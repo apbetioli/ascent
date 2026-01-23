@@ -1,0 +1,10 @@
+export { Header } from "./header";
+export { Hero } from "./hero";
+export { Features } from "./features";
+export { HowItWorks } from "./how-it-works";
+export { Testimonials } from "./testimonials";
+export { Pricing } from "./pricing";
+export { PricingCard } from "./pricing-card";
+export { FAQ } from "./faq";
+export { CTA } from "./cta";
+export { Footer } from "./footer";

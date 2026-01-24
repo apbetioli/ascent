@@ -1,5 +1,9 @@
 import { authenticateApiRequest, apiError } from "./auth";
-import { apiRateLimiter, getRateLimitHeaders, checkRateLimit } from "@/lib/rate-limit";
+import {
+  apiRateLimiter,
+  getRateLimitHeaders,
+  checkRateLimit,
+} from "@/lib/redis/rate-limit";
 
 interface ApiContext {
   userId: string;

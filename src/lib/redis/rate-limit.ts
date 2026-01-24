@@ -1,13 +1,5 @@
 import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
-
-// Create Redis client - only if env vars are present
-const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    })
-  : null;
+import { redis } from "./redis";
 
 // Rate limiter for public API: 100 requests per hour
 export const apiRateLimiter = redis
@@ -33,10 +25,20 @@ export const authRateLimiter = redis
 export async function checkRateLimit(
   limiter: Ratelimit | null,
   identifier: string
-): Promise<{ success: boolean; limit: number; remaining: number; reset: number }> {
+): Promise<{
+  success: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+}> {
   // If no limiter (missing env vars), allow all requests
   if (!limiter) {
-    return { success: true, limit: 100, remaining: 99, reset: Date.now() + 3600000 };
+    return {
+      success: true,
+      limit: 100,
+      remaining: 99,
+      reset: Date.now() + 3600000,
+    };
   }
   const { success, limit, remaining, reset } = await limiter.limit(identifier);
   return { success, limit, remaining, reset };

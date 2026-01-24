@@ -4,21 +4,28 @@ import {
   authRateLimiter,
   checkRateLimit,
   getRateLimitHeaders,
-} from "./lib/rate-limit";
+} from "./lib/redis/rate-limit";
+import { addVisitor } from "./lib/redis/visitors";
 
 export async function middleware(request: NextRequest) {
-  // Skip rate limiting for the blocked page to prevent redirect loops
-  if (request.nextUrl.pathname === "/blocked") {
-    return await updateSession(request);
-  }
-
+  const pathname = request.nextUrl.pathname;
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0] ||
     request.headers.get("x-real-ip") ||
     "127.0.0.1";
 
-  // Skip rate limiting for localhost/development
+  // Track visitors on marketing/landing page
+  if (pathname === "/") {
+    await addVisitor(ip);
+  }
+
+  // Skip rate limiting for the blocked page to prevent redirect loops
+  if (pathname === "/blocked") {
+    return await updateSession(request);
+  }
+
   const isLocalhost = ip === "127.0.0.1" || ip === "::1" || ip === "localhost";
+  // Skip rate limiting for localhost/development
   if (!isLocalhost) {
     const rateLimitResult = await checkRateLimit(authRateLimiter, ip);
     const { success } = getRateLimitHeaders(rateLimitResult);
@@ -41,6 +48,7 @@ export const config = {
      * - public folder
      * - api routes that don't need auth
      */
+    "/",
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

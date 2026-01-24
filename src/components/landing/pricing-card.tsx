@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -39,6 +40,7 @@ export function PricingCard({
   userId,
 }: PricingCardProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleCheckout = async () => {
     setIsLoading(true);
@@ -58,7 +60,9 @@ export function PricingCard({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create checkout session");
+        // Redirect to login page instead of throwing error
+        router.push("/login");
+        return;
       }
 
       // Redirect to Stripe Checkout

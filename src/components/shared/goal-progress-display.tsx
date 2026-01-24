@@ -85,8 +85,24 @@ export function GoalProgressDisplay({
       }}
     >
       <CardHeader>
-        <div className="flex items-start justify-between -mb-2">
+        <div className="flex items-center gap-2 -mb-2">
           <CardTitle className={titleSize}>{goal.name}</CardTitle>
+          {isSurpassed && (
+            <Badge
+              variant="default"
+              className="bg-yellow-500 text-yellow-950 gap-1"
+            >
+              <Trophy className="h-3 w-3" />
+              Surpassed!
+            </Badge>
+          )}
+          {isComplete && !isSurpassed && (
+            <Badge variant="default" className="bg-green-500 gap-1">
+              <Sparkles className="h-3 w-3" />
+              Complete!
+            </Badge>
+          )}
+          <div className="flex-1" />
           {contextMenu}
         </div>
         <CardDescription className="flex flex-wrap gap-2 text-xs">
@@ -116,26 +132,6 @@ export function GoalProgressDisplay({
       </CardHeader>
 
       <CardContent className={contentSpacing}>
-        {isSurpassed && (
-          <div className="absolute top-2 right-2">
-            <Badge
-              variant="default"
-              className="bg-yellow-500 text-yellow-950 gap-1"
-            >
-              <Trophy className="h-3 w-3" />
-              Surpassed!
-            </Badge>
-          </div>
-        )}
-        {isComplete && !isSurpassed && (
-          <div className="absolute top-2 right-2">
-            <Badge variant="default" className="bg-green-500 gap-1">
-              <Sparkles className="h-3 w-3" />
-              Complete!
-            </Badge>
-          </div>
-        )}
-
         {/* Progress Bar */}
         <div className="space-y-1">
           <div className="flex justify-between text-sm">

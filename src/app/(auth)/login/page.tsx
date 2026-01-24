@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -20,15 +20,23 @@ import { Loader2, Mail } from "lucide-react";
 import Link from "next/link";
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+  const redirect = searchParams.get("redirect") || "/boards";
+  const emailParam = searchParams.get("email");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
-  const searchParams = useSearchParams();
-  const error = searchParams.get("error");
-  const redirect = searchParams.get("redirect") || "/boards";
 
   const supabase = createClient();
+
+  // Pre-fill email from URL parameter
+  useEffect(() => {
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, [emailParam]);
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();

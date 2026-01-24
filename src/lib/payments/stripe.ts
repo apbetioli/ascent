@@ -9,26 +9,34 @@ const stripe = process.env.STRIPE_SECRET_KEY
   : null;
 
 export const stripeProvider: PaymentProvider = {
-  async createCheckoutUrl(userId: string, email: string): Promise<string> {
+  async createCheckoutUrl(email?: string, userId?: string): Promise<string> {
     if (!stripe) {
-      throw new Error("Stripe is not configured. Please set STRIPE_SECRET_KEY.");
+      throw new Error(
+        "Stripe is not configured. Please set STRIPE_SECRET_KEY."
+      );
+    }
+
+    const metadata: Record<string, string> = {};
+    if (email) {
+      metadata.email = email;
+    }
+    if (userId) {
+      metadata.userId = userId;
     }
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
-      customer_email: email,
-      metadata: {
-        userId,
-      },
+      ...(email && { customer_email: email }),
+      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
       line_items: [
         {
           price: process.env.STRIPE_PRICE_ID!,
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/boards?payment=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?payment=cancelled`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/auth/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/#pricing?payment=cancelled`,
     });
 
     if (!session.url) {
@@ -60,22 +68,34 @@ export const stripeProvider: PaymentProvider = {
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
-      return { success: false, error: `Webhook signature verification failed: ${message}` };
+      return {
+        success: false,
+        error: `Webhook signature verification failed: ${message}`,
+      };
     }
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.userId;
+      const email =
+        session.metadata?.email ||
+        session.customer_email ||
+        session.customer_details?.email;
       const customerId = session.customer as string;
+      const sessionId = session.id;
 
-      if (!userId) {
-        return { success: false, error: "Missing userId in metadata" };
+      console.log("email", email, session);
+
+      if (!email) {
+        return { success: false, error: "Missing email in session" };
       }
 
       return {
         success: true,
         userId,
+        email,
         customerId,
+        sessionId,
         paid: true,
       };
     }

@@ -1,41 +1,46 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { paymentProvider } from "@/lib/payments";
 
 export async function POST(req: Request) {
   try {
+    const body = await req.json();
+    const { email, userId } = body;
+
     const supabase = await createClient();
 
-    // Verify user is authenticated
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // If userId is provided, verify user is authenticated and check if already paid
+    if (userId) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+      if (!user || user.id !== userId) {
+        return NextResponse.json(
+          { error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
 
-    // Check if user has already paid
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("has_paid")
-      .eq("id", user.id)
-      .single();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("has_paid")
+        .eq("id", user.id)
+        .single();
 
-    if (profile?.has_paid) {
-      return NextResponse.json(
-        { error: "You have already purchased GoalTrack" },
-        { status: 400 }
-      );
+      if (profile?.has_paid) {
+        return NextResponse.json(
+          { error: "You have already purchased GoalTrack" },
+          { status: 400 }
+        );
+      }
     }
 
     // Create checkout session
+    // Email is optional - if not provided, Stripe will collect it during checkout
     const checkoutUrl = await paymentProvider.createCheckoutUrl(
-      user.id,
-      user.email!
+      email || undefined,
+      userId
     );
 
     return NextResponse.json({ url: checkoutUrl });

@@ -26,7 +26,7 @@ export default async function DashboardLayout({
 
   // Check if user has paid
   if (!profile?.has_paid) {
-    redirect("/pricing");
+    redirect("/#pricing");
   }
 
   return (

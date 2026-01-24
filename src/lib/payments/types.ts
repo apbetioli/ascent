@@ -1,8 +1,10 @@
 export interface PaymentProvider {
   /**
    * Create a checkout URL for a user to complete payment
+   * @param email - Email address (optional, Stripe will collect if not provided)
+   * @param userId - User ID (optional, for existing users)
    */
-  createCheckoutUrl(userId: string, email: string): Promise<string>;
+  createCheckoutUrl(email?: string, userId?: string): Promise<string>;
 
   /**
    * Handle incoming webhook from payment provider
@@ -18,7 +20,9 @@ export interface PaymentProvider {
 export interface WebhookResult {
   success: boolean;
   userId?: string;
+  email?: string;
   customerId?: string;
+  sessionId?: string;
   paid?: boolean;
   error?: string;
 }

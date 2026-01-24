@@ -1,24 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { GoalProgressDisplay } from "@/components/shared/goal-progress-display";
-import { Target } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import type { Tables } from "@/lib/supabase/types";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { useEffect, useMemo, useState } from "react";
 
 interface EmbedGoalWidgetProps {
-  goal: Tables<"goals"> & {
-    boards: {
-      is_public: boolean;
-      public_slug: string | null;
-    };
-  };
+  goal: Tables<"goals">;
 }
 
 export function EmbedGoalWidget({ goal: initialGoal }: EmbedGoalWidgetProps) {
   const [goal, setGoal] = useState(initialGoal);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -48,26 +42,9 @@ export function EmbedGoalWidget({ goal: initialGoal }: EmbedGoalWidgetProps) {
     };
   }, [goal.id, supabase]);
 
-  const customHeader = (
-    <div className="flex items-start justify-between gap-2">
-      <div className="flex items-center gap-2">
-        <Target className="h-4 w-4 text-muted-foreground" />
-        <span className="text-base leading-tight font-semibold">{goal.name}</span>
-      </div>
-    </div>
-  );
-
   return (
     <GoalProgressDisplay
-      goal={{
-        name: goal.name,
-        current_amount: goal.current_amount,
-        target_amount: goal.target_amount,
-        is_reverse: goal.is_reverse,
-        deadline: goal.deadline,
-        color: goal.color,
-      }}
-      customHeader={customHeader}
+      goal={goal}
       variant="compact"
       cardClassName="w-full max-w-sm mx-auto overflow-hidden"
       footer={

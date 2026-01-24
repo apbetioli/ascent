@@ -12,16 +12,18 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main>
-        <Hero />
-        <Features />
-        <HowItWorks />
-        <Testimonials />
-        <Pricing />
-        <FAQ />
-        <CTA />
-      </main>
-      <Footer />
+      <div className="max-w-7xl mx-auto">
+        <main>
+          <Hero />
+          <Features />
+          <HowItWorks />
+          <Testimonials />
+          <Pricing />
+          <FAQ />
+          <CTA />
+        </main>
+        <Footer />
+      </div>
     </div>
   );
 }

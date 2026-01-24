@@ -1,18 +1,9 @@
-"use client";
-
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import Visitors from "./visitors";
+import { HeroButtons } from "./hero-buttons";
 
 export function Hero() {
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
   return (
     <section className="py-20 md:py-32">
       <div className="container px-4 md:px-6">
@@ -33,19 +24,7 @@ export function Hero() {
             with stunning visual charts.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button size="lg" onClick={() => scrollToSection("pricing")}>
-              Get Started
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => scrollToSection("features")}
-            >
-              See Features
-            </Button>
-          </div>
+          <HeroButtons />
 
           <p className="text-sm text-muted-foreground">
             One-time payment of $29. No subscription required.

@@ -1,8 +1,16 @@
-import Link from "next/link";
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
 export function CTA() {
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <section className="py-20">
       <div className="container px-4 md:px-6">
@@ -15,11 +23,9 @@ export function CTA() {
             GoalTrack. Start tracking today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" asChild>
-              <Link href="/#pricing">
-                Get Started for $29
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+            <Button size="lg" onClick={() => scrollToSection("pricing")}>
+              Get Started for $29
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-4">

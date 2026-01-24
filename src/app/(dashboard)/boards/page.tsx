@@ -18,34 +18,12 @@ export default async function BoardsPage() {
     redirect("/login");
   }
 
-  // Get user's boards
-  let { data: boards } = await supabase
+  // Get user's boards (single board created only on signup via DB trigger)
+  const { data: boards } = await supabase
     .from("boards")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
-
-  // If user has no boards, create a default one
-  if (!boards || boards.length === 0) {
-    const { data: newBoard, error } = await supabase
-      .from("boards")
-      .insert({
-        user_id: user.id,
-        name: "My Goals",
-        theme: "default",
-      })
-      .select()
-      .single();
-
-    if (!error && newBoard) {
-      boards = [newBoard];
-    }
-  }
-
-  // If user has exactly one board, redirect directly to it
-  if (boards && boards.length === 1) {
-    redirect(`/boards/${boards[0].id}`);
-  }
 
   return (
     <div className="space-y-6">

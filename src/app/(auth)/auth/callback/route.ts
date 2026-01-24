@@ -24,8 +24,7 @@ export async function GET(request: Request) {
   // it sets session cookies and redirects. If the redirect includes
   // the token, we need to verify it to ensure the session is established.
   if (token && type === "magiclink") {
-    // The token has already been verified by Supabase's /auth/v1/verify endpoint
-    // and session cookies should be set. We just need to verify the session exists.
+    // First check if session already exists (token might have been verified via Supabase's endpoint)
     const {
       data: { user },
       error: userError,
@@ -35,15 +34,28 @@ export async function GET(request: Request) {
       return await handleSuccessfulAuth(supabase, origin, next, request);
     }
 
-    // If no user, try verifying the token explicitly
-    // Note: verifyOtp expects token_hash, but the token from the URL might need different handling
-    const { error: verifyError } = await supabase.auth.verifyOtp({
-      token_hash: token,
-      type: "magiclink",
-    });
+    // If no session, verify the token explicitly
+    // The token from generateLink is the hashed_token, which verifyOtp accepts
+    const { data: verifyData, error: verifyError } =
+      await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: "magiclink",
+      });
 
-    if (!verifyError) {
-      return await handleSuccessfulAuth(supabase, origin, next, request);
+    if (!verifyError && verifyData.session) {
+      // Session created, now check if user exists
+      const {
+        data: { user: verifiedUser },
+      } = await supabase.auth.getUser();
+
+      if (verifiedUser) {
+        return await handleSuccessfulAuth(supabase, origin, next, request);
+      }
+    }
+
+    // If verification failed, log and redirect to login
+    if (verifyError) {
+      console.error("Token verification failed:", verifyError);
     }
   }
 
@@ -77,14 +89,27 @@ async function handleSuccessfulAuth(
     }
   }
 
+  let redirectPath = next;
+  if (next === "/boards" && user) {
+    const { data: boards } = await supabase
+      .from("boards")
+      .select("id")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .limit(2);
+    if (boards?.length === 1) {
+      redirectPath = `/boards/${boards[0].id}`;
+    }
+  }
+
   const forwardedHost = request.headers.get("x-forwarded-host");
   const isLocalEnv = process.env.NODE_ENV === "development";
 
   if (isLocalEnv) {
-    return NextResponse.redirect(`${origin}${next}`);
+    return NextResponse.redirect(`${origin}${redirectPath}`);
   } else if (forwardedHost) {
-    return NextResponse.redirect(`https://${forwardedHost}${next}`);
+    return NextResponse.redirect(`https://${forwardedHost}${redirectPath}`);
   } else {
-    return NextResponse.redirect(`${origin}${next}`);
+    return NextResponse.redirect(`${origin}${redirectPath}`);
   }
 }

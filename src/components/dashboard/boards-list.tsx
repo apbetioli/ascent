@@ -59,11 +59,6 @@ export function BoardsList({ boards }: BoardsListProps) {
                 })}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Theme: {board.theme}
-              </p>
-            </CardContent>
           </Card>
         </Link>
       ))}

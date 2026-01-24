@@ -54,8 +54,16 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname === "/signup";
 
   if (isAuthRoute && user) {
+    const { data: boards } = await supabase
+      .from("boards")
+      .select("id")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .limit(2);
+    const path =
+      boards?.length === 1 ? `/boards/${boards[0].id}` : "/boards";
     const url = request.nextUrl.clone();
-    url.pathname = "/boards";
+    url.pathname = path;
     return NextResponse.redirect(url);
   }
 

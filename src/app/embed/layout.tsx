@@ -11,10 +11,6 @@ export default function EmbedLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Allow iframe embedding */}
-        <meta httpEquiv="X-Frame-Options" content="ALLOWALL" />
-      </head>
       <body className="bg-transparent" suppressHydrationWarning>
         {children}
       </body>

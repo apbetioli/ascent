@@ -9,6 +9,8 @@ import { addVisitor } from "./lib/redis/visitors";
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+
+  // x-forwarded-for & x-real-ip: Only trust in production when behind a trusted proxy
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0] ||
     request.headers.get("x-real-ip") ||

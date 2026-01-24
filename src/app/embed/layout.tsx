@@ -10,12 +10,14 @@ export default function EmbedLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Allow iframe embedding */}
         <meta httpEquiv="X-Frame-Options" content="ALLOWALL" />
       </head>
-      <body className="bg-transparent">{children}</body>
+      <body className="bg-transparent" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

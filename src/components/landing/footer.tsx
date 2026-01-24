@@ -1,7 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { Target } from "lucide-react";
 
 export function Footer() {
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <footer className="border-t py-12 bg-muted/30">
       <div className="container px-4 md:px-6">
@@ -21,19 +30,28 @@ export function Footer() {
             <h3 className="font-semibold mb-4">Product</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="#features" className="hover:text-foreground">
+                <button
+                  onClick={() => scrollToSection("features")}
+                  className="hover:text-foreground"
+                >
                   Features
-                </Link>
+                </button>
               </li>
               <li>
-                <Link href="#pricing" className="hover:text-foreground">
+                <button
+                  onClick={() => scrollToSection("pricing")}
+                  className="hover:text-foreground"
+                >
                   Pricing
-                </Link>
+                </button>
               </li>
               <li>
-                <Link href="#faq" className="hover:text-foreground">
+                <button
+                  onClick={() => scrollToSection("faq")}
+                  className="hover:text-foreground"
+                >
                   FAQ
-                </Link>
+                </button>
               </li>
             </ul>
           </div>

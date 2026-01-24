@@ -1,9 +1,18 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 export function Hero() {
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <section className="py-20 md:py-32">
       <div className="container px-4 md:px-6">
@@ -25,14 +34,12 @@ export function Hero() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button size="lg" asChild>
-              <Link href="/#pricing">
-                Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+            <Button size="lg" onClick={() => scrollToSection("pricing")}>
+              Get Started
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="#features">See Features</Link>
+            <Button size="lg" variant="outline" onClick={() => scrollToSection("features")}>
+              See Features
             </Button>
           </div>
 

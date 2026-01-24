@@ -23,11 +23,19 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Skip authentication for public routes (public boards and embeds)
-  if (pathname.startsWith("/public/") || pathname.startsWith("/embed/")) {
+  if (pathname.startsWith("/public/")) {
     return NextResponse.next({ request });
   }
 
+  if (pathname.startsWith("/embed/")) {
+    const response = NextResponse.next({ request });
+    // Allow iframe embedding for embed routes by removing X-Frame-Options
+    // (not setting it allows embedding from any origin)
+    response.headers.delete("X-Frame-Options");
+    return response;
+  }
+
+  // Authenticate the request
   return await updateSession(request);
 }
 

@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
+import Visitors from "./visitors";
 
 export function Hero() {
   const scrollToSection = (id: string) => {
@@ -38,7 +38,11 @@ export function Hero() {
               Get Started
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-            <Button size="lg" variant="outline" onClick={() => scrollToSection("features")}>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => scrollToSection("features")}
+            >
               See Features
             </Button>
           </div>
@@ -47,22 +51,32 @@ export function Hero() {
             One-time payment of $29. No subscription required.
           </p>
 
+          <Visitors />
+
           {/* Hero Image/Demo */}
           <div className="w-full max-w-5xl mt-12">
             <div className="relative rounded-xl border bg-muted/30 p-2 shadow-2xl">
               <div className="rounded-lg bg-background p-4 md:p-8">
                 <div className="grid gap-4 md:grid-cols-3">
                   {/* Demo Goal Card 1 */}
-                  <div className="rounded-lg border p-4" style={{ borderTopColor: "#22C55E", borderTopWidth: "3px" }}>
+                  <div
+                    className="rounded-lg border p-4"
+                    style={{ borderTopColor: "#22C55E", borderTopWidth: "3px" }}
+                  >
                     <h3 className="font-semibold mb-1">Save for Vacation</h3>
-                    <p className="text-xs text-muted-foreground mb-3">12 days left</p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      12 days left
+                    </p>
                     <div className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Progress</span>
                         <span className="font-medium">75%</span>
                       </div>
                       <div className="h-2 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full bg-[#22C55E]" style={{ width: "75%" }} />
+                        <div
+                          className="h-full bg-[#22C55E]"
+                          style={{ width: "75%" }}
+                        />
                       </div>
                     </div>
                     <div className="flex justify-between text-sm mt-3">
@@ -71,16 +85,24 @@ export function Hero() {
                   </div>
 
                   {/* Demo Goal Card 2 */}
-                  <div className="rounded-lg border p-4" style={{ borderTopColor: "#3B82F6", borderTopWidth: "3px" }}>
+                  <div
+                    className="rounded-lg border p-4"
+                    style={{ borderTopColor: "#3B82F6", borderTopWidth: "3px" }}
+                  >
                     <h3 className="font-semibold mb-1">Read 50 Books</h3>
-                    <p className="text-xs text-muted-foreground mb-3">Yearly goal</p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Yearly goal
+                    </p>
                     <div className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Progress</span>
                         <span className="font-medium">62%</span>
                       </div>
                       <div className="h-2 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full bg-[#3B82F6]" style={{ width: "62%" }} />
+                        <div
+                          className="h-full bg-[#3B82F6]"
+                          style={{ width: "62%" }}
+                        />
                       </div>
                     </div>
                     <div className="flex justify-between text-sm mt-3">
@@ -89,16 +111,24 @@ export function Hero() {
                   </div>
 
                   {/* Demo Goal Card 3 */}
-                  <div className="rounded-lg border p-4" style={{ borderTopColor: "#EF4444", borderTopWidth: "3px" }}>
+                  <div
+                    className="rounded-lg border p-4"
+                    style={{ borderTopColor: "#EF4444", borderTopWidth: "3px" }}
+                  >
                     <h3 className="font-semibold mb-1">Run 500 Miles</h3>
-                    <p className="text-xs text-muted-foreground mb-3">Monthly recurring</p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Monthly recurring
+                    </p>
                     <div className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Progress</span>
                         <span className="font-medium">88%</span>
                       </div>
                       <div className="h-2 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full bg-[#EF4444]" style={{ width: "88%" }} />
+                        <div
+                          className="h-full bg-[#EF4444]"
+                          style={{ width: "88%" }}
+                        />
                       </div>
                     </div>
                     <div className="flex justify-between text-sm mt-3">

@@ -375,7 +375,6 @@ Pre-defined palette with 12 colors (auto-assigned on goal creation):
 6. Stripe webhook sets `has_paid = true` in profiles table
 7. On first login, auto-create default board via database trigger or API
 8. Redirect to `/boards`
-
 ```typescript
 // Supabase Auth - Magic Link
 await supabase.auth.signInWithOtp({ email });
@@ -383,6 +382,7 @@ await supabase.auth.signInWithOtp({ email });
 // Supabase Auth - Google OAuth
 await supabase.auth.signInWithOAuth({ provider: "google" });
 ```
+
 
 ---
 
@@ -529,7 +529,6 @@ create unique index idx_goals_board_name
 
    - Rows in sheet → upsert goals by name
    - Goals NOT in sheet → delete from database
-
 ```typescript
 async function syncSheetBoard(boardId: string, rows: SheetRow[]) {
   const sheetGoalNames = rows.map((r) => r.name);
@@ -556,6 +555,7 @@ async function syncSheetBoard(boardId: string, rows: SheetRow[]) {
     .not("name", "in", `(${sheetGoalNames.join(",")})`);
 }
 ```
+
 
 ### Key Points
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -40,20 +39,8 @@ export function PricingCard({
   userId,
 }: PricingCardProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const handleCheckout = async () => {
-    if (!isLoggedIn) {
-      // Redirect to login with redirect back to pricing
-      router.push("/login?redirect=/pricing");
-      return;
-    }
-
-    if (!userId || !userEmail) {
-      toast.error("Unable to start checkout. Please try logging in again.");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -62,7 +49,10 @@ export function PricingCard({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId, email: userEmail }),
+        body: JSON.stringify({ 
+          email: isLoggedIn ? userEmail : undefined,
+          userId: isLoggedIn ? userId : undefined,
+        }),
       });
 
       const data = await response.json();

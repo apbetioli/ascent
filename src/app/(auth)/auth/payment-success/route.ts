@@ -21,7 +21,9 @@ export async function GET(request: Request) {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     if (session.payment_status !== "paid") {
-      return NextResponse.redirect(`${origin}/#pricing?error=payment_not_completed`);
+      return NextResponse.redirect(
+        `${origin}/#pricing?error=payment_not_completed`
+      );
     }
 
     const email =
@@ -54,7 +56,9 @@ export async function GET(request: Request) {
       if (createError || !newUser.user) {
         console.error("Failed to create user:", createError);
         return NextResponse.redirect(
-          `${origin}/login?error=user_creation_failed&email=${encodeURIComponent(email)}`
+          `${origin}/login?error=user_creation_failed&email=${encodeURIComponent(
+            email
+          )}`
         );
       }
 
@@ -64,26 +68,24 @@ export async function GET(request: Request) {
 
     // Ensure profile exists and is marked as paid
     const customerId = session.customer as string;
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          id: userId!,
-          has_paid: true,
-          payment_provider: paymentProvider.getProviderName(),
-          payment_customer_id: customerId,
-        },
-        {
-          onConflict: "id",
-        }
-      );
+    const { error: profileError } = await supabase.from("profiles").upsert(
+      {
+        id: userId!,
+        has_paid: true,
+        payment_provider: paymentProvider.getProviderName(),
+        payment_customer_id: customerId,
+      },
+      {
+        onConflict: "id",
+      }
+    );
 
     if (profileError) {
       console.error("Failed to update profile:", profileError);
       // Continue anyway - user exists, profile update can happen via webhook
     }
 
-    // Generate a magic link for auto-login
+    // Generate a magic link token for auto-login
     const { data: linkData, error: linkError } =
       await supabase.auth.admin.generateLink({
         type: "magiclink",
@@ -93,17 +95,20 @@ export async function GET(request: Request) {
         },
       });
 
-    if (linkError || !linkData?.properties?.action_link) {
+    if (linkError || !linkData?.properties?.hashed_token) {
       console.error("Failed to generate magic link:", linkError);
       // Fallback: redirect to login with email pre-filled
-      // User can use magic link from there
       return NextResponse.redirect(
         `${origin}/login?email=${encodeURIComponent(email)}&redirect=/boards`
       );
     }
 
-    // Redirect directly to the magic link (it will auto-verify and log in)
-    return NextResponse.redirect(linkData.properties.action_link);
+    // Redirect to callback route with the token
+    // The callback will verify the token and set the session
+    const callbackUrl = `${origin}/auth/callback?token=${encodeURIComponent(
+      linkData.properties.hashed_token
+    )}&type=magiclink&next=/boards`;
+    return NextResponse.redirect(callbackUrl);
   } catch (error) {
     console.error("Payment success error:", error);
     return NextResponse.redirect(`${origin}/#pricing?error=verification_failed`);

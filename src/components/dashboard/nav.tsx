@@ -16,6 +16,7 @@ import {
 import { LayoutDashboard, Settings, LogOut, Target } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import type { Tables } from "@/lib/supabase/types";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface DashboardNavProps {
   user: User;
@@ -70,6 +71,7 @@ export function DashboardNav({ user, profile }: DashboardNavProps) {
           </nav>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">

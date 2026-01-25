@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Target } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function Header() {
   const scrollToSection = (id: string) => {
@@ -48,6 +49,7 @@ export function Header() {
           </button>
         </nav>
         <div className="flex-1 flex justify-end items-center gap-2">
+          <ThemeToggle />
           <Button variant="ghost" asChild>
             <Link href="/login">Sign In</Link>
           </Button>

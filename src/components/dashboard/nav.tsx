@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/hooks/use-supabase";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -25,10 +25,10 @@ interface DashboardNavProps {
 export function DashboardNav({ user, profile }: DashboardNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
+  const { signOut } = useSupabase();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     router.push("/");
     router.refresh();
   };

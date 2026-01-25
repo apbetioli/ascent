@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/hooks/use-supabase";
 import type { Tables } from "@/lib/supabase/types";
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -39,22 +39,22 @@ export function GoalCard({ goal }: GoalCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const router = useRouter();
-  const supabase = createClient();
+  const { deleteGoal } = useSupabase();
 
   const handleDelete = async () => {
     setIsDeleting(true);
 
-    const { error } = await supabase.from("goals").delete().eq("id", goal.id);
-
-    if (error) {
+    try {
+      await deleteGoal(goal.id);
+      toast.success("Goal deleted");
+      setShowDeleteDialog(false);
+      router.refresh();
+    } catch (error) {
       toast.error("Failed to delete goal");
+      console.error(error);
+    } finally {
       setIsDeleting(false);
-      return;
     }
-
-    toast.success("Goal deleted");
-    setShowDeleteDialog(false);
-    router.refresh();
   };
 
   const contextMenu = (

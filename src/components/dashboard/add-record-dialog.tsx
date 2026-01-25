@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/hooks/use-supabase";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -44,7 +44,7 @@ export function AddRecordDialog({
   const [date, setDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  const { getUser, createRecord } = useSupabase();
 
   const resetForm = () => {
     setAmount("");
@@ -64,28 +64,20 @@ export function AddRecordDialog({
     setIsLoading(true);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getUser();
 
       if (!user) {
         toast.error("You must be logged in");
         return;
       }
 
-      const { error } = await supabase.from("records").insert({
+      await createRecord({
         goal_id: goalId,
         user_id: user.id,
         amount: amountValue,
         description: description.trim() || null,
         timestamp: date.getTime(),
       });
-
-      if (error) {
-        toast.error("Failed to add record");
-        console.error(error);
-        return;
-      }
 
       toast.success("Record added successfully");
       onOpenChange(false);

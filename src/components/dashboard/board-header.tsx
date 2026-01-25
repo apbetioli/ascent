@@ -20,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/hooks/use-supabase";
 import type { Tables } from "@/lib/supabase/types";
 import {
   Check,
@@ -49,7 +49,7 @@ export function BoardHeader({ board, children }: BoardHeaderProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  const { updateBoard, deleteBoard } = useSupabase();
 
   const handleSaveName = async () => {
     if (!name.trim()) {
@@ -57,52 +57,44 @@ export function BoardHeader({ board, children }: BoardHeaderProps) {
       return;
     }
 
-    const { error } = await supabase
-      .from("boards")
-      .update({ name: name.trim() })
-      .eq("id", board.id);
-
-    if (error) {
+    try {
+      await updateBoard(board.id, { name: name.trim() });
+      toast.success("Board name updated");
+      setIsEditing(false);
+      router.refresh();
+    } catch (error) {
       toast.error("Failed to update board name");
-      return;
+      console.error(error);
     }
-
-    toast.success("Board name updated");
-    setIsEditing(false);
-    router.refresh();
   };
 
   const handleTogglePublic = async () => {
-    const { error } = await supabase
-      .from("boards")
-      .update({ is_public: !board.is_public })
-      .eq("id", board.id);
-
-    if (error) {
+    try {
+      await updateBoard(board.id, { is_public: !board.is_public });
+      toast.success(
+        board.is_public ? "Board is now private" : "Board is now public"
+      );
+      router.refresh();
+    } catch (error) {
       toast.error("Failed to update board visibility");
-      return;
+      console.error(error);
     }
-
-    toast.success(
-      board.is_public ? "Board is now private" : "Board is now public"
-    );
-    router.refresh();
   };
 
   const handleDelete = async () => {
     setIsDeleting(true);
 
-    const { error } = await supabase.from("boards").delete().eq("id", board.id);
-
-    if (error) {
+    try {
+      await deleteBoard(board.id);
+      toast.success("Board deleted");
+      router.push("/boards");
+      router.refresh();
+    } catch (error) {
       toast.error("Failed to delete board");
+      console.error(error);
+    } finally {
       setIsDeleting(false);
-      return;
     }
-
-    toast.success("Board deleted");
-    router.push("/boards");
-    router.refresh();
   };
 
   const handleCopyPublicLink = () => {

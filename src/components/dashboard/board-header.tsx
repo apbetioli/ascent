@@ -1,18 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,20 +11,32 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supabase/client";
+import type { Tables } from "@/lib/supabase/types";
+import {
+  Check,
+  Copy,
+  ExternalLink,
+  Globe,
+  Lock,
   MoreHorizontal,
   Pencil,
   Trash2,
-  Globe,
-  Lock,
-  ChevronLeft,
-  Check,
   X,
-  Copy,
-  ExternalLink,
 } from "lucide-react";
-import type { Tables } from "@/lib/supabase/types";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface BoardHeaderProps {
   board: Tables<"boards">;

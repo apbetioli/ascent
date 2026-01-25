@@ -122,9 +122,7 @@ export function EditGoalDialog({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Edit Goal</DialogTitle>
-            <DialogDescription>
-              Update your goal settings.
-            </DialogDescription>
+            <DialogDescription>Update your goal settings.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -224,9 +222,7 @@ export function EditGoalDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="normal">Normal (0% → 100%)</SelectItem>
-                    <SelectItem value="reverse">
-                      Reverse (100% → 0%)
-                    </SelectItem>
+                    <SelectItem value="reverse">Reverse (100% → 0%)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -264,7 +260,7 @@ export function EditGoalDialog({
             </Button>
             <Button type="submit" disabled={isLoading || !name.trim()}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Changes
+              Save
             </Button>
           </DialogFooter>
         </form>

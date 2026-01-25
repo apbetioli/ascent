@@ -200,7 +200,7 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
           </div>
           <Button onClick={handleSaveProfile} disabled={isSaving}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Changes
+            Save
           </Button>
         </CardContent>
       </Card>

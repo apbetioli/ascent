@@ -67,7 +67,7 @@ export function GoalCard({ goal }: GoalCardProps) {
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setShowAddRecordDialog(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Record
+          Add Progress
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
           <Pencil className="mr-2 h-4 w-4" />
@@ -91,17 +91,6 @@ export function GoalCard({ goal }: GoalCardProps) {
         goal={goal}
         contextMenu={contextMenu}
         cardClassName="relative overflow-hidden transition-all hover:shadow-md"
-        footer={
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={() => setShowAddRecordDialog(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Progress
-          </Button>
-        }
       />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

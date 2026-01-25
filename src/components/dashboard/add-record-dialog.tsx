@@ -183,7 +183,7 @@ export function AddRecordDialog({
             </Button>
             <Button type="submit" disabled={isLoading || !amount}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Add Record
+              Save
             </Button>
           </DialogFooter>
         </form>

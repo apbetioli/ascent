@@ -22,8 +22,8 @@ interface GoalProgressDisplayProps {
   cardClassName?: string;
   showRemaining?: boolean;
   variant?: "default" | "compact";
-  footer?: React.ReactNode;
   contextMenu?: React.ReactNode;
+  footer?: React.ReactNode;
 }
 
 export function GoalProgressDisplay({
@@ -31,8 +31,8 @@ export function GoalProgressDisplay({
   cardClassName,
   showRemaining = true,
   variant = "default",
-  footer,
   contextMenu,
+  footer,
 }: GoalProgressDisplayProps) {
   const [currentTime, setCurrentTime] = useState(() => Date.now());
 
@@ -135,7 +135,14 @@ export function GoalProgressDisplay({
         {/* Progress Bar */}
         <div className="space-y-1">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Progress</span>
+            <div className="flex items-center gap-1">
+              <span className="font-bold text-lg">
+                {formatAmount(goal.current_amount)}
+              </span>
+              <span className="text-muted-foreground">
+                / {formatAmount(goal.target_amount)}
+              </span>
+            </div>
             <span className="font-medium">
               {Math.min(Math.round(percentage), 100)}%
               {isSurpassed && ` (${Math.round(percentage)}%)`}
@@ -152,22 +159,6 @@ export function GoalProgressDisplay({
           />
         </div>
 
-        {/* Current and Target */}
-        <div className="flex justify-between text-sm">
-          <div>
-            <span className="text-muted-foreground">Current: </span>
-            <span className="font-medium">
-              {formatAmount(goal.current_amount)}
-            </span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Target: </span>
-            <span className="font-medium">
-              {formatAmount(goal.target_amount)}
-            </span>
-          </div>
-        </div>
-
         {/* Remaining */}
         {showRemaining && !isComplete && (
           <div className="text-sm text-muted-foreground">
@@ -177,7 +168,6 @@ export function GoalProgressDisplay({
           </div>
         )}
 
-        {/* Custom Footer */}
         {footer}
       </CardContent>
     </Card>

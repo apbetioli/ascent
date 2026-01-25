@@ -8,28 +8,22 @@ export function Hero() {
     <section className="py-20 md:py-32">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center text-center space-y-8">
-          <Badge variant="secondary" className="gap-1">
-            <Sparkles className="h-3 w-3" />
-            Now with real-time updates
-          </Badge>
-
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight max-w-4xl">
             Track Your Goals,{" "}
             <span className="text-primary">Achieve Your Dreams</span>
           </h1>
 
           <p className="text-xl text-muted-foreground max-w-2xl">
-            A beautiful and simple goal tracking app. Set financial goals,
-            fitness targets, reading challenges, and more. Watch your progress
-            with stunning visual charts.
+            Set financial goals, fitness targets, reading challenges, and more.
+            Watch your progress with stunning visual charts.
           </p>
 
           <HeroButtons />
 
-          <p className="text-sm text-muted-foreground">
-            One-time payment of $29. No subscription required.
-          </p>
-
+          <Badge variant="secondary" className="gap-1">
+            <Sparkles className="h-3 w-3" />
+            Now with real-time updates
+          </Badge>
           <Visitors />
 
           {/* Hero Image/Demo */}

@@ -1,6 +1,6 @@
+import { DashboardNav } from "@/components/dashboard/nav";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { DashboardNav } from "@/components/dashboard/nav";
 
 export default async function DashboardLayout({
   children,
@@ -18,14 +18,15 @@ export default async function DashboardLayout({
   }
 
   // Get user profile
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
 
   // Check if user has paid
-  if (!profile?.has_paid) {
+  // If profile doesn't exist or hasn't paid, redirect to pricing
+  if (profileError || !profile?.has_paid) {
     redirect("/#pricing");
   }
 

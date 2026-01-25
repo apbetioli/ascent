@@ -14,7 +14,7 @@ import {
   calculateProgressPercentage,
   formatDeadlineStatus,
 } from "@/lib/utils/progress";
-import { Calendar, Repeat, Sparkles, Trophy } from "lucide-react";
+import { AlertCircleIcon, Calendar, Repeat, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface GoalProgressDisplayProps {
@@ -80,7 +80,7 @@ export function GoalProgressDisplay({
               variant="default"
               className="bg-yellow-500 text-yellow-950 gap-1"
             >
-              <Trophy className="h-3 w-3" />
+              <AlertCircleIcon className="h-3 w-3" />
               Surpassed!
             </Badge>
           )}

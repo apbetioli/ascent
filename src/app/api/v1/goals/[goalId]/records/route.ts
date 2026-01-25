@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { createServerQueries } from "@/lib/supabase/server-queries";
 import { withApiAuth, apiSuccess, apiError } from "@/lib/api";
 import { createRecordSchema } from "@/lib/validations";
 
@@ -12,34 +13,15 @@ export const GET = withApiAuth(async ({ userId, request }) => {
   const goalId = pathParts[pathParts.indexOf("goals") + 1];
 
   const supabase = await createServiceClient();
+  const { verifyGoalOwnership, getRecordsByGoal } = createServerQueries(supabase);
 
   // Verify goal ownership
-  const { data: goal } = await supabase
-    .from("goals")
-    .select("id")
-    .eq("id", goalId)
-    .eq("user_id", userId)
-    .single();
-
-  if (!goal) {
+  const isOwner = await verifyGoalOwnership(goalId, userId);
+  if (!isOwner) {
     return apiError("Goal not found", 404);
   }
 
-  const { data: records, error } = await supabase
-    .from("records")
-    .select(`
-      id,
-      goal_id,
-      amount,
-      description,
-      timestamp
-    `)
-    .eq("goal_id", goalId)
-    .order("timestamp", { ascending: false });
-
-  if (error) {
-    return apiError("Failed to fetch records", 500);
-  }
+  const records = await getRecordsByGoal(goalId);
 
   return apiSuccess({ records });
 });
@@ -54,16 +36,11 @@ export const POST = withApiAuth(async ({ userId, request }) => {
   const goalId = pathParts[pathParts.indexOf("goals") + 1];
 
   const supabase = await createServiceClient();
+  const { verifyGoalOwnership, createRecord } = createServerQueries(supabase);
 
   // Verify goal ownership
-  const { data: goal } = await supabase
-    .from("goals")
-    .select("id")
-    .eq("id", goalId)
-    .eq("user_id", userId)
-    .single();
-
-  if (!goal) {
+  const isOwner = await verifyGoalOwnership(goalId, userId);
+  if (!isOwner) {
     return apiError("Goal not found", 404);
   }
 
@@ -86,21 +63,17 @@ export const POST = withApiAuth(async ({ userId, request }) => {
 
   const { amount, description, timestamp } = validation.data;
 
-  const { data: record, error } = await supabase
-    .from("records")
-    .insert({
+  try {
+    const record = await createRecord({
       goal_id: goalId,
       user_id: userId,
       amount,
       description: description || null,
       timestamp,
-    })
-    .select()
-    .single();
+    });
 
-  if (error) {
+    return apiSuccess({ record }, 201);
+  } catch (error) {
     return apiError("Failed to create record", 500);
   }
-
-  return apiSuccess({ record }, 201);
 });

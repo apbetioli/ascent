@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { createServerQueries } from "@/lib/supabase/server-queries";
 import { notFound } from "next/navigation";
 import { PublicBoardView } from "@/components/public/board-view";
 import Link from "next/link";
@@ -11,13 +12,9 @@ interface PublicBoardPageProps {
 export async function generateMetadata({ params }: PublicBoardPageProps) {
   const { publicSlug } = await params;
   const supabase = await createServiceClient();
+  const { getBoardByPublicSlug } = createServerQueries(supabase);
 
-  const { data: board } = await supabase
-    .from("boards")
-    .select("name")
-    .eq("public_slug", publicSlug)
-    .eq("is_public", true)
-    .single();
+  const board = await getBoardByPublicSlug(publicSlug);
 
   return {
     title: board?.name ?? "Public Board",
@@ -30,25 +27,17 @@ export default async function PublicBoardPage({
 }: PublicBoardPageProps) {
   const { publicSlug } = await params;
   const supabase = await createServiceClient();
+  const { getBoardByPublicSlug, getGoalsByBoard } = createServerQueries(supabase);
 
   // Get board by public_slug
-  const { data: board, error } = await supabase
-    .from("boards")
-    .select("*")
-    .eq("public_slug", publicSlug)
-    .eq("is_public", true)
-    .single();
+  const board = await getBoardByPublicSlug(publicSlug);
 
-  if (error || !board) {
+  if (!board) {
     notFound();
   }
 
   // Get goals for this board
-  const { data: goals } = await supabase
-    .from("goals")
-    .select("*")
-    .eq("board_id", board.id)
-    .order("sort_order", { ascending: true });
+  const goals = await getGoalsByBoard(board.id);
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,7 +50,7 @@ export default async function PublicBoardPage({
         </div>
       </header>
       <main className="container mx-auto px-4 py-8">
-        <PublicBoardView board={board} goals={goals ?? []} />
+        <PublicBoardView board={board} goals={goals} />
       </main>
     </div>
   );

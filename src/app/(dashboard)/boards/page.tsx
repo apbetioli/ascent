@@ -1,4 +1,5 @@
 import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
+import { createServerQueries } from "@/lib/supabase/server-queries";
 import { BoardsList } from "@/components/dashboard/boards-list";
 import { CreateBoardDialog } from "@/components/dashboard/create-board-dialog";
 
@@ -9,13 +10,10 @@ export const metadata = {
 export default async function BoardsPage() {
   const supabase = await createClient();
   const user = await getAuthenticatedUser(supabase);
+  const { getBoards } = createServerQueries(supabase);
 
   // Get user's boards (single board created only on signup via DB trigger)
-  const { data: boards } = await supabase
-    .from("boards")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+  const boards = await getBoards(user.id);
 
   return (
     <div className="space-y-6">
@@ -29,7 +27,7 @@ export default async function BoardsPage() {
         <CreateBoardDialog />
       </div>
 
-      <BoardsList boards={boards ?? []} />
+      <BoardsList boards={boards} />
     </div>
   );
 }

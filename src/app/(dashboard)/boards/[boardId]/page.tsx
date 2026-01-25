@@ -2,6 +2,7 @@ import { BoardHeader } from "@/components/dashboard/board-header";
 import { CreateGoalDialog } from "@/components/dashboard/create-goal-dialog";
 import { GoalsList } from "@/components/dashboard/goals-list";
 import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
+import { createServerQueries } from "@/lib/supabase/server-queries";
 import { notFound } from "next/navigation";
 
 interface BoardPageProps {
@@ -11,11 +12,8 @@ interface BoardPageProps {
 export async function generateMetadata({ params }: BoardPageProps) {
   const { boardId } = await params;
   const supabase = await createClient();
-  const { data: board } = await supabase
-    .from("boards")
-    .select("name")
-    .eq("id", boardId)
-    .single<{ name: string }>();
+  const { getBoard } = createServerQueries(supabase);
+  const board = await getBoard(boardId);
 
   return {
     title: board?.name ?? "Board",
@@ -26,36 +24,28 @@ export default async function BoardPage({ params }: BoardPageProps) {
   const { boardId } = await params;
   const supabase = await createClient();
   const user = await getAuthenticatedUser(supabase);
+  const { getBoard, getGoalsByBoard } = createServerQueries(supabase);
 
   // Get board with goals
-  const { data: board, error } = await supabase
-    .from("boards")
-    .select("*")
-    .eq("id", boardId)
-    .eq("user_id", user.id)
-    .single();
+  const board = await getBoard(boardId, user.id);
 
-  if (error || !board) {
+  if (!board) {
     notFound();
   }
 
   // Get goals for this board
-  const { data: goals } = await supabase
-    .from("goals")
-    .select("*")
-    .eq("board_id", boardId)
-    .order("sort_order", { ascending: true });
+  const goals = await getGoalsByBoard(boardId);
 
   return (
     <div className="space-y-6">
       <BoardHeader board={board}>
         <CreateGoalDialog
           boardId={boardId}
-          existingGoalsCount={goals?.length ?? 0}
+          existingGoalsCount={goals.length}
         />
       </BoardHeader>
 
-      <GoalsList goals={goals ?? []} boardId={boardId} />
+      <GoalsList goals={goals} boardId={boardId} />
     </div>
   );
 }

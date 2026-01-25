@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { createServerQueries } from "@/lib/supabase/server-queries";
 import { withApiAuth, apiSuccess, apiError } from "@/lib/api";
 import { updateRecordSchema } from "@/lib/validations";
 
@@ -13,17 +14,11 @@ export const PUT = withApiAuth(async ({ userId, request }) => {
   const recordId = pathParts[pathParts.indexOf("records") + 1];
 
   const supabase = await createServiceClient();
+  const { verifyRecordOwnership, updateRecord } = createServerQueries(supabase);
 
   // Verify record ownership
-  const { data: existingRecord } = await supabase
-    .from("records")
-    .select("id, goal_id")
-    .eq("id", recordId)
-    .eq("goal_id", goalId)
-    .eq("user_id", userId)
-    .single();
-
-  if (!existingRecord) {
+  const isOwner = await verifyRecordOwnership(recordId, goalId, userId);
+  if (!isOwner) {
     return apiError("Record not found", 404);
   }
 
@@ -50,18 +45,12 @@ export const PUT = withApiAuth(async ({ userId, request }) => {
     return apiError("No updates provided", 400);
   }
 
-  const { data: record, error } = await supabase
-    .from("records")
-    .update(updates)
-    .eq("id", recordId)
-    .select()
-    .single();
-
-  if (error) {
+  try {
+    const record = await updateRecord(recordId, updates);
+    return apiSuccess({ record });
+  } catch (error) {
     return apiError("Failed to update record", 500);
   }
-
-  return apiSuccess({ record });
 });
 
 /**
@@ -75,25 +64,18 @@ export const DELETE = withApiAuth(async ({ userId, request }) => {
   const recordId = pathParts[pathParts.indexOf("records") + 1];
 
   const supabase = await createServiceClient();
+  const { verifyRecordOwnership, deleteRecord } = createServerQueries(supabase);
 
   // Verify record ownership
-  const { data: existingRecord } = await supabase
-    .from("records")
-    .select("id")
-    .eq("id", recordId)
-    .eq("goal_id", goalId)
-    .eq("user_id", userId)
-    .single();
-
-  if (!existingRecord) {
+  const isOwner = await verifyRecordOwnership(recordId, goalId, userId);
+  if (!isOwner) {
     return apiError("Record not found", 404);
   }
 
-  const { error } = await supabase.from("records").delete().eq("id", recordId);
-
-  if (error) {
+  try {
+    await deleteRecord(recordId);
+    return apiSuccess({ success: true });
+  } catch (error) {
     return apiError("Failed to delete record", 500);
   }
-
-  return apiSuccess({ success: true });
 });

@@ -1,5 +1,6 @@
 import { DashboardNav } from "@/components/dashboard/nav";
 import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
+import { createServerQueries } from "@/lib/supabase/server-queries";
 import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
@@ -9,17 +10,14 @@ export default async function DashboardLayout({
 }) {
   const supabase = await createClient();
   const user = await getAuthenticatedUser(supabase);
+  const { getProfile } = createServerQueries(supabase);
 
   // Get user profile
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  const profile = await getProfile(user.id);
 
   // Check if user has paid
   // If profile doesn't exist or hasn't paid, redirect to pricing
-  if (profileError || !profile?.has_paid) {
+  if (!profile?.has_paid) {
     redirect("/#pricing");
   }
 

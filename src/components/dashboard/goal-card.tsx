@@ -13,6 +13,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -21,7 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSupabase } from "@/lib/hooks/use-supabase";
 import type { Tables } from "@/lib/supabase/types";
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Code, Copy, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -36,10 +43,17 @@ export function GoalCard({ goal }: GoalCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showAddRecordDialog, setShowAddRecordDialog] = useState(false);
+  const [showEmbedDialog, setShowEmbedDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const router = useRouter();
   const { deleteGoal } = useSupabase();
+
+  const handleCopyEmbedCode = () => {
+    const embedCode = `<iframe src="${process.env.NEXT_PUBLIC_APP_URL}/embed/${goal.embed_id}" width="400" height="200" frameborder="0" style="border-radius: 8px;"></iframe>`;
+    navigator.clipboard.writeText(embedCode);
+    toast.success("Embed code copied to clipboard!");
+  };
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -72,6 +86,10 @@ export function GoalCard({ goal }: GoalCardProps) {
         <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
           <Pencil className="mr-2 h-4 w-4" />
           Edit Goal
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setShowEmbedDialog(true)}>
+          <Code className="mr-2 h-4 w-4" />
+          Embed Goal
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -130,6 +148,28 @@ export function GoalCard({ goal }: GoalCardProps) {
         open={showAddRecordDialog}
         onOpenChange={setShowAddRecordDialog}
       />
+
+      <Dialog open={showEmbedDialog} onOpenChange={setShowEmbedDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Embed Goal Widget</DialogTitle>
+            <DialogDescription>
+              Copy the code below to embed this goal on your website.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 bg-muted rounded-md">
+              <code className="text-xs break-all">
+                {`<iframe src="${process.env.NEXT_PUBLIC_APP_URL}/embed/${goal.embed_id}" width="400" height="200" frameborder="0" style="border-radius: 8px;"></iframe>`}
+              </code>
+            </div>
+            <Button onClick={handleCopyEmbedCode} className="w-full">
+              <Copy className="mr-2 h-4 w-4" />
+              Copy Embed Code
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

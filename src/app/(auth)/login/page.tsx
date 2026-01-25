@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/hooks/use-supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +29,7 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
-  const supabase = createClient();
+  const { signInWithOtp, signInWithOAuth } = useSupabase();
 
   // Pre-fill email from URL parameter
   useEffect(() => {
@@ -43,21 +43,15 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
-        },
+      await signInWithOtp(email, {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
       });
-
-      if (error) {
-        toast.error(error.message);
-      } else {
-        setMagicLinkSent(true);
-        toast.success("Check your email for the magic link!");
-      }
-    } catch {
-      toast.error("An unexpected error occurred");
+      setMagicLinkSent(true);
+      toast.success("Check your email for the magic link!");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unexpected error occurred";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -67,19 +61,14 @@ export default function LoginPage() {
     setIsGoogleLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
-        },
-      });
-
-      if (error) {
-        toast.error(error.message);
-        setIsGoogleLoading(false);
-      }
-    } catch {
-      toast.error("An unexpected error occurred");
+      await signInWithOAuth(
+        "google",
+        `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`
+      );
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unexpected error occurred";
+      toast.error(errorMessage);
       setIsGoogleLoading(false);
     }
   };

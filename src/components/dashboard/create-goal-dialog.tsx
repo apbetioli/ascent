@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/hooks/use-supabase";
 import type { Tables } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
 import { GOAL_COLORS, getNextColor } from "@/lib/utils/colors";
@@ -75,7 +75,12 @@ export function CreateGoalDialog({
   );
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  const {
+    getUser,
+    createGoal,
+    updateGoal,
+    createRecord,
+  } = useSupabase();
 
   // Reset form when goal changes (edit mode)
   useEffect(() => {
@@ -133,9 +138,7 @@ export function CreateGoalDialog({
     setIsLoading(true);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getUser();
 
       if (!user) {
         toast.error("You must be logged in");
@@ -144,23 +147,14 @@ export function CreateGoalDialog({
 
       if (isEditMode && goal) {
         // Update existing goal
-        const { error } = await supabase
-          .from("goals")
-          .update({
-            name: name.trim(),
-            target_amount: target,
-            deadline: deadline ? deadline.getTime() : null,
-            recurrence,
-            format: amountFormat,
-            color,
-          })
-          .eq("id", goal.id);
-
-        if (error) {
-          toast.error("Failed to update goal");
-          console.error(error);
-          return;
-        }
+        await updateGoal(goal.id, {
+          name: name.trim(),
+          target_amount: target,
+          deadline: deadline ? deadline.getTime() : null,
+          recurrence,
+          format: amountFormat,
+          color,
+        });
 
         toast.success("Goal updated successfully");
         setOpen(false);
@@ -168,40 +162,29 @@ export function CreateGoalDialog({
       } else {
         // Create new goal
         const initial = initialAmount ? parseFloat(initialAmount) : 0;
-        const { data: newGoal, error: goalError } = await supabase
-          .from("goals")
-          .insert({
-            board_id: boardId,
-            user_id: user.id,
-            name: name.trim(),
-            target_amount: target,
-            current_amount: 0, // Will be updated by trigger if we add initial record
-            deadline: deadline ? deadline.getTime() : null,
-            recurrence,
-            format: amountFormat,
-            color,
-            sort_order: existingGoalsCount,
-          })
-          .select()
-          .single();
-
-        if (goalError) {
-          toast.error("Failed to create goal");
-          console.error(goalError);
-          return;
-        }
+        const newGoal = await createGoal({
+          board_id: boardId,
+          user_id: user.id,
+          name: name.trim(),
+          target_amount: target,
+          deadline: deadline ? deadline.getTime() : null,
+          recurrence,
+          format: amountFormat,
+          color,
+          sort_order: existingGoalsCount,
+        });
 
         // If there's an initial amount, create an initial record
         if (initial > 0 && newGoal) {
-          const { error: recordError } = await supabase.from("records").insert({
-            goal_id: newGoal.id,
-            user_id: user.id,
-            amount: initial,
-            description: "Initial amount",
-            timestamp: Date.now(),
-          });
-
-          if (recordError) {
+          try {
+            await createRecord({
+              goal_id: newGoal.id,
+              user_id: user.id,
+              amount: initial,
+              description: "Initial amount",
+              timestamp: Date.now(),
+            });
+          } catch (recordError) {
             console.error("Failed to create initial record:", recordError);
             // Goal was created, just warn about the record
             toast.warning(

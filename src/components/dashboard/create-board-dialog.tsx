@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/hooks/use-supabase";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,7 +23,7 @@ export function CreateBoardDialog() {
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  const { getUser, createBoard } = useSupabase();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,30 +36,18 @@ export function CreateBoardDialog() {
     setIsLoading(true);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getUser();
 
       if (!user) {
         toast.error("You must be logged in");
         return;
       }
 
-      const { data: board, error } = await supabase
-        .from("boards")
-        .insert({
-          user_id: user.id,
-          name: name.trim(),
-          theme: "default",
-        })
-        .select()
-        .single();
-
-      if (error) {
-        toast.error("Failed to create board");
-        console.error(error);
-        return;
-      }
+      const board = await createBoard({
+        user_id: user.id,
+        name: name.trim(),
+        theme: "default",
+      });
 
       toast.success("Board created successfully");
       setOpen(false);

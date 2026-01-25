@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/hooks/use-supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,27 +76,24 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
   const [newToken, setNewToken] = useState<string | null>(null);
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  const { updateProfile, deleteApiToken, createApiToken } = useSupabase();
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
+    try {
+      await updateProfile(user.id, {
         name: name.trim(),
         timezone,
-      })
-      .eq("id", user.id);
-
-    if (error) {
-      toast.error("Failed to save settings");
-    } else {
+      });
       toast.success("Settings saved");
       router.refresh();
+    } catch (error) {
+      toast.error("Failed to save settings");
+      console.error(error);
+    } finally {
+      setIsSaving(false);
     }
-
-    setIsSaving(false);
   };
 
   const handleCreateToken = async () => {
@@ -108,18 +105,7 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
     setIsCreatingToken(true);
 
     try {
-      const response = await fetch("/api/tokens", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newTokenName.trim() }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create token");
-      }
-
+      const data = await createApiToken(newTokenName.trim());
       setNewToken(data.token);
       setNewTokenName("");
       router.refresh();
@@ -132,16 +118,13 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
   };
 
   const handleDeleteToken = async (tokenId: string) => {
-    const { error } = await supabase
-      .from("api_tokens")
-      .delete()
-      .eq("id", tokenId);
-
-    if (error) {
-      toast.error("Failed to delete token");
-    } else {
+    try {
+      await deleteApiToken(tokenId);
       toast.success("Token deleted");
       router.refresh();
+    } catch (error) {
+      toast.error("Failed to delete token");
+      console.error(error);
     }
   };
 

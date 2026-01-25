@@ -41,7 +41,7 @@ export function CreateBoardDialog() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        toast.error("You must be logged in to create a board");
+        toast.error("You must be logged in");
         return;
       }
 

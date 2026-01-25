@@ -1,5 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import type { Database } from "./types";
 
 export async function createClient() {
@@ -41,4 +43,26 @@ export async function createServiceClient() {
       },
     }
   );
+}
+
+/**
+ * Get the authenticated user, redirecting to login if not authenticated.
+ * This is a convenience function to avoid duplicating auth checks across server components.
+ *
+ * @param supabase - Optional Supabase client. If not provided, a new client will be created.
+ * @returns The authenticated user (never null, as it redirects if unauthenticated).
+ */
+export async function getAuthenticatedUser(
+  supabase?: Awaited<ReturnType<typeof createClient>>
+): Promise<User> {
+  const client = supabase ?? (await createClient());
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  return user;
 }

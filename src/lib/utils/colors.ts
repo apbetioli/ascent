@@ -11,7 +11,6 @@ export const GOAL_COLORS = [
   "#EC4899", // pink
   "#F43F5E", // rose
   "#64748B", // slate
-  "#78716C", // stone
 ] as const;
 
 export type GoalColor = (typeof GOAL_COLORS)[number];

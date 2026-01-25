@@ -1,5 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { SettingsPage } from "@/components/dashboard/settings-page";
 
 export const metadata = {
@@ -8,14 +7,7 @@ export const metadata = {
 
 export default async function Settings() {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  const user = await getAuthenticatedUser(supabase);
 
   // Get user profile
   const { data: profile } = await supabase

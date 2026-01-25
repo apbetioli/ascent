@@ -18,6 +18,9 @@ function Progress({
   style,
   ...props
 }: ProgressProps) {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
   const { theme, resolvedTheme } = useTheme();
   const progressColor = "var(--progress-background, hsl(var(--primary)))";
   const normalizedValue = Math.min(value || 0, 100);
@@ -25,12 +28,14 @@ function Progress({
     surpassedValue && surpassedValue > 100
       ? Math.min(surpassedValue - 100, 100)
       : 0;
-  
+
   // Determine if we're in dark mode
-  const isDark = resolvedTheme === "dark" || (resolvedTheme === undefined && theme === "dark");
+  const isDark =
+    resolvedTheme === "dark" ||
+    (resolvedTheme === undefined && theme === "dark");
   // Use light lines for light mode, dark lines for dark mode
-  const textureColor = isDark 
-    ? "rgba(0, 0, 0, 0.5)" 
+  const textureColor = isDark
+    ? "rgba(0, 0, 0, 0.5)"
     : "rgba(255, 255, 255, 0.5)";
 
   return (
@@ -59,8 +64,8 @@ function Progress({
           backgroundColor: progressColor,
         }}
       />
-      {/* Surpassed portion with texture - only on the surpassed part (>100%) */}
-      {surpassed > 0 && (
+      {/* Surpassed portion with texture - only on the surpassed part (>100%). Rendered after mount to avoid hydration mismatch (theme, float precision, style serialization). */}
+      {mounted && surpassed > 0 && (
         <div
           className="absolute z-40 h-full transition-all rounded-full"
           data-surpassed={surpassed}

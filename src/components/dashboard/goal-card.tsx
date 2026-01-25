@@ -26,7 +26,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AddRecordDialog } from "./add-record-dialog";
-import { EditGoalDialog } from "./edit-goal-dialog";
+import { CreateGoalDialog } from "./create-goal-dialog";
 
 interface GoalCardProps {
   goal: Tables<"goals">;
@@ -116,7 +116,9 @@ export function GoalCard({ goal }: GoalCardProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <EditGoalDialog
+      <CreateGoalDialog
+        boardId={goal.board_id}
+        existingGoalsCount={0}
         goal={goal}
         open={showEditDialog}
         onOpenChange={setShowEditDialog}

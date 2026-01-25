@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { createServerQueries } from "@/lib/supabase/server-queries";
 import { createHash } from "crypto";
 
 /**
@@ -34,12 +35,9 @@ export async function authenticateApiRequest(
   const hashedToken = hashToken(token);
 
   const supabase = await createServiceClient();
+  const { getApiTokenByHash } = createServerQueries(supabase);
 
-  const { data: apiToken } = await supabase
-    .from("api_tokens")
-    .select("user_id")
-    .eq("hashed_token", hashedToken)
-    .single();
+  const apiToken = await getApiTokenByHash(hashedToken);
 
   return apiToken?.user_id ?? null;
 }

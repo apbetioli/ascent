@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { createServerQueries } from "@/lib/supabase/server-queries";
 import { withApiAuth, apiSuccess, apiError } from "@/lib/api";
 
 /**
@@ -7,30 +8,9 @@ import { withApiAuth, apiSuccess, apiError } from "@/lib/api";
  */
 export const GET = withApiAuth(async ({ userId }) => {
   const supabase = await createServiceClient();
+  const { getGoalsByUser } = createServerQueries(supabase);
 
-  const { data: goals, error } = await supabase
-    .from("goals")
-    .select(`
-      id,
-      embed_id,
-      board_id,
-      name,
-      target_amount,
-      current_amount,
-      deadline,
-      recurrence,
-      format,
-      color,
-      sort_order,
-      created_at,
-      updated_at
-    `)
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    return apiError("Failed to fetch goals", 500);
-  }
+  const goals = await getGoalsByUser(userId);
 
   return apiSuccess({ goals });
 });

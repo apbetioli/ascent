@@ -128,7 +128,8 @@ export function GoalProgressDisplay({
           </div>
           <Progress
             value={Math.min(percentage, 100)}
-            className="h-2"
+            surpassedValue={isSurpassed ? percentage : undefined}
+            className="h-3"
             style={
               {
                 "--progress-background": goal.color,

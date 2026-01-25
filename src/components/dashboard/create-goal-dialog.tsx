@@ -29,43 +29,83 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { GOAL_COLORS, getNextColor } from "@/lib/utils/colors";
 import type { Recurrence } from "@/lib/utils/progress";
+import type { Tables } from "@/lib/supabase/types";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, Plus } from "lucide-react";
+import { CalendarIcon, Loader2, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 interface CreateGoalDialogProps {
   boardId: string;
   existingGoalsCount: number;
+  goal?: Tables<"goals">;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function CreateGoalDialog({
   boardId,
   existingGoalsCount,
+  goal,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: CreateGoalDialogProps) {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [targetAmount, setTargetAmount] = useState("");
-  const [initialAmount, setInitialAmount] = useState("");
-  const [deadline, setDeadline] = useState<Date | undefined>(undefined);
-  const [recurrence, setRecurrence] = useState<Recurrence>("none");
-  const [amountFormat, setAmountFormat] = useState<"number" | "currency">(
-    "number"
+  const isEditMode = !!goal;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = controlledOnOpenChange ?? setInternalOpen;
+
+  const [name, setName] = useState(goal?.name ?? "");
+  const [targetAmount, setTargetAmount] = useState(
+    goal?.target_amount.toString() ?? ""
   );
-  const [color, setColor] = useState(getNextColor(existingGoalsCount));
+  const [initialAmount, setInitialAmount] = useState("");
+  const [deadline, setDeadline] = useState<Date | undefined>(
+    goal?.deadline ? new Date(goal.deadline) : undefined
+  );
+  const [recurrence, setRecurrence] = useState<Recurrence>(
+    (goal?.recurrence as Recurrence) ?? "none"
+  );
+  const [amountFormat, setAmountFormat] = useState<"number" | "currency">(
+    goal?.format ?? "number"
+  );
+  const [color, setColor] = useState(
+    goal?.color ?? getNextColor(existingGoalsCount)
+  );
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
+  // Reset form when goal changes (edit mode)
+  useEffect(() => {
+    if (goal) {
+      setName(goal.name);
+      setTargetAmount(goal.target_amount.toString());
+      setDeadline(goal.deadline ? new Date(goal.deadline) : undefined);
+      setRecurrence(goal.recurrence as Recurrence);
+      setAmountFormat(goal.format ?? "number");
+      setColor(goal.color);
+    }
+  }, [goal]);
+
   const resetForm = () => {
-    setName("");
-    setTargetAmount("");
-    setInitialAmount("");
-    setDeadline(undefined);
-    setRecurrence("none");
-    setAmountFormat("number");
-    setColor(getNextColor(existingGoalsCount));
+    if (isEditMode && goal) {
+      setName(goal.name);
+      setTargetAmount(goal.target_amount.toString());
+      setDeadline(goal.deadline ? new Date(goal.deadline) : undefined);
+      setRecurrence(goal.recurrence as Recurrence);
+      setAmountFormat(goal.format ?? "number");
+      setColor(goal.color);
+    } else {
+      setName("");
+      setTargetAmount("");
+      setInitialAmount("");
+      setDeadline(undefined);
+      setRecurrence("none");
+      setAmountFormat("number");
+      setColor(getNextColor(existingGoalsCount));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,10 +122,12 @@ export function CreateGoalDialog({
       return;
     }
 
-    const initial = initialAmount ? parseFloat(initialAmount) : 0;
-    if (isNaN(initial) || initial < 0) {
-      toast.error("Please enter a valid initial amount");
-      return;
+    if (!isEditMode) {
+      const initial = initialAmount ? parseFloat(initialAmount) : 0;
+      if (isNaN(initial) || initial < 0) {
+        toast.error("Please enter a valid initial amount");
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -100,53 +142,81 @@ export function CreateGoalDialog({
         return;
       }
 
-      // Create the goal
-      const { data: goal, error: goalError } = await supabase
-        .from("goals")
-        .insert({
-          board_id: boardId,
-          user_id: user.id,
-          name: name.trim(),
-          target_amount: target,
-          current_amount: 0, // Will be updated by trigger if we add initial record
-          deadline: deadline ? deadline.getTime() : null,
-          recurrence,
-          format: amountFormat,
-          color,
-          sort_order: existingGoalsCount,
-        })
-        .select()
-        .single();
+      if (isEditMode && goal) {
+        // Update existing goal
+        const { error } = await supabase
+          .from("goals")
+          .update({
+            name: name.trim(),
+            target_amount: target,
+            deadline: deadline ? deadline.getTime() : null,
+            recurrence,
+            format: amountFormat,
+            color,
+          })
+          .eq("id", goal.id);
 
-      if (goalError) {
-        toast.error("Failed to create goal");
-        console.error(goalError);
-        return;
-      }
-
-      // If there's an initial amount, create an initial record
-      if (initial > 0 && goal) {
-        const { error: recordError } = await supabase.from("records").insert({
-          goal_id: goal.id,
-          user_id: user.id,
-          amount: initial,
-          description: "Initial amount",
-          timestamp: Date.now(),
-        });
-
-        if (recordError) {
-          console.error("Failed to create initial record:", recordError);
-          // Goal was created, just warn about the record
-          toast.warning(
-            "Goal created but failed to set initial amount. You can add it manually."
-          );
+        if (error) {
+          toast.error("Failed to update goal");
+          console.error(error);
+          return;
         }
-      }
 
-      toast.success("Goal created successfully");
-      setOpen(false);
-      resetForm();
-      router.refresh();
+        toast.success("Goal updated successfully");
+        setOpen(false);
+        router.refresh();
+      } else {
+        // Create new goal
+        const initial = initialAmount ? parseFloat(initialAmount) : 0;
+        const { data: newGoal, error: goalError } = await supabase
+          .from("goals")
+          .insert({
+            board_id: boardId,
+            user_id: user.id,
+            name: name.trim(),
+            target_amount: target,
+            current_amount: 0, // Will be updated by trigger if we add initial record
+            deadline: deadline ? deadline.getTime() : null,
+            recurrence,
+            format: amountFormat,
+            color,
+            sort_order: existingGoalsCount,
+          })
+          .select()
+          .single();
+
+        if (goalError) {
+          toast.error("Failed to create goal");
+          console.error(goalError);
+          return;
+        }
+
+        // If there's an initial amount, create an initial record
+        if (initial > 0 && newGoal) {
+          const { error: recordError } = await supabase
+            .from("records")
+            .insert({
+              goal_id: newGoal.id,
+              user_id: user.id,
+              amount: initial,
+              description: "Initial amount",
+              timestamp: Date.now(),
+            });
+
+          if (recordError) {
+            console.error("Failed to create initial record:", recordError);
+            // Goal was created, just warn about the record
+            toast.warning(
+              "Goal created but failed to set initial amount. You can add it manually."
+            );
+          }
+        }
+
+        toast.success("Goal created successfully");
+        setOpen(false);
+        resetForm();
+        router.refresh();
+      }
     } catch (error) {
       toast.error("An unexpected error occurred");
       console.error(error);
@@ -155,35 +225,31 @@ export function CreateGoalDialog({
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          New Goal
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Create New Goal</DialogTitle>
-            <DialogDescription>
-              Set up a new goal to track your progress.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Goal Name</Label>
-              <Input
-                id="name"
-                placeholder="e.g., Save for vacation"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={isLoading}
-                autoFocus
-              />
-            </div>
+  const dialogContent = (
+    <DialogContent className="sm:max-w-[500px]">
+      <form onSubmit={handleSubmit}>
+        <DialogHeader>
+          <DialogTitle>{isEditMode ? "Edit Goal" : "Create New Goal"}</DialogTitle>
+          <DialogDescription>
+            {isEditMode
+              ? "Update your goal settings."
+              : "Set up a new goal to track your progress."}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor={isEditMode ? "edit-name" : "name"}>Goal Name</Label>
+            <Input
+              id={isEditMode ? "edit-name" : "name"}
+              placeholder="e.g., Save for vacation"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={isLoading}
+              autoFocus={!isEditMode}
+            />
+          </div>
 
+          {!isEditMode ? (
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="target">Target Amount</Label>
@@ -212,55 +278,71 @@ export function CreateGoalDialog({
                 />
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label>Format</Label>
-                <Select
-                  value={amountFormat}
-                  onValueChange={(value) =>
-                    setAmountFormat(value as "number" | "currency")
-                  }
-                  disabled={isLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="number">Number</SelectItem>
-                    <SelectItem value="currency">Currency</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label>Recurrence</Label>
-                <Select
-                  value={recurrence}
-                  onValueChange={(value) => setRecurrence(value as Recurrence)}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select recurrence" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
+          ) : (
             <div className="grid gap-2">
-              <Label>Deadline (optional)</Label>
+              <Label htmlFor="edit-target">Target Amount</Label>
+              <Input
+                id="edit-target"
+                type="number"
+                placeholder="10000"
+                value={targetAmount}
+                onChange={(e) => setTargetAmount(e.target.value)}
+                disabled={isLoading}
+                min="0"
+                step="any"
+              />
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label>Format</Label>
+              <Select
+                value={amountFormat}
+                onValueChange={(value) =>
+                  setAmountFormat(value as "number" | "currency")
+                }
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="number">Number</SelectItem>
+                  <SelectItem value="currency">Currency</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Recurrence</Label>
+              <Select
+                value={recurrence}
+                onValueChange={(value) => setRecurrence(value as Recurrence)}
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select recurrence" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Deadline (optional)</Label>
+            <div className="flex gap-2">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "justify-start text-left font-normal",
+                      "flex-1 justify-start text-left font-normal",
                       !deadline && "text-muted-foreground"
                     )}
                     disabled={isLoading}
@@ -275,52 +357,77 @@ export function CreateGoalDialog({
                     selected={deadline}
                     onSelect={setDeadline}
                     initialFocus
-                    disabled={(date) => date < new Date()}
+                    disabled={isEditMode ? undefined : (date) => date < new Date()}
                   />
                 </PopoverContent>
               </Popover>
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Color</Label>
-              <div className="flex flex-wrap gap-2">
-                {GOAL_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className={cn(
-                      "w-8 h-8 rounded-full transition-all",
-                      color === c
-                        ? "ring-2 ring-offset-2 ring-primary scale-110"
-                        : "hover:scale-105"
-                    )}
-                    style={{ backgroundColor: c }}
-                    onClick={() => setColor(c)}
-                    disabled={isLoading}
-                  />
-                ))}
-              </div>
+              {deadline && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setDeadline(undefined)}
+                  disabled={isLoading}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setOpen(false);
-                resetForm();
-              }}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading || !name.trim()}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Goal
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+
+          <div className="grid gap-2">
+            <Label>Color</Label>
+            <div className="flex flex-wrap gap-2">
+              {GOAL_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={cn(
+                    "w-8 h-8 rounded-full transition-all",
+                    color === c
+                      ? "ring-2 ring-offset-2 ring-primary scale-110"
+                      : "hover:scale-105"
+                  )}
+                  style={{ backgroundColor: c }}
+                  onClick={() => setColor(c)}
+                  disabled={isLoading}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setOpen(false);
+              resetForm();
+            }}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isLoading || !name.trim()}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isEditMode ? "Save" : "Create Goal"}
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      {!isEditMode && (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            New Goal
+          </Button>
+        </DialogTrigger>
+      )}
+      {dialogContent}
     </Dialog>
   );
 }

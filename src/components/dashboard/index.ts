@@ -5,6 +5,5 @@ export { CreateBoardDialog } from "./create-board-dialog";
 export { GoalsList } from "./goals-list";
 export { GoalCard } from "./goal-card";
 export { CreateGoalDialog } from "./create-goal-dialog";
-export { EditGoalDialog } from "./edit-goal-dialog";
 export { AddRecordDialog } from "./add-record-dialog";
 export { SettingsPage } from "./settings-page";

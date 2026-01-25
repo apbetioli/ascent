@@ -3,7 +3,7 @@ import { BoardsList } from "@/components/dashboard/boards-list";
 import { CreateBoardDialog } from "@/components/dashboard/create-board-dialog";
 
 export const metadata = {
-  title: "My Boards",
+  title: "Boards",
 };
 
 export default async function BoardsPage() {
@@ -21,7 +21,7 @@ export default async function BoardsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Boards</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Boards</h1>
           <p className="text-muted-foreground">
             Organize your goals into boards
           </p>

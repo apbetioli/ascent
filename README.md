@@ -7,7 +7,7 @@ A beautiful and simple goal tracking app built with Next.js, Supabase, and Strip
 - **Visual Progress Tracking** - Beautiful progress bars with color customization
 - **Forward & Reverse Goals** - Track savings (increasing) or debt payoff (decreasing)
 - **Recurring Goals** - Daily, weekly, monthly, or yearly goals with automatic reset
-- **Deadlines** - Set target dates and see countdown
+- **Due Dates** - Set target dates and see countdown
 - **Public Boards** - Share your progress with others via unique URL
 - **Embeddable Widgets** - Embed goal progress on any website
 - **Real-time Updates** - See changes instantly across all devices

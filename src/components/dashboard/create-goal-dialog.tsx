@@ -318,7 +318,7 @@ export function CreateGoalDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label>Deadline (optional)</Label>
+            <Label>Due Date (optional)</Label>
             <div className="flex gap-2">
               <Popover>
                 <PopoverTrigger asChild>
@@ -331,7 +331,7 @@ export function CreateGoalDialog({
                     disabled={isLoading}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {deadline ? format(deadline, "PPP") : "Pick a deadline"}
+                    {deadline ? format(deadline, "PPP") : "Pick a due date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">

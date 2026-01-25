@@ -26,14 +26,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
+import type { Tables } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
 import { GOAL_COLORS, getNextColor } from "@/lib/utils/colors";
 import type { Recurrence } from "@/lib/utils/progress";
-import type { Tables } from "@/lib/supabase/types";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface CreateGoalDialogProps {
@@ -193,15 +193,13 @@ export function CreateGoalDialog({
 
         // If there's an initial amount, create an initial record
         if (initial > 0 && newGoal) {
-          const { error: recordError } = await supabase
-            .from("records")
-            .insert({
-              goal_id: newGoal.id,
-              user_id: user.id,
-              amount: initial,
-              description: "Initial amount",
-              timestamp: Date.now(),
-            });
+          const { error: recordError } = await supabase.from("records").insert({
+            goal_id: newGoal.id,
+            user_id: user.id,
+            amount: initial,
+            description: "Initial amount",
+            timestamp: Date.now(),
+          });
 
           if (recordError) {
             console.error("Failed to create initial record:", recordError);
@@ -229,7 +227,9 @@ export function CreateGoalDialog({
     <DialogContent className="sm:max-w-[500px]">
       <form onSubmit={handleSubmit}>
         <DialogHeader>
-          <DialogTitle>{isEditMode ? "Edit Goal" : "Create New Goal"}</DialogTitle>
+          <DialogTitle>
+            {isEditMode ? "Edit Goal" : "Create New Goal"}
+          </DialogTitle>
           <DialogDescription>
             {isEditMode
               ? "Update your goal settings."
@@ -314,7 +314,7 @@ export function CreateGoalDialog({
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Recurrence</Label>
+              <Label>Recurring</Label>
               <Select
                 value={recurrence}
                 onValueChange={(value) => setRecurrence(value as Recurrence)}
@@ -356,8 +356,10 @@ export function CreateGoalDialog({
                     mode="single"
                     selected={deadline}
                     onSelect={setDeadline}
-                    initialFocus
-                    disabled={isEditMode ? undefined : (date) => date < new Date()}
+                    autoFocus
+                    disabled={
+                      isEditMode ? undefined : (date) => date < new Date()
+                    }
                   />
                 </PopoverContent>
               </Popover>

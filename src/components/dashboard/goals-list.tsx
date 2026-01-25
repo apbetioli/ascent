@@ -1,18 +1,17 @@
 "use client";
 
-import { GoalCard } from "./goal-card";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { Target } from "lucide-react";
 import { useRealtimeBoardGoals } from "@/lib/hooks";
 import type { Tables } from "@/lib/supabase/types";
+import { Target } from "lucide-react";
+import { GoalCard } from "./goal-card";
 
 interface GoalsListProps {
   goals: Tables<"goals">[];
   boardId: string;
-  timezone: string;
 }
 
-export function GoalsList({ goals: initialGoals, boardId, timezone }: GoalsListProps) {
+export function GoalsList({ goals: initialGoals, boardId }: GoalsListProps) {
   // Subscribe to real-time updates for all goals on this board
   const goals = useRealtimeBoardGoals(boardId, initialGoals);
 
@@ -34,12 +33,7 @@ export function GoalsList({ goals: initialGoals, boardId, timezone }: GoalsListP
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {sortedGoals.map((goal) => (
-        <GoalCard
-          key={goal.id}
-          goal={goal}
-          boardId={boardId}
-          timezone={timezone}
-        />
+        <GoalCard key={goal.id} goal={goal} />
       ))}
     </div>
   );

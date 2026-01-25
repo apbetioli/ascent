@@ -12,12 +12,7 @@ import {
 import { MoreVertical } from "lucide-react";
 
 // Helper to create mock goal data
-function createMockGoal(
-  overrides: Partial<Tables<"goals">>
-): Tables<"goals"> {
-  const now = Date.now();
-  const oneDay = 24 * 60 * 60 * 1000;
-
+function createMockGoal(overrides: Partial<Tables<"goals">>): Tables<"goals"> {
   return {
     id: "mock-goal-id",
     embed_id: "mock-embed-id",
@@ -38,7 +33,7 @@ function createMockGoal(
 }
 
 export default function GoalProgressDebugPage() {
-  const now = Date.now();
+  const now = new Date().getTime();
   const oneDay = 24 * 60 * 60 * 1000;
 
   const mockContextMenu = (
@@ -65,7 +60,9 @@ export default function GoalProgressDebugPage() {
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-12">
         <div>
-          <h1 className="text-4xl font-bold mb-2">Goal Progress Display - Debug Page</h1>
+          <h1 className="text-4xl font-bold mb-2">
+            Goal Progress Display - Debug Page
+          </h1>
           <p className="text-muted-foreground">
             All possible states of the GoalProgressDisplay component
           </p>
@@ -349,82 +346,6 @@ export default function GoalProgressDebugPage() {
           </div>
         </section>
 
-        {/* Variant States */}
-        <section className="space-y-6">
-          <h2 className="text-2xl font-semibold">Variant States</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                Default Variant
-              </h3>
-              <GoalProgressDisplay
-                goal={createMockGoal({
-                  name: "Default Size",
-                })}
-                variant="default"
-              />
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                Compact Variant
-              </h3>
-              <GoalProgressDisplay
-                goal={createMockGoal({
-                  name: "Compact Size",
-                })}
-                variant="compact"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Show Remaining States */}
-        <section className="space-y-6">
-          <h2 className="text-2xl font-semibold">Show Remaining States</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                Show Remaining (default)
-              </h3>
-              <GoalProgressDisplay
-                goal={createMockGoal({
-                  name: "With Remaining",
-                  current_amount: 500,
-                  showRemaining: true,
-                })}
-              />
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                Hide Remaining
-              </h3>
-              <GoalProgressDisplay
-                goal={createMockGoal({
-                  name: "Without Remaining",
-                  current_amount: 500,
-                  showRemaining: false,
-                })}
-              />
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                Complete Goal (no remaining shown)
-              </h3>
-              <GoalProgressDisplay
-                goal={createMockGoal({
-                  name: "Complete - No Remaining",
-                  current_amount: 1000,
-                  target_amount: 1000,
-                  showRemaining: true,
-                })}
-              />
-            </div>
-          </div>
-        </section>
-
         {/* Color States */}
         <section className="space-y-6">
           <h2 className="text-2xl font-semibold">Color States</h2>
@@ -547,7 +468,6 @@ export default function GoalProgressDebugPage() {
                   recurrence: "monthly",
                   current_amount: 750,
                 })}
-                variant="compact"
               />
             </div>
 

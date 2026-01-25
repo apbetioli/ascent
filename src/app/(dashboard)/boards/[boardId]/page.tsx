@@ -1,8 +1,8 @@
+import { BoardHeader } from "@/components/dashboard/board-header";
+import { CreateGoalDialog } from "@/components/dashboard/create-goal-dialog";
+import { GoalsList } from "@/components/dashboard/goals-list";
 import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import { BoardHeader } from "@/components/dashboard/board-header";
-import { GoalsList } from "@/components/dashboard/goals-list";
-import { CreateGoalDialog } from "@/components/dashboard/create-goal-dialog";
 
 interface BoardPageProps {
   params: Promise<{ boardId: string }>;
@@ -46,13 +46,6 @@ export default async function BoardPage({ params }: BoardPageProps) {
     .eq("board_id", boardId)
     .order("sort_order", { ascending: true });
 
-  // Get user profile for timezone
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("timezone")
-    .eq("id", user.id)
-    .single<{ timezone: string }>();
-
   return (
     <div className="space-y-6">
       <BoardHeader board={board} />
@@ -70,11 +63,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
         />
       </div>
 
-      <GoalsList
-        goals={goals ?? []}
-        boardId={boardId}
-        timezone={profile?.timezone ?? "UTC"}
-      />
+      <GoalsList goals={goals ?? []} boardId={boardId} />
     </div>
   );
 }

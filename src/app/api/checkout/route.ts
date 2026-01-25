@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { paymentProvider } from "@/lib/payments";
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
@@ -16,10 +16,7 @@ export async function POST(req: Request) {
       } = await supabase.auth.getUser();
 
       if (!user || user.id !== userId) {
-        return NextResponse.json(
-          { error: "Unauthorized" },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
 
       const { data: profile } = await supabase

@@ -14,14 +14,12 @@ import {
   calculateProgressPercentage,
   formatDeadlineStatus,
 } from "@/lib/utils/progress";
-import { Calendar, Repeat, Sparkles, Trophy } from "lucide-react";
+import { AlertCircleIcon, Calendar, Repeat, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface GoalProgressDisplayProps {
   goal: Tables<"goals">;
   cardClassName?: string;
-  showRemaining?: boolean;
-  variant?: "default" | "compact";
   contextMenu?: React.ReactNode;
   footer?: React.ReactNode;
 }
@@ -29,8 +27,6 @@ interface GoalProgressDisplayProps {
 export function GoalProgressDisplay({
   goal,
   cardClassName,
-  showRemaining = true,
-  variant = "default",
   contextMenu,
   footer,
 }: GoalProgressDisplayProps) {
@@ -55,22 +51,85 @@ export function GoalProgressDisplay({
   const deadlineStatus = formatDeadlineStatus(goal.deadline);
   const isOverdue = goal.deadline && goal.deadline < currentTime && !isComplete;
 
-  const remaining = Math.max(0, goal.target_amount - goal.current_amount);
+  const getCurrencyFromLocale = (locale: string): string => {
+    // Map common locale patterns to currencies
+    const localeToCurrency: Record<string, string> = {
+      "en-US": "USD",
+      "en-GB": "GBP",
+      "en-CA": "CAD",
+      "en-AU": "AUD",
+      "en-NZ": "NZD",
+      "de-DE": "EUR",
+      "de-AT": "EUR",
+      "de-CH": "CHF",
+      "fr-FR": "EUR",
+      "fr-CA": "CAD",
+      "fr-BE": "EUR",
+      "es-ES": "EUR",
+      "es-MX": "MXN",
+      "es-AR": "ARS",
+      "it-IT": "EUR",
+      "pt-BR": "BRL",
+      "pt-PT": "EUR",
+      "nl-NL": "EUR",
+      "nl-BE": "EUR",
+      "pl-PL": "PLN",
+      "ru-RU": "RUB",
+      "ja-JP": "JPY",
+      "ko-KR": "KRW",
+      "zh-CN": "CNY",
+      "zh-TW": "TWD",
+      "hi-IN": "INR",
+      "sv-SE": "SEK",
+      "no-NO": "NOK",
+      "da-DK": "DKK",
+    };
+
+    // Try exact match first
+    if (localeToCurrency[locale]) {
+      return localeToCurrency[locale];
+    }
+
+    // Try language code match (e.g., "en" -> "USD")
+    const languageCode = locale.split("-")[0];
+    const languageToCurrency: Record<string, string> = {
+      en: "USD",
+      de: "EUR",
+      fr: "EUR",
+      es: "EUR",
+      it: "EUR",
+      pt: "EUR",
+      nl: "EUR",
+      pl: "PLN",
+      ru: "RUB",
+      ja: "JPY",
+      ko: "KRW",
+      zh: "CNY",
+      hi: "INR",
+      sv: "SEK",
+      no: "NOK",
+      da: "DKK",
+    };
+
+    return languageToCurrency[languageCode] || "USD";
+  };
 
   const formatAmount = (amount: number) => {
     if (goal.format === "currency") {
-      return new Intl.NumberFormat("en-US", {
+      const locale =
+        typeof navigator !== "undefined" ? navigator.language : "en-US";
+      const currency = getCurrencyFromLocale(locale);
+      return new Intl.NumberFormat(locale, {
         style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
       }).format(amount);
     }
-    return amount.toLocaleString();
+    const locale =
+      typeof navigator !== "undefined" ? navigator.language : "en-US";
+    return amount.toLocaleString(locale);
   };
-
-  const titleSize = variant === "compact" ? "text-base" : "text-lg";
-  const contentSpacing = variant === "compact" ? "space-y-2" : "space-y-3";
 
   return (
     <Card
@@ -82,23 +141,23 @@ export function GoalProgressDisplay({
     >
       <CardHeader>
         <div className="flex items-center gap-2 -mb-2">
-          <CardTitle className={titleSize}>{goal.name}</CardTitle>
+          <CardTitle className={"text-base"}>{goal.name}</CardTitle>
+          <div className="flex-1" />
           {isSurpassed && (
             <Badge
               variant="default"
-              className="bg-yellow-500 text-yellow-950 gap-1"
+              className="bg-amber-300 text-amber-950 gap-1"
             >
-              <Trophy className="h-3 w-3" />
+              <AlertCircleIcon className="h-3 w-3" />
               Surpassed!
             </Badge>
           )}
           {isComplete && !isSurpassed && (
-            <Badge variant="default" className="bg-green-500 gap-1">
+            <Badge variant="default" className="bg-green-600 gap-1">
               <Sparkles className="h-3 w-3" />
               Complete!
             </Badge>
           )}
-          <div className="flex-1" />
           {contextMenu}
         </div>
         <CardDescription className="flex flex-wrap gap-2 text-xs">
@@ -121,7 +180,7 @@ export function GoalProgressDisplay({
         </CardDescription>
       </CardHeader>
 
-      <CardContent className={contentSpacing}>
+      <CardContent className={"space-y-2"}>
         {/* Progress Bar */}
         <div className="space-y-1">
           <div className="flex justify-between text-sm">
@@ -133,14 +192,11 @@ export function GoalProgressDisplay({
                 / {formatAmount(goal.target_amount)}
               </span>
             </div>
-            <span className="font-medium">
-              {Math.min(Math.round(percentage), 100)}%
-              {isSurpassed && ` (${Math.round(percentage)}%)`}
-            </span>
+            <span className="font-medium">{Math.round(percentage)}%</span>
           </div>
           <Progress
             value={Math.min(percentage, 100)}
-            className="h-2"
+            className="h-4"
             style={
               {
                 "--progress-background": goal.color,
@@ -148,13 +204,6 @@ export function GoalProgressDisplay({
             }
           />
         </div>
-
-        {/* Remaining */}
-        {showRemaining && !isComplete && (
-          <div className="text-sm text-muted-foreground">
-            {formatAmount(remaining)} remaining
-          </div>
-        )}
 
         {footer}
       </CardContent>

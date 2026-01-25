@@ -1,6 +1,6 @@
-import { createServerClient } from "@supabase/ssr";
-import { NextResponse } from "next/server";
 import type { Database } from "@/lib/supabase/types";
+import { CookieOptions, createServerClient } from "@supabase/ssr";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -10,14 +10,18 @@ export async function GET(request: Request) {
   const next = searchParams.get("next") ?? "/boards";
 
   // Create Supabase client for route handler with proper cookie handling
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
 
   // Store cookies as they're set so we can copy them to redirect responses
-  const storedCookies: Array<{ name: string; value: string; options?: any }> = [];
+  const storedCookies: Array<{
+    name: string;
+    value: string;
+    options?: CookieOptions;
+  }> = [];
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,13 +29,15 @@ export async function GET(request: Request) {
     {
       cookies: {
         getAll() {
-          return request.headers
-            .get("cookie")
-            ?.split(";")
-            .map((cookie) => {
-              const [name, ...rest] = cookie.trim().split("=");
-              return { name, value: rest.join("=") };
-            }) || [];
+          return (
+            request.headers
+              .get("cookie")
+              ?.split(";")
+              .map((cookie) => {
+                const [name, ...rest] = cookie.trim().split("=");
+                return { name, value: rest.join("=") };
+              }) || []
+          );
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
@@ -48,7 +54,13 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      return await handleSuccessfulAuth(supabase, origin, next, request, storedCookies);
+      return await handleSuccessfulAuth(
+        supabase,
+        origin,
+        next,
+        request,
+        storedCookies
+      );
     }
   }
 
@@ -64,7 +76,13 @@ export async function GET(request: Request) {
     } = await supabase.auth.getUser();
 
     if (!userError && user) {
-      return await handleSuccessfulAuth(supabase, origin, next, request, storedCookies);
+      return await handleSuccessfulAuth(
+        supabase,
+        origin,
+        next,
+        request,
+        storedCookies
+      );
     }
 
     // If no session, verify the token explicitly
@@ -82,7 +100,13 @@ export async function GET(request: Request) {
       } = await supabase.auth.getUser();
 
       if (verifiedUser) {
-        return await handleSuccessfulAuth(supabase, origin, next, request, storedCookies);
+        return await handleSuccessfulAuth(
+          supabase,
+          origin,
+          next,
+          request,
+          storedCookies
+        );
       }
     }
 
@@ -101,7 +125,13 @@ export async function GET(request: Request) {
     } = await supabase.auth.getUser();
 
     if (!userError && user) {
-      return await handleSuccessfulAuth(supabase, origin, next, request, storedCookies);
+      return await handleSuccessfulAuth(
+        supabase,
+        origin,
+        next,
+        request,
+        storedCookies
+      );
     }
   }
 
@@ -114,7 +144,7 @@ async function handleSuccessfulAuth(
   origin: string,
   next: string,
   request: Request,
-  storedCookies: Array<{ name: string; value: string; options?: any }>
+  storedCookies: Array<{ name: string; value: string; options?: CookieOptions }>
 ) {
   // Check if user has paid
   const {
@@ -130,14 +160,16 @@ async function handleSuccessfulAuth(
 
     // If user hasn't paid, redirect to pricing
     if (!profile?.has_paid) {
-      const pricingUrl = `${origin}/#pricing?redirect=${encodeURIComponent(next)}`;
+      const pricingUrl = `${origin}/#pricing?redirect=${encodeURIComponent(
+        next
+      )}`;
       const pricingResponse = NextResponse.redirect(pricingUrl);
-      
+
       // Copy all stored cookies to the redirect response
       storedCookies.forEach(({ name, value, options }) => {
         pricingResponse.cookies.set(name, value, options);
       });
-      
+
       return pricingResponse;
     }
   }
@@ -169,7 +201,7 @@ async function handleSuccessfulAuth(
   }
 
   const redirectResponse = NextResponse.redirect(redirectUrl);
-  
+
   // Copy all stored cookies to the redirect response
   storedCookies.forEach(({ name, value, options }) => {
     redirectResponse.cookies.set(name, value, options);

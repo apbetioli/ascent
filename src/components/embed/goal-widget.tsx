@@ -45,7 +45,6 @@ export function EmbedGoalWidget({ goal: initialGoal }: EmbedGoalWidgetProps) {
   return (
     <GoalProgressDisplay
       goal={goal}
-      variant="compact"
       cardClassName="w-full max-w-sm mx-auto overflow-hidden"
       footer={
         <p className="text-xs text-center text-muted-foreground pt-1 border-t">

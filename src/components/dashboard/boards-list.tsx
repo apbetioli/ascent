@@ -1,17 +1,16 @@
 "use client";
 
-import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { LayoutDashboard, Globe, Lock } from "lucide-react";
 import type { Tables } from "@/lib/supabase/types";
+import { formatDistanceToNow } from "date-fns";
+import { Globe, LayoutDashboard, Lock } from "lucide-react";
+import Link from "next/link";
 
 interface BoardsListProps {
   boards: Tables<"boards">[];

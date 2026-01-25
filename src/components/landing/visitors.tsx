@@ -20,8 +20,6 @@ export default async function Visitors() {
             color: "#3b82f6", // Blue color
           } as Tables<"goals">
         }
-        variant="compact"
-        showRemaining={false}
       />
     </div>
   );

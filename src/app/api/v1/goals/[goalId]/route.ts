@@ -1,9 +1,5 @@
+import { apiError, apiSuccess, withApiAuth } from "@/lib/api";
 import { createServiceClient } from "@/lib/supabase/server";
-import { withApiAuth, apiSuccess, apiError } from "@/lib/api";
-
-interface RouteParams {
-  params: Promise<{ goalId: string }>;
-}
 
 /**
  * GET /api/v1/goals/:goalId
@@ -18,7 +14,8 @@ export const GET = withApiAuth(async ({ userId, request }) => {
 
   const { data: goal, error } = await supabase
     .from("goals")
-    .select(`
+    .select(
+      `
       id,
       embed_id,
       board_id,
@@ -32,7 +29,8 @@ export const GET = withApiAuth(async ({ userId, request }) => {
       sort_order,
       created_at,
       updated_at
-    `)
+    `
+    )
     .eq("id", goalId)
     .eq("user_id", userId)
     .single();

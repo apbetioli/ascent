@@ -48,20 +48,12 @@ export default async function BoardPage({ params }: BoardPageProps) {
 
   return (
     <div className="space-y-6">
-      <BoardHeader board={board} />
-
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">Goals</h2>
-          <p className="text-sm text-muted-foreground">
-            {goals?.length ?? 0} goal{goals?.length !== 1 ? "s" : ""}
-          </p>
-        </div>
+      <BoardHeader board={board}>
         <CreateGoalDialog
           boardId={boardId}
           existingGoalsCount={goals?.length ?? 0}
         />
-      </div>
+      </BoardHeader>
 
       <GoalsList goals={goals ?? []} boardId={boardId} />
     </div>

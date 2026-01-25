@@ -41,9 +41,10 @@ import type { Tables } from "@/lib/supabase/types";
 
 interface BoardHeaderProps {
   board: Tables<"boards">;
+  children?: React.ReactNode;
 }
 
-export function BoardHeader({ board }: BoardHeaderProps) {
+export function BoardHeader({ board, children }: BoardHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(board.name);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -84,9 +85,7 @@ export function BoardHeader({ board }: BoardHeaderProps) {
     }
 
     toast.success(
-      board.is_public
-        ? "Board is now private"
-        : "Board is now public"
+      board.is_public ? "Board is now private" : "Board is now public"
     );
     router.refresh();
   };
@@ -94,10 +93,7 @@ export function BoardHeader({ board }: BoardHeaderProps) {
   const handleDelete = async () => {
     setIsDeleting(true);
 
-    const { error } = await supabase
-      .from("boards")
-      .delete()
-      .eq("id", board.id);
+    const { error } = await supabase.from("boards").delete().eq("id", board.id);
 
     if (error) {
       toast.error("Failed to delete board");
@@ -120,12 +116,6 @@ export function BoardHeader({ board }: BoardHeaderProps) {
   return (
     <>
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/boards">
-            <ChevronLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-
         {isEditing ? (
           <div className="flex items-center gap-2 flex-1">
             <Input
@@ -173,6 +163,8 @@ export function BoardHeader({ board }: BoardHeaderProps) {
             </Badge>
           </div>
         )}
+
+        {children}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

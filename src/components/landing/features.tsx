@@ -30,9 +30,9 @@ const features = [
   },
   {
     icon: Calendar,
-    title: "Deadlines & Reminders",
+    title: "Due Dates & Reminders",
     description:
-      "Set deadlines for your goals and see how many days are left. Never miss a target date.",
+      "Set due dates for your goals and see how many days are left. Never miss a target date.",
   },
   {
     icon: Share2,

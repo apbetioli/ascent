@@ -33,7 +33,7 @@ export function GoalProgressDisplay({
   const [currentTime, setCurrentTime] = useState(() => Date.now());
 
   useEffect(() => {
-    // Update current time periodically to check for overdue deadlines
+    // Update current time periodically to check for overdue due dates
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
     }, 60000); // Update every minute

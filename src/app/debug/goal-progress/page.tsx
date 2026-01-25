@@ -152,17 +152,17 @@ export default function GoalProgressDebugPage() {
           </div>
         </section>
 
-        {/* Deadline States */}
+        {/* Due Date States */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-semibold">Deadline States</h2>
+          <h2 className="text-2xl font-semibold">Due Date States</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                No Deadline
+                No Due Date
               </h3>
               <GoalProgressDisplay
                 goal={createMockGoal({
-                  name: "No Deadline Goal",
+                  name: "No Due Date Goal",
                   deadline: null,
                 })}
               />
@@ -170,7 +170,7 @@ export default function GoalProgressDebugPage() {
 
             <div>
               <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                Deadline: 5 Days Left
+                Due Date: 5 Days Left
               </h3>
               <GoalProgressDisplay
                 goal={createMockGoal({
@@ -182,7 +182,7 @@ export default function GoalProgressDebugPage() {
 
             <div>
               <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                Deadline: 1 Day Left
+                Due Date: 1 Day Left
               </h3>
               <GoalProgressDisplay
                 goal={createMockGoal({
@@ -194,7 +194,7 @@ export default function GoalProgressDebugPage() {
 
             <div>
               <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                Deadline: Due Today
+                Due Date: Due Today
               </h3>
               <GoalProgressDisplay
                 goal={createMockGoal({
@@ -206,7 +206,7 @@ export default function GoalProgressDebugPage() {
 
             <div>
               <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                Deadline: 1 Day Overdue
+                Due Date: 1 Day Overdue
               </h3>
               <GoalProgressDisplay
                 goal={createMockGoal({
@@ -219,7 +219,7 @@ export default function GoalProgressDebugPage() {
 
             <div>
               <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                Deadline: 5 Days Overdue
+                Due Date: 5 Days Overdue
               </h3>
               <GoalProgressDisplay
                 goal={createMockGoal({

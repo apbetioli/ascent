@@ -5,7 +5,7 @@ const steps = [
     number: "01",
     title: "Create Your Goals",
     description:
-      "Set up your goals in seconds. Add a target amount, optional deadline, and choose a color. Goals can be one-time or recurring.",
+      "Set up your goals in seconds. Add a target amount, optional due date, and choose a color. Goals can be one-time or recurring.",
   },
   {
     number: "02",

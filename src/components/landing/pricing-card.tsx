@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,9 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
 import { Check, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface PricingCardProps {
   isLoggedIn: boolean;
@@ -51,11 +51,20 @@ export function PricingCard({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           email: isLoggedIn ? userEmail : undefined,
           userId: isLoggedIn ? userId : undefined,
         }),
       });
+
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Non-JSON response:", text);
+        toast.error("Failed to start checkout. Please try again.");
+        return;
+      }
 
       const data = await response.json();
 
@@ -82,7 +91,9 @@ export function PricingCard({
       </div>
       <CardHeader className="text-center pb-2">
         <CardTitle className="text-2xl">GoalTrack Pro</CardTitle>
-        <CardDescription>Everything you need to track your goals</CardDescription>
+        <CardDescription>
+          Everything you need to track your goals
+        </CardDescription>
       </CardHeader>
       <CardContent className="text-center">
         <div className="mb-6">

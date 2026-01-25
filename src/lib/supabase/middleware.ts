@@ -67,6 +67,11 @@ export async function updateSession(request: NextRequest) {
       return supabaseResponse;
     }
 
+    // Allow debug routes (for development/debugging purposes)
+    if (currentPath.startsWith("/debug")) {
+      return supabaseResponse;
+    }
+
     // If user has exactly 1 board, redirect to it (unless already there)
     if (boards?.length === 1) {
       const targetPath = `/boards/${boards[0].id}`;

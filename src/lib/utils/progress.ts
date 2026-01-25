@@ -19,7 +19,7 @@ export interface Goal {
   current_amount: number;
   deadline: number | null;
   recurrence: Recurrence;
-  is_reverse: boolean;
+  format: "number" | "currency";
 }
 
 export interface Record {
@@ -91,19 +91,13 @@ export function calculateProgressAmount(records: Record[]): number {
  */
 export function calculateProgressPercentage(
   currentAmount: number,
-  targetAmount: number,
-  isReverse: boolean
+  targetAmount: number
 ): number {
-  if (targetAmount === 0) return isReverse ? 100 : 0;
+  if (targetAmount === 0) return 0;
 
   const percentage = (currentAmount / targetAmount) * 100;
 
-  if (isReverse) {
-    // Reverse goals: 100% at start, decreases as progress is made
-    return Math.max(0, 100 - percentage);
-  }
-
-  // Normal goals: can exceed 100%
+  // Goals can exceed 100%
   return percentage;
 }
 
@@ -130,21 +124,14 @@ export function calculateGoalProgress(
   const currentAmount = calculateProgressAmount(relevantRecords);
   const percentage = calculateProgressPercentage(
     currentAmount,
-    goal.target_amount,
-    goal.is_reverse
+    goal.target_amount
   );
 
-  const remaining = goal.is_reverse
-    ? currentAmount // For reverse goals, remaining is how much was "spent"
-    : Math.max(0, goal.target_amount - currentAmount);
+  const remaining = Math.max(0, goal.target_amount - currentAmount);
 
-  const isSurpassed = goal.is_reverse
-    ? percentage <= 0
-    : percentage > 100;
+  const isSurpassed = percentage > 100;
 
-  const isComplete = goal.is_reverse
-    ? percentage <= 0
-    : percentage >= 100;
+  const isComplete = percentage >= 100;
 
   return {
     currentAmount,

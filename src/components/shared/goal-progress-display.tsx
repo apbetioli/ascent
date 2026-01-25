@@ -14,7 +14,7 @@ import {
   calculateProgressPercentage,
   formatDeadlineStatus,
 } from "@/lib/utils/progress";
-import { Calendar, Repeat, Sparkles, TrendingDown, Trophy } from "lucide-react";
+import { Calendar, Repeat, Sparkles, Trophy } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface GoalProgressDisplayProps {
@@ -47,22 +47,18 @@ export function GoalProgressDisplay({
 
   const percentage = calculateProgressPercentage(
     goal.current_amount,
-    goal.target_amount,
-    goal.is_reverse
+    goal.target_amount
   );
 
-  const isSurpassed = goal.is_reverse ? percentage <= 0 : percentage > 100;
-  const isComplete = goal.is_reverse ? percentage <= 0 : percentage >= 100;
+  const isSurpassed = percentage > 100;
+  const isComplete = percentage >= 100;
   const deadlineStatus = formatDeadlineStatus(goal.deadline);
   const isOverdue = goal.deadline && goal.deadline < currentTime && !isComplete;
 
-  const remaining = goal.is_reverse
-    ? goal.current_amount
-    : Math.max(0, goal.target_amount - goal.current_amount);
+  const remaining = Math.max(0, goal.target_amount - goal.current_amount);
 
   const formatAmount = (amount: number) => {
-    // Check if it's a monetary value (has decimals)
-    if (amount % 1 !== 0) {
+    if (goal.format === "currency") {
       return new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
@@ -112,12 +108,6 @@ export function GoalProgressDisplay({
               {goal.recurrence}
             </span>
           )}
-          {goal.is_reverse && (
-            <span className="flex items-center gap-1">
-              <TrendingDown className="h-3 w-3" />
-              Reverse
-            </span>
-          )}
           {deadlineStatus && (
             <span
               className={`flex items-center gap-1 ${
@@ -162,9 +152,7 @@ export function GoalProgressDisplay({
         {/* Remaining */}
         {showRemaining && !isComplete && (
           <div className="text-sm text-muted-foreground">
-            {goal.is_reverse
-              ? `${formatAmount(remaining)} spent`
-              : `${formatAmount(remaining)} remaining`}
+            {formatAmount(remaining)} remaining
           </div>
         )}
 

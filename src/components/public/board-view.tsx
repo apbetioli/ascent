@@ -30,7 +30,6 @@ import {
   Sparkles,
   Calendar,
   Repeat,
-  TrendingDown,
   Code,
   Copy,
 } from "lucide-react";
@@ -64,8 +63,8 @@ export function PublicBoardView({
     toast.success("Embed code copied to clipboard!");
   };
 
-  const formatAmount = (amount: number) => {
-    if (amount >= 100 || amount % 1 !== 0) {
+  const formatAmount = (amount: number, format: "number" | "currency" = "number") => {
+    if (format === "currency") {
       return new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
@@ -96,21 +95,14 @@ export function PublicBoardView({
           {sortedGoals.map((goal) => {
             const percentage = calculateProgressPercentage(
               goal.current_amount,
-              goal.target_amount,
-              goal.is_reverse
+              goal.target_amount
             );
-            const isSurpassed = goal.is_reverse
-              ? percentage <= 0
-              : percentage > 100;
-            const isComplete = goal.is_reverse
-              ? percentage <= 0
-              : percentage >= 100;
+            const isSurpassed = percentage > 100;
+            const isComplete = percentage >= 100;
             const deadlineStatus = formatDeadlineStatus(goal.deadline);
             const isOverdue =
               goal.deadline && goal.deadline < Date.now() && !isComplete;
-            const remaining = goal.is_reverse
-              ? goal.current_amount
-              : Math.max(0, goal.target_amount - goal.current_amount);
+            const remaining = Math.max(0, goal.target_amount - goal.current_amount);
 
             return (
               <Card
@@ -150,12 +142,6 @@ export function PublicBoardView({
                         {goal.recurrence}
                       </span>
                     )}
-                    {goal.is_reverse && (
-                      <span className="flex items-center gap-1">
-                        <TrendingDown className="h-3 w-3" />
-                        Reverse
-                      </span>
-                    )}
                     {deadlineStatus && (
                       <span
                         className={`flex items-center gap-1 ${
@@ -193,22 +179,20 @@ export function PublicBoardView({
                     <div>
                       <span className="text-muted-foreground">Current: </span>
                       <span className="font-medium">
-                        {formatAmount(goal.current_amount)}
+                        {formatAmount(goal.current_amount, goal.format || "number")}
                       </span>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Target: </span>
                       <span className="font-medium">
-                        {formatAmount(goal.target_amount)}
+                        {formatAmount(goal.target_amount, goal.format || "number")}
                       </span>
                     </div>
                   </div>
 
                   {!isComplete && (
                     <div className="text-sm text-muted-foreground">
-                      {goal.is_reverse
-                        ? `${formatAmount(remaining)} spent`
-                        : `${formatAmount(remaining)} remaining`}
+                      {formatAmount(remaining, goal.format || "number")} remaining
                     </div>
                   )}
 

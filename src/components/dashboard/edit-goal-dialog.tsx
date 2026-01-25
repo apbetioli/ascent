@@ -54,7 +54,9 @@ export function EditGoalDialog({
   const [recurrence, setRecurrence] = useState<Recurrence>(
     goal.recurrence as Recurrence
   );
-  const [isReverse, setIsReverse] = useState(goal.is_reverse);
+  const [goalFormat, setGoalFormat] = useState<"number" | "currency">(
+    goal.format || "number"
+  );
   const [color, setColor] = useState(goal.color);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -66,7 +68,7 @@ export function EditGoalDialog({
     setTargetAmount(goal.target_amount.toString());
     setDeadline(goal.deadline ? new Date(goal.deadline) : undefined);
     setRecurrence(goal.recurrence as Recurrence);
-    setIsReverse(goal.is_reverse);
+    setGoalFormat(goal.format || "number");
     setColor(goal.color);
   }, [goal]);
 
@@ -94,7 +96,7 @@ export function EditGoalDialog({
           target_amount: target,
           deadline: deadline ? deadline.getTime() : null,
           recurrence,
-          is_reverse: isReverse,
+          format: goalFormat,
           color,
         })
         .eq("id", goal.id);
@@ -211,18 +213,18 @@ export function EditGoalDialog({
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label>Goal Type</Label>
+                <Label>Format</Label>
                 <Select
-                  value={isReverse ? "reverse" : "normal"}
-                  onValueChange={(value) => setIsReverse(value === "reverse")}
+                  value={goalFormat}
+                  onValueChange={(value) => setGoalFormat(value as "number" | "currency")}
                   disabled={isLoading}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="normal">Normal (0% → 100%)</SelectItem>
-                    <SelectItem value="reverse">Reverse (100% → 0%)</SelectItem>
+                    <SelectItem value="number">Number</SelectItem>
+                    <SelectItem value="currency">Currency</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

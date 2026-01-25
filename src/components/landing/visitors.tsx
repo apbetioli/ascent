@@ -15,7 +15,7 @@ export default async function Visitors() {
             name: "Live Visitors",
             current_amount: visitorCount,
             target_amount: VISITOR_TARGET,
-            is_reverse: false,
+            format: "number",
             deadline: null,
             color: "#3b82f6", // Blue color
           } as Tables<"goals">

@@ -92,14 +92,14 @@ export function GoalProgressDisplay({
           )}
           {contextMenu}
         </div>
-        <CardDescription className="flex flex-wrap gap-2 text-xs">
+        <CardDescription className="flex flex-wrap gap-2 text-xs min-h-[20px]">
           {goal.recurrence && goal.recurrence !== "none" && (
             <span className="flex items-center gap-1">
               <Repeat className="h-3 w-3" />
               {goal.recurrence}
             </span>
           )}
-          {deadlineStatus && (
+          {deadlineStatus && !isComplete && (
             <span
               className={`flex items-center gap-1 ${
                 isOverdue ? "text-destructive" : ""

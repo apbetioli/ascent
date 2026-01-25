@@ -10,10 +10,8 @@ export default function EmbedLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="bg-transparent" suppressHydrationWarning>
-        {children}
-      </body>
-    </html>
+    <div className="bg-transparent">
+      {children}
+    </div>
   );
 }

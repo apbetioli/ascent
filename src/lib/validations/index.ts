@@ -22,7 +22,7 @@ export const createGoalSchema = z.object({
   initial_amount: z.number().min(0, "Initial amount cannot be negative").optional(),
   deadline: z.number().int().positive().optional().nullable(),
   recurrence: recurrenceSchema.optional().default("none"),
-  is_reverse: z.boolean().optional().default(false),
+  format: z.enum(["number", "currency"]).optional().default("number"),
   color: z.string().refine(
     (color) => GOAL_COLORS.includes(color as any),
     "Invalid color"
@@ -34,7 +34,7 @@ export const updateGoalSchema = z.object({
   target_amount: z.number().positive("Target amount must be positive").optional(),
   deadline: z.number().int().positive().optional().nullable(),
   recurrence: recurrenceSchema.optional(),
-  is_reverse: z.boolean().optional(),
+  format: z.enum(["number", "currency"]).optional(),
   color: z.string().refine(
     (color) => GOAL_COLORS.includes(color as any),
     "Invalid color"

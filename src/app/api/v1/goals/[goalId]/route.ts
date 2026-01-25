@@ -27,7 +27,7 @@ export const GET = withApiAuth(async ({ userId, request }) => {
       current_amount,
       deadline,
       recurrence,
-      is_reverse,
+      format,
       color,
       sort_order,
       created_at,

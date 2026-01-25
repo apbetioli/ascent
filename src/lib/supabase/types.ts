@@ -48,7 +48,7 @@ export interface Goal {
   current_amount: number;
   deadline: number | null;
   recurrence: "none" | "daily" | "weekly" | "monthly" | "yearly";
-  is_reverse: boolean;
+  format: "number" | "currency";
   color: string;
   sort_order: number;
   created_at: string;

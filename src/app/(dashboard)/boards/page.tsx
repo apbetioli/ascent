@@ -1,5 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { BoardsList } from "@/components/dashboard/boards-list";
 import { CreateBoardDialog } from "@/components/dashboard/create-board-dialog";
 
@@ -9,14 +8,7 @@ export const metadata = {
 
 export default async function BoardsPage() {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  const user = await getAuthenticatedUser(supabase);
 
   // Get user's boards (single board created only on signup via DB trigger)
   const { data: boards } = await supabase

@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect, notFound } from "next/navigation";
+import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
 import { BoardHeader } from "@/components/dashboard/board-header";
 import { GoalsList } from "@/components/dashboard/goals-list";
 import { CreateGoalDialog } from "@/components/dashboard/create-goal-dialog";
@@ -25,14 +25,7 @@ export async function generateMetadata({ params }: BoardPageProps) {
 export default async function BoardPage({ params }: BoardPageProps) {
   const { boardId } = await params;
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  const user = await getAuthenticatedUser(supabase);
 
   // Get board with goals
   const { data: board, error } = await supabase

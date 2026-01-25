@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -16,24 +14,26 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { toast } from "sonner";
-import { Plus, Loader2, CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { GOAL_COLORS, getNextColor } from "@/lib/utils/colors";
 import type { Recurrence } from "@/lib/utils/progress";
+import { format } from "date-fns";
+import { CalendarIcon, Loader2, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface CreateGoalDialogProps {
   boardId: string;
@@ -50,7 +50,9 @@ export function CreateGoalDialog({
   const [initialAmount, setInitialAmount] = useState("");
   const [deadline, setDeadline] = useState<Date | undefined>(undefined);
   const [recurrence, setRecurrence] = useState<Recurrence>("none");
-  const [format, setFormat] = useState<"number" | "currency">("number");
+  const [amountFormat, setAmountFormat] = useState<"number" | "currency">(
+    "number"
+  );
   const [color, setColor] = useState(getNextColor(existingGoalsCount));
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -62,7 +64,7 @@ export function CreateGoalDialog({
     setInitialAmount("");
     setDeadline(undefined);
     setRecurrence("none");
-    setFormat("number");
+    setAmountFormat("number");
     setColor(getNextColor(existingGoalsCount));
   };
 
@@ -109,7 +111,7 @@ export function CreateGoalDialog({
           current_amount: 0, // Will be updated by trigger if we add initial record
           deadline: deadline ? deadline.getTime() : null,
           recurrence,
-          format,
+          format: amountFormat,
           color,
           sort_order: existingGoalsCount,
         })
@@ -211,6 +213,46 @@ export function CreateGoalDialog({
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Format</Label>
+                <Select
+                  value={amountFormat}
+                  onValueChange={(value) =>
+                    setAmountFormat(value as "number" | "currency")
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="number">Number</SelectItem>
+                    <SelectItem value="currency">Currency</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Recurrence</Label>
+                <Select
+                  value={recurrence}
+                  onValueChange={(value) => setRecurrence(value as Recurrence)}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select recurrence" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="yearly">Yearly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="grid gap-2">
               <Label>Deadline (optional)</Label>
               <Popover>
@@ -237,44 +279,6 @@ export function CreateGoalDialog({
                   />
                 </PopoverContent>
               </Popover>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label>Recurrence</Label>
-                <Select
-                  value={recurrence}
-                  onValueChange={(value) => setRecurrence(value as Recurrence)}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select recurrence" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label>Format</Label>
-                <Select
-                  value={format}
-                  onValueChange={(value) => setFormat(value as "number" | "currency")}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="number">Number</SelectItem>
-                    <SelectItem value="currency">Currency</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
 
             <div className="grid gap-2">

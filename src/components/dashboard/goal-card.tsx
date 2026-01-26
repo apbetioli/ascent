@@ -28,11 +28,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSupabase } from "@/lib/hooks/use-supabase";
 import type { Tables } from "@/lib/supabase/types";
-import { Code, Copy, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Code, Copy, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { AddRecordDialog } from "./add-record-dialog";
 import { CreateGoalDialog } from "./create-goal-dialog";
 
 interface GoalCardProps {
@@ -42,12 +41,11 @@ interface GoalCardProps {
 export function GoalCard({ goal }: GoalCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showAddRecordDialog, setShowAddRecordDialog] = useState(false);
   const [showEmbedDialog, setShowEmbedDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const router = useRouter();
-  const { deleteGoal } = useSupabase();
+  const { getUser, createRecord, deleteGoal } = useSupabase();
 
   const handleCopyEmbedCode = () => {
     const embedCode = `<iframe src="${process.env.NEXT_PUBLIC_APP_URL}/embed/${goal.embed_id}" width="400" height="200" frameborder="0" style="border-radius: 8px;"></iframe>`;
@@ -62,6 +60,7 @@ export function GoalCard({ goal }: GoalCardProps) {
       await deleteGoal(goal.id);
       toast.success("Goal deleted");
       setShowDeleteDialog(false);
+      setShowEditDialog(false);
       router.refresh();
     } catch (error) {
       toast.error("Failed to delete goal");
@@ -71,36 +70,62 @@ export function GoalCard({ goal }: GoalCardProps) {
     }
   };
 
+  const handlePlusOne = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const user = await getUser();
+    if (!user) {
+      toast.error("You must be logged in");
+      return;
+    }
+    try {
+      await createRecord({
+        goal_id: goal.id,
+        user_id: user.id,
+        amount: 1,
+        description: null,
+        timestamp: Date.now(),
+      });
+      toast.success("Progress added");
+      router.refresh();
+    } catch (error) {
+      toast.error("Failed to add progress");
+      console.error(error);
+    }
+  };
+
   const contextMenu = (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setShowAddRecordDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Progress
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
-          <Pencil className="mr-2 h-4 w-4" />
-          Edit Goal
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setShowEmbedDialog(true)}>
-          <Code className="mr-2 h-4 w-4" />
-          Embed Goal
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
-          onClick={() => setShowDeleteDialog(true)}
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete Goal
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 shrink-0"
+        onClick={handlePlusOne}
+      >
+        <Plus className="h-4 w-4" />
+        <span className="sr-only">Add 1</span>
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="right">
+          <DropdownMenuItem onClick={() => setShowEmbedDialog(true)}>
+            <Code className="mr-2 h-4 w-4" />
+            Embed Goal
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete Goal
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 
   return (
@@ -109,6 +134,8 @@ export function GoalCard({ goal }: GoalCardProps) {
         goal={goal}
         contextMenu={contextMenu}
         cardClassName="relative overflow-hidden transition-all hover:shadow-md"
+        contextMenuHoverOnly
+        onCardClick={() => setShowEditDialog(true)}
       />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -140,13 +167,8 @@ export function GoalCard({ goal }: GoalCardProps) {
         goal={goal}
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
-      />
-
-      <AddRecordDialog
-        goalId={goal.id}
-        goalName={goal.name}
-        open={showAddRecordDialog}
-        onOpenChange={setShowAddRecordDialog}
+        onEmbedClick={() => setShowEmbedDialog(true)}
+        onDeleteClick={() => setShowDeleteDialog(true)}
       />
 
       <Dialog open={showEmbedDialog} onOpenChange={setShowEmbedDialog}>

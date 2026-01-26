@@ -154,7 +154,7 @@ export function GoalProgressDisplay({
           {deadlineStatus && !isComplete && (
             <span
               className={`flex items-center gap-1 ${
-                isOverdue ? "text-destructive" : ""
+                isOverdue && deadlineStatus !== "Due today" ? "text-destructive" : ""
               }`}
             >
               <Calendar className="h-3 w-3" />

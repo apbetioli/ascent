@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { Tables } from "@/lib/supabase/types";
+import { cn } from "@/lib/utils";
 import {
   calculateProgressPercentage,
   formatDeadlineStatus,
@@ -22,6 +23,8 @@ interface GoalProgressDisplayProps {
   cardClassName?: string;
   contextMenu?: React.ReactNode;
   footer?: React.ReactNode;
+  contextMenuHoverOnly?: boolean;
+  onCardClick?: () => void;
 }
 
 export function GoalProgressDisplay({
@@ -29,6 +32,8 @@ export function GoalProgressDisplay({
   cardClassName,
   contextMenu,
   footer,
+  contextMenuHoverOnly,
+  onCardClick,
 }: GoalProgressDisplayProps) {
   const [currentTime, setCurrentTime] = useState(() => Date.now());
 
@@ -63,13 +68,48 @@ export function GoalProgressDisplay({
     return amount.toLocaleString();
   };
 
+  const cardCls = cn(
+    "relative",
+    contextMenuHoverOnly && "group",
+    onCardClick && "cursor-pointer",
+    cardClassName
+  );
+  const contextMenuEl =
+    contextMenu && (contextMenuHoverOnly || onCardClick) ? (
+      <div
+        className={cn(
+          "flex items-center gap-1",
+          contextMenuHoverOnly &&
+            "opacity-0 transition-opacity group-hover:opacity-100"
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {contextMenu}
+      </div>
+    ) : (
+      contextMenu
+    );
+
   return (
     <Card
-      className={`relative ${cardClassName || ""}`}
+      className={cardCls}
       style={{
         borderTopColor: goal.color,
         borderTopWidth: "3px",
       }}
+      onClick={onCardClick}
+      onKeyDown={
+        onCardClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onCardClick();
+              }
+            }
+          : undefined
+      }
+      role={onCardClick ? "button" : undefined}
+      tabIndex={onCardClick ? 0 : undefined}
     >
       <CardHeader>
         <div className="flex items-center gap-2 -mb-2">
@@ -90,7 +130,7 @@ export function GoalProgressDisplay({
               Complete!
             </Badge>
           )}
-          {contextMenu}
+          {contextMenuEl}
         </div>
         <CardDescription className="flex flex-wrap gap-2 text-xs min-h-[20px]">
           {goal.recurrence && goal.recurrence !== "none" && (

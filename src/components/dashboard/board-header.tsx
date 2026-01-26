@@ -29,7 +29,6 @@ import {
   Globe,
   Lock,
   MoreHorizontal,
-  Pencil,
   Trash2,
   X,
 } from "lucide-react";
@@ -138,7 +137,20 @@ export function BoardHeader({ board, children }: BoardHeaderProps) {
           </div>
         ) : (
           <div className="flex items-center gap-3 flex-1">
-            <h1 className="text-2xl font-bold">{board.name}</h1>
+            <h1
+              role="button"
+              tabIndex={0}
+              onClick={() => setIsEditing(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setIsEditing(true);
+                }
+              }}
+              className="text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity rounded px-1 -ml-1 border border-transparent hover:border-border/50 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              {board.name}
+            </h1>
             <Badge
               variant={board.is_public ? "default" : "secondary"}
               className="hidden md:inline-flex"
@@ -158,8 +170,9 @@ export function BoardHeader({ board, children }: BoardHeaderProps) {
           </div>
         )}
 
-        {children}
+        {!isEditing && children}
 
+        {!isEditing && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon">
@@ -167,10 +180,6 @@ export function BoardHeader({ board, children }: BoardHeaderProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setIsEditing(true)}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Rename
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleTogglePublic}>
               {board.is_public ? (
                 <>
@@ -213,6 +222,7 @@ export function BoardHeader({ board, children }: BoardHeaderProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        )}
       </div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

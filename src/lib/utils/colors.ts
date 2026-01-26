@@ -35,3 +35,35 @@ export function getNextColor(existingGoalsCount: number): GoalColor {
 export function isValidGoalColor(color: string): color is GoalColor {
   return GOAL_COLORS.includes(color as GoalColor);
 }
+
+/**
+ * Calculate the relative luminance of a color
+ * Returns a value between 0 (dark) and 1 (light)
+ */
+function getLuminance(hex: string): number {
+  // Remove # if present
+  const rgb = hex.replace("#", "");
+  
+  // Parse RGB values
+  const r = parseInt(rgb.substring(0, 2), 16) / 255;
+  const g = parseInt(rgb.substring(2, 4), 16) / 255;
+  const b = parseInt(rgb.substring(4, 6), 16) / 255;
+
+  // Apply gamma correction
+  const [rLinear, gLinear, bLinear] = [r, g, b].map((val) => {
+    return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+  });
+
+  // Calculate relative luminance
+  return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
+}
+
+/**
+ * Get the appropriate text color (white or dark) for a given background color
+ * Returns "white" for dark backgrounds and a dark color for light backgrounds
+ */
+export function getContrastTextColor(backgroundColor: string): string {
+  const luminance = getLuminance(backgroundColor);
+  // Use white text for backgrounds with luminance < 0.5, dark text otherwise
+  return luminance < 0.5 ? "white" : "#1f2937"; // dark gray for light backgrounds
+}

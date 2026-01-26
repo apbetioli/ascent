@@ -11,6 +11,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import type { Tables } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
+import { getContrastTextColor } from "@/lib/utils/colors";
 import {
   calculateProgressPercentage,
   formatDeadlineStatus,
@@ -118,14 +119,25 @@ export function GoalProgressDisplay({
           {isSurpassed && (
             <Badge
               variant="default"
-              className="bg-yellow-500 text-yellow-950 gap-1"
+              className="gap-1"
+              style={{
+                backgroundColor: goal.color,
+                color: getContrastTextColor(goal.color),
+              }}
             >
               <AlertCircleIcon className="h-3 w-3" />
               Surpassed!
             </Badge>
           )}
           {isComplete && !isSurpassed && (
-            <Badge variant="default" className="bg-green-500 gap-1">
+            <Badge
+              variant="default"
+              className="gap-1"
+              style={{
+                backgroundColor: goal.color,
+                color: getContrastTextColor(goal.color),
+              }}
+            >
               <Sparkles className="h-3 w-3" />
               Complete!
             </Badge>

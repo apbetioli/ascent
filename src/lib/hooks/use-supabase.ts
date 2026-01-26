@@ -15,13 +15,13 @@ export function useSupabase() {
   // ==================== Auth Operations ====================
 
   /**
-   * Get the current authenticated user
+   * Get the current authenticated user from session (cached, no network request)
    */
   const getUser = useCallback(async (): Promise<User | null> => {
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    return user;
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.user ?? null;
   }, [supabase]);
 
   /**

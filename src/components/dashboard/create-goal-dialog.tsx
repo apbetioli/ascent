@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/select";
 import { useSupabase } from "@/lib/hooks/use-supabase";
 import type { Tables } from "@/lib/supabase/types";
-import { updateGoalSchema } from "@/lib/validations";
+import { createGoalSchema, updateGoalSchema } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 import { GOAL_COLORS, getNextColor } from "@/lib/utils/colors";
 import type { Recurrence } from "@/lib/utils/progress";
@@ -153,26 +153,52 @@ export function CreateGoalDialog({
     const target = parseFloat(formState.targetAmount);
     if (isNaN(target) || target < 0) return;
 
-    const validation = updateGoalSchema.safeParse({
+    const validationData: {
+      name?: string;
+      target_amount?: number;
+      deadline?: number | null;
+      recurrence?: Recurrence;
+      format?: "number" | "currency";
+      color?: string;
+    } = {
       name: trimmedName,
-      target_amount: target,
       deadline: formState.deadline ? formState.deadline.getTime() : null,
       recurrence: formState.recurrence,
       format: formState.amountFormat,
       color: formState.color,
-    });
+    };
+
+    // Only include target_amount if it's a valid number
+    if (!isNaN(target) && target > 0) {
+      validationData.target_amount = target;
+    }
+
+    const validation = updateGoalSchema.safeParse(validationData);
 
     if (!validation.success) return;
 
     try {
-      await updateGoal(goal.id, {
+      const updateData: {
+        name?: string;
+        target_amount?: number;
+        deadline?: number | null;
+        recurrence?: Recurrence;
+        format?: "number" | "currency";
+        color?: string;
+      } = {
         name: trimmedName,
-        target_amount: target,
         deadline: formState.deadline ? formState.deadline.getTime() : null,
         recurrence: formState.recurrence,
         format: formState.amountFormat,
         color: formState.color,
-      });
+      };
+
+      // Only include target_amount if it's a valid number
+      if (!isNaN(target) && target > 0) {
+        updateData.target_amount = target;
+      }
+
+      await updateGoal(goal.id, updateData);
       previousFormStateRef.current = { ...formState };
       router.refresh();
     } catch (error) {
@@ -277,14 +303,28 @@ export function CreateGoalDialog({
     if (!goal) return;
     setIsLoading(true);
     try {
-      const validation = updateGoalSchema.safeParse({
+      const target = parseFloat(formState.targetAmount);
+      const validationData: {
+        name?: string;
+        target_amount?: number;
+        deadline?: number | null;
+        recurrence?: Recurrence;
+        format?: "number" | "currency";
+        color?: string;
+      } = {
         name: trimmed,
-        target_amount: parseFloat(formState.targetAmount),
         deadline: formState.deadline ? formState.deadline.getTime() : null,
         recurrence: formState.recurrence,
         format: formState.amountFormat,
         color: formState.color,
-      });
+      };
+
+      // Only include target_amount if it's a valid number
+      if (!isNaN(target) && target > 0) {
+        validationData.target_amount = target;
+      }
+
+      const validation = updateGoalSchema.safeParse(validationData);
       if (!validation.success) {
         toast.error(validation.error.issues[0].message);
         return;
@@ -392,32 +432,26 @@ export function CreateGoalDialog({
       ? parseFloat(formState.initialAmount)
       : undefined;
 
-    const validationData: {
-      name?: string;
-      target_amount?: number;
-      current_value?: number;
-      deadline?: number | null;
-      recurrence?: Recurrence;
-      format?: "number" | "currency";
-      color?: string;
-    } = {
+    const validation = createGoalSchema.safeParse({
+      board_id: boardId,
       name: formState.name.trim(),
       target_amount: target,
+      initial_amount: initial,
       deadline: formState.deadline ? formState.deadline.getTime() : null,
       recurrence: formState.recurrence,
       format: formState.amountFormat,
       color: formState.color,
-    };
-
-    const validation = updateGoalSchema.safeParse(validationData);
+    });
 
     if (!validation.success) {
-      toast.error(validation.error.issues[0].message);
-      return;
-    }
-
-    if (initial !== undefined && (isNaN(initial) || initial < 0)) {
-      toast.error("Please enter a valid initial amount");
+      // Show the first error message, prioritizing target_amount errors
+      const targetError = validation.error.issues.find(
+        (issue) => issue.path[0] === "target_amount"
+      );
+      const errorMessage = targetError
+        ? targetError.message
+        : validation.error.issues[0].message;
+      toast.error(errorMessage);
       return;
     }
 

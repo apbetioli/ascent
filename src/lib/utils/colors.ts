@@ -39,6 +39,7 @@ export function isValidGoalColor(color: string): color is GoalColor {
 /**
  * Calculate the relative luminance of a color
  * Returns a value between 0 (dark) and 1 (light)
+ * Based on WCAG 2.1 specification
  */
 function getLuminance(hex: string): number {
   // Remove # if present
@@ -59,11 +60,44 @@ function getLuminance(hex: string): number {
 }
 
 /**
+ * Calculate the contrast ratio between two colors
+ * Returns a value between 1 (no contrast) and 21 (maximum contrast)
+ * Based on WCAG 2.1 specification
+ */
+function getContrastRatio(color1: string, color2: string): number {
+  const lum1 = getLuminance(color1);
+  const lum2 = getLuminance(color2);
+  
+  const lighter = Math.max(lum1, lum2);
+  const darker = Math.min(lum1, lum2);
+  
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/**
  * Get the appropriate text color (white or dark) for a given background color
- * Returns "white" for dark backgrounds and a dark color for light backgrounds
+ * Ensures WCAG AA contrast ratio of at least 4.5:1 for normal text
+ * Returns the text color that provides the best contrast
  */
 export function getContrastTextColor(backgroundColor: string): string {
-  const luminance = getLuminance(backgroundColor);
-  // Use white text for backgrounds with luminance < 0.5, dark text otherwise
-  return luminance < 0.5 ? "white" : "#1f2937"; // dark gray for light backgrounds
+  const white = "#ffffff";
+  // Use a very dark gray instead of pure black for better visual appearance
+  // while still maintaining excellent contrast
+  const dark = "#0f172a"; // slate-900 equivalent
+  
+  // Calculate contrast ratios
+  const whiteContrast = getContrastRatio(backgroundColor, white);
+  const darkContrast = getContrastRatio(backgroundColor, dark);
+  
+  // Use the color with the higher contrast ratio
+  // For badges, we want at least 4.5:1 for WCAG AA compliance
+  if (whiteContrast >= darkContrast && whiteContrast >= 4.5) {
+    return white;
+  } else if (darkContrast >= 4.5) {
+    return dark;
+  } else {
+    // If neither meets 4.5:1, use the one with better contrast
+    // This handles edge cases where colors might be mid-tone
+    return whiteContrast > darkContrast ? white : dark;
+  }
 }

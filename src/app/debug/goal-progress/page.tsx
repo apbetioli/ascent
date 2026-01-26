@@ -351,16 +351,16 @@ export default function GoalProgressDebugPage() {
           <h2 className="text-2xl font-semibold">Color States</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { name: "Red", color: "#EF4444" },
-              { name: "Orange", color: "#F97316" },
-              { name: "Yellow", color: "#EAB308" },
-              { name: "Green", color: "#22C55E" },
-              { name: "Teal", color: "#14B8A6" },
-              { name: "Blue", color: "#3B82F6" },
-              { name: "Indigo", color: "#6366F1" },
-              { name: "Violet", color: "#8B5CF6" },
-              { name: "Pink", color: "#EC4899" },
-            ].map(({ name, color }) => (
+              { name: "Red", color: "#EF4444", current_amount: 1000, target_amount: 1000 }, // Complete
+              { name: "Orange", color: "#F97316", current_amount: 1200, target_amount: 1000 }, // Surpassed
+              { name: "Yellow", color: "#EAB308", current_amount: 600 }, // In Progress
+              { name: "Green", color: "#22C55E", current_amount: 1000, target_amount: 1000 }, // Complete
+              { name: "Teal", color: "#14B8A6", current_amount: 1300, target_amount: 1000 }, // Surpassed
+              { name: "Blue", color: "#3B82F6", current_amount: 600 }, // In Progress
+              { name: "Indigo", color: "#6366F1", current_amount: 1000, target_amount: 1000 }, // Complete
+              { name: "Violet", color: "#8B5CF6", current_amount: 1150, target_amount: 1000 }, // Surpassed
+              { name: "Pink", color: "#EC4899", current_amount: 600 }, // In Progress
+            ].map(({ name, color, current_amount, target_amount = 1000 }) => (
               <div key={color}>
                 <h3 className="text-sm font-medium mb-3 text-muted-foreground">
                   {name}
@@ -369,7 +369,8 @@ export default function GoalProgressDebugPage() {
                   goal={createMockGoal({
                     name: `${name} Goal`,
                     color,
-                    current_amount: 600,
+                    current_amount,
+                    target_amount,
                   })}
                 />
               </div>

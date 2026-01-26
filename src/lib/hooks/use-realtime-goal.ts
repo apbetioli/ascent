@@ -64,15 +64,27 @@ export function useRealtimeBoardGoals(
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "INSERT",
           schema: "public",
           table: "goals",
           filter: `board_id=eq.${boardId}`,
         },
         (payload: RealtimePostgresChangesPayload<Tables<"goals">>) => {
-          if (payload.eventType === "INSERT" && payload.new) {
+          if (payload.new && "id" in payload.new) {
             setGoals((prev) => [...prev, payload.new as Tables<"goals">]);
-          } else if (payload.eventType === "UPDATE" && payload.new) {
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "goals",
+          filter: `board_id=eq.${boardId}`,
+        },
+        (payload: RealtimePostgresChangesPayload<Tables<"goals">>) => {
+          if (payload.new && "id" in payload.new) {
             setGoals((prev) =>
               prev.map((g) =>
                 g.id === (payload.new as Tables<"goals">).id
@@ -80,10 +92,22 @@ export function useRealtimeBoardGoals(
                   : g
               )
             );
-          } else if (payload.eventType === "DELETE" && payload.old) {
-            setGoals((prev) =>
-              prev.filter((g) => g.id !== (payload.old as Tables<"goals">).id)
-            );
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "goals",
+        },
+        (payload: RealtimePostgresChangesPayload<Tables<"goals">>) => {
+          // DELETE events only have `old` with the primary key (id)
+          // Filter client-side by checking if the deleted id exists in our goals
+          if (payload.old && "id" in payload.old) {
+            const deletedId = (payload.old as { id: string }).id;
+            setGoals((prev) => prev.filter((g) => g.id !== deletedId));
           }
         }
       )

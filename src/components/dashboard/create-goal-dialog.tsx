@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { useSupabase } from "@/lib/hooks/use-supabase";
 import type { Tables } from "@/lib/supabase/types";
+import { updateGoalSchema } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 import { GOAL_COLORS, getNextColor } from "@/lib/utils/colors";
 import type { Recurrence } from "@/lib/utils/progress";
@@ -35,6 +36,17 @@ import { CalendarIcon, Loader2, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
+interface FormState {
+  name: string;
+  targetAmount: string;
+  initialAmount: string;
+  currentValue: string;
+  deadline: Date | undefined;
+  recurrence: Recurrence;
+  amountFormat: "number" | "currency";
+  color: string;
+}
 
 interface CreateGoalDialogProps {
   boardId: string;
@@ -56,80 +68,108 @@ export function CreateGoalDialog({
   const open = controlledOpen ?? internalOpen;
   const setOpen = controlledOnOpenChange ?? setInternalOpen;
 
-  const [name, setName] = useState(goal?.name ?? "");
-  const [targetAmount, setTargetAmount] = useState(
-    goal?.target_amount.toString() ?? ""
-  );
-  const [initialAmount, setInitialAmount] = useState("");
-  const [deadline, setDeadline] = useState<Date | undefined>(
-    goal?.deadline ? new Date(goal.deadline) : undefined
-  );
-  const [recurrence, setRecurrence] = useState<Recurrence>(
-    (goal?.recurrence as Recurrence) ?? "none"
-  );
-  const [amountFormat, setAmountFormat] = useState<"number" | "currency">(
-    goal?.format ?? "number"
-  );
-  const [color, setColor] = useState(
-    goal?.color ?? getNextColor(existingGoalsCount)
-  );
+  const [formState, setFormState] = useState<FormState>(() => ({
+    name: goal?.name ?? "",
+    targetAmount: goal?.target_amount.toString() ?? "",
+    initialAmount: "",
+    currentValue: goal?.current_amount.toString() ?? "",
+    deadline: goal?.deadline ? new Date(goal.deadline) : undefined,
+    recurrence: (goal?.recurrence as Recurrence) ?? "none",
+    amountFormat: goal?.format ?? "number",
+    color: goal?.color ?? getNextColor(existingGoalsCount),
+  }));
   const [isLoading, setIsLoading] = useState(false);
+
+  const updateFormField = <K extends keyof FormState>(
+    field: K,
+    value: FormState[K]
+  ) => {
+    setFormState((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const getFormStateFromGoal = (goal: Tables<"goals">): FormState => ({
+    name: goal.name,
+    targetAmount: goal.target_amount.toString(),
+    initialAmount: "",
+    currentValue: goal.current_amount.toString(),
+    deadline: goal.deadline ? new Date(goal.deadline) : undefined,
+    recurrence: goal.recurrence as Recurrence,
+    amountFormat: goal.format ?? "number",
+    color: goal.color,
+  });
+
+  const getEmptyFormState = (): FormState => ({
+    name: "",
+    targetAmount: "",
+    initialAmount: "",
+    currentValue: "",
+    deadline: undefined,
+    recurrence: "none",
+    amountFormat: "number",
+    color: getNextColor(existingGoalsCount),
+  });
+
   const router = useRouter();
-  const {
-    getUser,
-    createGoal,
-    updateGoal,
-    createRecord,
-  } = useSupabase();
+  const { getUser, createGoal, updateGoal, createRecord } = useSupabase();
 
   // Reset form when goal changes (edit mode)
   useEffect(() => {
     if (goal) {
-      setName(goal.name);
-      setTargetAmount(goal.target_amount.toString());
-      setDeadline(goal.deadline ? new Date(goal.deadline) : undefined);
-      setRecurrence(goal.recurrence as Recurrence);
-      setAmountFormat(goal.format ?? "number");
-      setColor(goal.color);
+      setFormState(getFormStateFromGoal(goal));
     }
   }, [goal]);
 
   const resetForm = () => {
     if (isEditMode && goal) {
-      setName(goal.name);
-      setTargetAmount(goal.target_amount.toString());
-      setDeadline(goal.deadline ? new Date(goal.deadline) : undefined);
-      setRecurrence(goal.recurrence as Recurrence);
-      setAmountFormat(goal.format ?? "number");
-      setColor(goal.color);
+      setFormState(getFormStateFromGoal(goal));
     } else {
-      setName("");
-      setTargetAmount("");
-      setInitialAmount("");
-      setDeadline(undefined);
-      setRecurrence("none");
-      setAmountFormat("number");
-      setColor(getNextColor(existingGoalsCount));
+      setFormState(getEmptyFormState());
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim()) {
-      toast.error("Please enter a goal name");
-      return;
+    // Validate form using Zod schema
+    const target = parseFloat(formState.targetAmount);
+    const currentValue = formState.currentValue
+      ? parseFloat(formState.currentValue)
+      : undefined;
+    const initial = formState.initialAmount
+      ? parseFloat(formState.initialAmount)
+      : undefined;
+
+    const validationData: {
+      name?: string;
+      target_amount?: number;
+      current_value?: number;
+      deadline?: number | null;
+      recurrence?: Recurrence;
+      format?: "number" | "currency";
+      color?: string;
+    } = {
+      name: formState.name.trim(),
+      target_amount: target,
+      deadline: formState.deadline ? formState.deadline.getTime() : null,
+      recurrence: formState.recurrence,
+      format: formState.amountFormat,
+      color: formState.color,
+    };
+
+    if (isEditMode && currentValue !== undefined) {
+      validationData.current_value = currentValue;
     }
 
-    const target = parseFloat(targetAmount);
-    if (isNaN(target) || target <= 0) {
-      toast.error("Please enter a valid target amount");
+    const validation = updateGoalSchema.safeParse(validationData);
+
+    if (!validation.success) {
+      const firstError = validation.error.issues[0];
+      toast.error(firstError.message);
       return;
     }
 
     if (!isEditMode) {
-      const initial = initialAmount ? parseFloat(initialAmount) : 0;
-      if (isNaN(initial) || initial < 0) {
+      if (initial !== undefined && (isNaN(initial) || initial < 0)) {
         toast.error("Please enter a valid initial amount");
         return;
       }
@@ -146,42 +186,67 @@ export function CreateGoalDialog({
       }
 
       if (isEditMode && goal) {
+        // Calculate difference for current value if changed
+        if (currentValue !== undefined && !isNaN(currentValue)) {
+          const difference = currentValue - goal.current_amount;
+          if (difference !== 0) {
+            // Silently create a record with the difference
+            try {
+              await createRecord({
+                goal_id: goal.id,
+                user_id: user.id,
+                amount: difference,
+                description: null,
+                timestamp: Date.now(),
+              });
+            } catch (recordError) {
+              console.error(
+                "Failed to create record for current value:",
+                recordError
+              );
+              // Continue with goal update even if record creation fails
+            }
+          }
+        }
+
         // Update existing goal
-        await updateGoal(goal.id, {
-          name: name.trim(),
+        const updateData = {
+          name: formState.name.trim(),
           target_amount: target,
-          deadline: deadline ? deadline.getTime() : null,
-          recurrence,
-          format: amountFormat,
-          color,
-        });
+          deadline: formState.deadline ? formState.deadline.getTime() : null,
+          recurrence: formState.recurrence,
+          format: formState.amountFormat,
+          color: formState.color,
+        };
+        await updateGoal(goal.id, updateData);
 
         toast.success("Goal updated successfully");
         setOpen(false);
         router.refresh();
       } else {
         // Create new goal
-        const initial = initialAmount ? parseFloat(initialAmount) : 0;
-        const newGoal = await createGoal({
+        const initialValue = initial ?? 0;
+        const createData = {
           board_id: boardId,
           user_id: user.id,
-          name: name.trim(),
+          name: formState.name.trim(),
           target_amount: target,
-          deadline: deadline ? deadline.getTime() : null,
-          recurrence,
-          format: amountFormat,
-          color,
+          deadline: formState.deadline ? formState.deadline.getTime() : null,
+          recurrence: formState.recurrence,
+          format: formState.amountFormat,
+          color: formState.color,
           sort_order: existingGoalsCount,
-        });
+        };
+        const newGoal = await createGoal(createData);
 
         // If there's an initial amount, create an initial record
-        if (initial > 0 && newGoal) {
+        if (initialValue > 0 && newGoal) {
           try {
             await createRecord({
               goal_id: newGoal.id,
               user_id: user.id,
-              amount: initial,
-              description: "Initial amount",
+              amount: initialValue,
+              description: "Initial value",
               timestamp: Date.now(),
             });
           } catch (recordError) {
@@ -225,65 +290,65 @@ export function CreateGoalDialog({
             <Input
               id={isEditMode ? "edit-name" : "name"}
               placeholder="e.g., Save for vacation"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={formState.name}
+              onChange={(e) => updateFormField("name", e.target.value)}
               disabled={isLoading}
               autoFocus={!isEditMode}
             />
           </div>
 
-          {!isEditMode ? (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="target">Target Amount</Label>
-                <Input
-                  id="target"
-                  type="number"
-                  placeholder="10000"
-                  value={targetAmount}
-                  onChange={(e) => setTargetAmount(e.target.value)}
-                  disabled={isLoading}
-                  min="0"
-                  step="any"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="initial">Initial Amount (optional)</Label>
-                <Input
-                  id="initial"
-                  type="number"
-                  placeholder="0"
-                  value={initialAmount}
-                  onChange={(e) => setInitialAmount(e.target.value)}
-                  disabled={isLoading}
-                  min="0"
-                  step="any"
-                />
-              </div>
-            </div>
-          ) : (
+          <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-target">Target Amount</Label>
+              <Label htmlFor={isEditMode ? "edit-target" : "target"}>
+                Target Value
+              </Label>
               <Input
-                id="edit-target"
+                id={isEditMode ? "edit-target" : "target"}
                 type="number"
                 placeholder="10000"
-                value={targetAmount}
-                onChange={(e) => setTargetAmount(e.target.value)}
+                value={formState.targetAmount}
+                onChange={(e) =>
+                  updateFormField("targetAmount", e.target.value)
+                }
                 disabled={isLoading}
                 min="0"
                 step="any"
               />
             </div>
-          )}
+            <div className="grid gap-2">
+              <Label htmlFor={isEditMode ? "edit-current" : "initial"}>
+                {isEditMode ? "Current Value" : "Initial Value (optional)"}
+              </Label>
+              <Input
+                id={isEditMode ? "edit-current" : "initial"}
+                type="number"
+                placeholder="0"
+                value={
+                  isEditMode ? formState.currentValue : formState.initialAmount
+                }
+                onChange={(e) =>
+                  updateFormField(
+                    isEditMode ? "currentValue" : "initialAmount",
+                    e.target.value
+                  )
+                }
+                disabled={isLoading}
+                min="0"
+                step="any"
+              />
+            </div>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label>Format</Label>
               <Select
-                value={amountFormat}
+                value={formState.amountFormat}
                 onValueChange={(value) =>
-                  setAmountFormat(value as "number" | "currency")
+                  updateFormField(
+                    "amountFormat",
+                    value as "number" | "currency"
+                  )
                 }
                 disabled={isLoading}
               >
@@ -299,8 +364,10 @@ export function CreateGoalDialog({
             <div className="grid gap-2">
               <Label>Recurring</Label>
               <Select
-                value={recurrence}
-                onValueChange={(value) => setRecurrence(value as Recurrence)}
+                value={formState.recurrence}
+                onValueChange={(value) =>
+                  updateFormField("recurrence", value as Recurrence)
+                }
                 disabled={isLoading}
               >
                 <SelectTrigger>
@@ -326,19 +393,21 @@ export function CreateGoalDialog({
                     variant="outline"
                     className={cn(
                       "flex-1 justify-start text-left font-normal",
-                      !deadline && "text-muted-foreground"
+                      !formState.deadline && "text-muted-foreground"
                     )}
                     disabled={isLoading}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {deadline ? format(deadline, "PPP") : "Pick a due date"}
+                    {formState.deadline
+                      ? format(formState.deadline, "PPP")
+                      : "Pick a due date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={deadline}
-                    onSelect={setDeadline}
+                    selected={formState.deadline}
+                    onSelect={(date) => updateFormField("deadline", date)}
                     autoFocus
                     disabled={
                       isEditMode ? undefined : (date) => date < new Date()
@@ -346,12 +415,12 @@ export function CreateGoalDialog({
                   />
                 </PopoverContent>
               </Popover>
-              {deadline && (
+              {formState.deadline && (
                 <Button
                   type="button"
                   variant="outline"
                   size="icon"
-                  onClick={() => setDeadline(undefined)}
+                  onClick={() => updateFormField("deadline", undefined)}
                   disabled={isLoading}
                 >
                   <X className="h-4 w-4" />
@@ -369,12 +438,12 @@ export function CreateGoalDialog({
                   type="button"
                   className={cn(
                     "w-8 h-8 rounded-full transition-all",
-                    color === c
+                    formState.color === c
                       ? "ring-2 ring-offset-2 ring-primary scale-110"
                       : "hover:scale-105"
                   )}
                   style={{ backgroundColor: c }}
-                  onClick={() => setColor(c)}
+                  onClick={() => updateFormField("color", c)}
                   disabled={isLoading}
                 />
               ))}
@@ -393,7 +462,7 @@ export function CreateGoalDialog({
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading || !name.trim()}>
+          <Button type="submit" disabled={isLoading || !formState.name.trim()}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isEditMode ? "Save" : "Create Goal"}
           </Button>

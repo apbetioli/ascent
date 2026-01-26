@@ -61,6 +61,10 @@ export const updateGoalSchema = z.object({
     .number()
     .positive("Target amount must be positive")
     .optional(),
+  current_value: z
+    .number()
+    .min(0, "Current value cannot be negative")
+    .optional(),
   deadline: z.number().int().positive().optional().nullable(),
   recurrence: recurrenceSchema.optional(),
   format: z.enum(["number", "currency"]).optional(),

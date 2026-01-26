@@ -106,7 +106,7 @@ export function BoardHeader({ board, children }: BoardHeaderProps) {
 
   return (
     <>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-1">
         {isEditing ? (
           <div className="flex items-center gap-2 flex-1">
             <Input
@@ -139,7 +139,10 @@ export function BoardHeader({ board, children }: BoardHeaderProps) {
         ) : (
           <div className="flex items-center gap-3 flex-1">
             <h1 className="text-2xl font-bold">{board.name}</h1>
-            <Badge variant={board.is_public ? "default" : "secondary"}>
+            <Badge
+              variant={board.is_public ? "default" : "secondary"}
+              className="hidden md:inline-flex"
+            >
               {board.is_public ? (
                 <>
                   <Globe className="h-3 w-3 mr-1" />

@@ -12,18 +12,18 @@ export function useUser() {
   const supabase = createClient();
 
   useEffect(() => {
-    const getUser = async () => {
+    const loadUser = async () => {
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      setUser(user);
+      setUser(session?.user ?? null);
 
-      if (user) {
+      if (session?.user) {
         const { data: profile } = await supabase
           .from("profiles")
           .select("*")
-          .eq("id", user.id)
+          .eq("id", session.user.id)
           .single();
         setProfile(profile);
       }
@@ -31,7 +31,7 @@ export function useUser() {
       setLoading(false);
     };
 
-    getUser();
+    loadUser();
 
     const {
       data: { subscription },
@@ -53,7 +53,8 @@ export function useUser() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const signOut = async () => {
     await supabase.auth.signOut();

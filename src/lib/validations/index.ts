@@ -34,9 +34,13 @@ export const createGoalSchema = z.object({
     .string()
     .min(1, "Goal name is required")
     .max(200, "Goal name is too long"),
-  target_amount: z.number().positive("Target amount must be positive"),
+  target_amount: z
+    .number("Target amount must be a valid number")
+    .refine((val) => !isNaN(val), "Target amount is required")
+    .refine((val) => val > 0, "Target amount must be positive"),
   initial_amount: z
-    .number()
+    .number("Initial amount must be a valid number")
+    .refine((val) => !isNaN(val), "Initial amount must be a valid number")
     .min(0, "Initial amount cannot be negative")
     .optional(),
   deadline: z.number().int().positive().optional().nullable(),
@@ -59,11 +63,13 @@ export const updateGoalSchema = z.object({
     .optional(),
   target_amount: z
     .number()
-    .positive("Target amount must be positive")
+    .refine((val) => !isNaN(val), "Target amount must be a valid number")
+    .refine((val) => val > 0, "Target amount must be positive")
     .optional(),
   current_value: z
     .number()
-    .min(0, "Current value cannot be negative")
+    .refine((val) => !isNaN(val), "Current value must be a valid number")
+    .refine((val) => val >= 0, "Current value cannot be negative")
     .optional(),
   deadline: z.number().int().positive().optional().nullable(),
   recurrence: recurrenceSchema.optional(),

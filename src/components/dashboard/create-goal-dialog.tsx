@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -51,7 +50,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface FormState {
@@ -108,6 +107,9 @@ export function CreateGoalDialog({
   const [isAddingRecord, setIsAddingRecord] = useState(false);
   const currentValueOnFocusRef = useRef<string>("");
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const isInitialMountRef = useRef(true);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const previousFormStateRef = useRef<FormState | null>(null);
 
   const updateFormField = <K extends keyof FormState>(
     field: K,
@@ -141,14 +143,104 @@ export function CreateGoalDialog({
   const router = useRouter();
   const { getUser, createGoal, updateGoal, createRecord } = useSupabase();
 
+  // Auto-save function for edit mode
+  const autoSave = useCallback(async () => {
+    if (!isEditMode || !goal || isInitialMountRef.current) return;
+
+    const trimmedName = formState.name.trim();
+    if (!trimmedName) return; // Don't save if name is empty
+
+    const target = parseFloat(formState.targetAmount);
+    if (isNaN(target) || target < 0) return;
+
+    const validation = updateGoalSchema.safeParse({
+      name: trimmedName,
+      target_amount: target,
+      deadline: formState.deadline ? formState.deadline.getTime() : null,
+      recurrence: formState.recurrence,
+      format: formState.amountFormat,
+      color: formState.color,
+    });
+
+    if (!validation.success) return;
+
+    try {
+      await updateGoal(goal.id, {
+        name: trimmedName,
+        target_amount: target,
+        deadline: formState.deadline ? formState.deadline.getTime() : null,
+        recurrence: formState.recurrence,
+        format: formState.amountFormat,
+        color: formState.color,
+      });
+      previousFormStateRef.current = { ...formState };
+      router.refresh();
+    } catch (error) {
+      console.error("Auto-save failed:", error);
+    }
+  }, [isEditMode, goal, formState, updateGoal, router]);
+
   // Reset form when goal changes (edit mode)
   useEffect(() => {
     if (goal) {
       const next = getFormStateFromGoal(goal);
       setFormState(next);
       currentValueOnFocusRef.current = next.currentValue;
+      previousFormStateRef.current = next;
+      isInitialMountRef.current = true;
+      // Reset initial mount flag after a short delay
+      setTimeout(() => {
+        isInitialMountRef.current = false;
+      }, 100);
     }
   }, [goal]);
+
+  // Auto-save on form state changes (edit mode only, excluding currentValue)
+  useEffect(() => {
+    if (!isEditMode || !goal || isInitialMountRef.current) return;
+
+    // Skip if currentValue changed (it has its own handler)
+    const prev = previousFormStateRef.current;
+    if (
+      prev &&
+      formState.currentValue === prev.currentValue &&
+      formState.name === prev.name &&
+      formState.targetAmount === prev.targetAmount &&
+      formState.recurrence === prev.recurrence &&
+      formState.amountFormat === prev.amountFormat &&
+      formState.color === prev.color &&
+      formState.deadline?.getTime() === prev.deadline?.getTime()
+    ) {
+      return;
+    }
+
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Debounce auto-save
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSave();
+    }, 500);
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [
+    isEditMode,
+    goal,
+    formState.name,
+    formState.currentValue,
+    formState.targetAmount,
+    formState.recurrence,
+    formState.amountFormat,
+    formState.color,
+    formState.deadline,
+    autoSave,
+  ]);
 
   useEffect(() => {
     if (isEditingName) {
@@ -199,6 +291,8 @@ export function CreateGoalDialog({
       }
       await updateGoal(goal.id, { name: trimmed });
       updateFormField("name", trimmed);
+      // Update previous state to prevent auto-save from triggering
+      previousFormStateRef.current = { ...formState, name: trimmed };
       toast.success("Goal name updated");
       router.refresh();
     } catch (e) {
@@ -287,6 +381,12 @@ export function CreateGoalDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // In edit mode, just close the dialog (auto-save handles saving)
+    if (isEditMode) {
+      setOpen(false);
+      return;
+    }
+
     const target = parseFloat(formState.targetAmount);
     const initial = formState.initialAmount
       ? parseFloat(formState.initialAmount)
@@ -316,11 +416,7 @@ export function CreateGoalDialog({
       return;
     }
 
-    if (
-      !isEditMode &&
-      initial !== undefined &&
-      (isNaN(initial) || initial < 0)
-    ) {
+    if (initial !== undefined && (isNaN(initial) || initial < 0)) {
       toast.error("Please enter a valid initial amount");
       return;
     }
@@ -334,53 +430,39 @@ export function CreateGoalDialog({
         return;
       }
 
-      if (isEditMode && goal) {
-        await updateGoal(goal.id, {
-          name: formState.name.trim(),
-          target_amount: target,
-          deadline: formState.deadline ? formState.deadline.getTime() : null,
-          recurrence: formState.recurrence,
-          format: formState.amountFormat,
-          color: formState.color,
-        });
-        toast.success("Goal updated successfully");
-        setOpen(false);
-        router.refresh();
-      } else {
-        const initialValue = initial ?? 0;
-        const newGoal = await createGoal({
-          board_id: boardId,
-          user_id: user.id,
-          name: formState.name.trim(),
-          target_amount: target,
-          deadline: formState.deadline ? formState.deadline.getTime() : null,
-          recurrence: formState.recurrence,
-          format: formState.amountFormat,
-          color: formState.color,
-          sort_order: existingGoalsCount,
-        });
+      const initialValue = initial ?? 0;
+      const newGoal = await createGoal({
+        board_id: boardId,
+        user_id: user.id,
+        name: formState.name.trim(),
+        target_amount: target,
+        deadline: formState.deadline ? formState.deadline.getTime() : null,
+        recurrence: formState.recurrence,
+        format: formState.amountFormat,
+        color: formState.color,
+        sort_order: existingGoalsCount,
+      });
 
-        if (initialValue > 0 && newGoal) {
-          try {
-            await createRecord({
-              goal_id: newGoal.id,
-              user_id: user.id,
-              amount: initialValue,
-              description: "Initial value",
-              timestamp: Date.now(),
-            });
-          } catch (recordError) {
-            console.error("Failed to create initial record:", recordError);
-            toast.warning(
-              "Goal created but failed to set initial amount. You can add it manually."
-            );
-          }
+      if (initialValue > 0 && newGoal) {
+        try {
+          await createRecord({
+            goal_id: newGoal.id,
+            user_id: user.id,
+            amount: initialValue,
+            description: "Initial value",
+            timestamp: Date.now(),
+          });
+        } catch (recordError) {
+          console.error("Failed to create initial record:", recordError);
+          toast.warning(
+            "Goal created but failed to set initial amount. You can add it manually."
+          );
         }
-
-        toast.success("Goal created successfully");
-        setOpen(false);
-        router.refresh();
       }
+
+      toast.success("Goal created successfully");
+      setOpen(false);
+      router.refresh();
     } catch (error) {
       toast.error("An unexpected error occurred");
       console.error(error);
@@ -390,13 +472,13 @@ export function CreateGoalDialog({
   };
 
   const incrementRow = isEditMode && goal && (
-    <div className="flex flex-wrap items-end gap-4">
+    <div className="grid gap-4">
       <div className="grid gap-2">
         <Label htmlFor="edit-current-value">Current value</Label>
         <Input
           id="edit-current-value"
           type="number"
-          className="w-24"
+          className="w-full"
           value={formState.currentValue}
           onChange={(e) => updateFormField("currentValue", e.target.value)}
           onFocus={() => {
@@ -413,18 +495,20 @@ export function CreateGoalDialog({
           step="any"
         />
       </div>
-      {([1, 5, 10, 100] as const).map((n) => (
-        <Button
-          key={n}
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={isLoading || isAddingRecord}
-          onClick={() => addRecordByAmount(n)}
-        >
-          +{n}
-        </Button>
-      ))}
+      <div className="flex flex-wrap justify-between gap-2">
+        {([1, 5, 10, 100] as const).map((n) => (
+          <Button
+            key={n}
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isLoading || isAddingRecord}
+            onClick={() => addRecordByAmount(n)}
+          >
+            +{n}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 
@@ -472,7 +556,7 @@ export function CreateGoalDialog({
           onClick={() => setIsEditingName(true)}
           disabled={isLoading}
           className={cn(
-            "text-left text-lg font-semibold rounded px-1 -mx-1 hover:bg-muted/50 transition-colors cursor-text",
+            "text-left text-xl font-semibold rounded px-1 -mx-1 hover:bg-muted/50 transition-colors cursor-text",
             !formState.name.trim() && "text-muted-foreground"
           )}
         >
@@ -484,7 +568,7 @@ export function CreateGoalDialog({
 
   const settingsSection = (
     <div className="grid gap-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="grid gap-2">
           <Label htmlFor={isEditMode ? "edit-target" : "target"}>
             Target Value
@@ -524,7 +608,7 @@ export function CreateGoalDialog({
               }
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -536,7 +620,7 @@ export function CreateGoalDialog({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="grid gap-2">
           <Label>Recurring</Label>
           <Select
@@ -546,7 +630,7 @@ export function CreateGoalDialog({
             }
             disabled={isLoading}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select recurrence" />
             </SelectTrigger>
             <SelectContent>
@@ -567,15 +651,17 @@ export function CreateGoalDialog({
                 <Button
                   variant="outline"
                   className={cn(
-                    "flex-1 justify-start text-left font-normal",
+                    "flex-1 min-w-0 justify-start text-left font-normal",
                     !formState.deadline && "text-muted-foreground"
                   )}
                   disabled={isLoading}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formState.deadline
-                    ? format(formState.deadline, "PPP")
-                    : "Pick a due date"}
+                  <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                  <span className="truncate">
+                    {formState.deadline
+                      ? format(formState.deadline, "PPP")
+                      : "Pick a due date"}
+                  </span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -681,10 +767,10 @@ export function CreateGoalDialog({
                 {formState.name.trim() || "Edit Goal"}
               </DialogTitle>
             </DialogHeader>
-            <div className="pr-24 pt-1">
-              {inlineNameEdit}
-              {incrementRow && <div className="mt-3">{incrementRow}</div>}
-            </div>
+            <div className="pr-24 pt-1">{inlineNameEdit}</div>
+
+            {incrementRow && <div className="mt-2">{incrementRow}</div>}
+
             <div className="grid gap-4 py-4 border-t mt-4">
               <h4 className="font-medium text-sm">Settings</h4>
               {settingsSection}
@@ -705,21 +791,15 @@ export function CreateGoalDialog({
         )}
 
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setOpen(false);
-              resetForm();
-            }}
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isLoading || !formState.name.trim()}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isEditMode ? "Save" : "Create Goal"}
-          </Button>
+          {!isEditMode && (
+            <Button
+              type="submit"
+              disabled={isLoading || !formState.name.trim()}
+            >
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create Goal
+            </Button>
+          )}
         </DialogFooter>
       </form>
     </DialogContent>

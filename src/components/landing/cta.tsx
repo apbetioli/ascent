@@ -24,7 +24,7 @@ export function CTA() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" onClick={() => scrollToSection("pricing")}>
-              Get Started for $29
+              Get Started
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>

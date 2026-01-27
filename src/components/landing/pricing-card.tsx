@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Check, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface PricingCardProps {
@@ -40,7 +40,17 @@ export function PricingCard({
   userId,
 }: PricingCardProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [priceFormatted, setPriceFormatted] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/price")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { formatted?: string } | null) =>
+        setPriceFormatted(data?.formatted ?? null)
+      )
+      .catch(() => setPriceFormatted(null));
+  }, []);
 
   const handleCheckout = async () => {
     setIsLoading(true);
@@ -97,7 +107,9 @@ export function PricingCard({
       </CardHeader>
       <CardContent className="text-center">
         <div className="mb-6">
-          <span className="text-5xl font-bold">$29</span>
+          <span className="text-5xl font-bold">
+            {priceFormatted ?? "$29"}
+          </span>
           <span className="text-muted-foreground ml-2">one-time</span>
         </div>
         <ul className="text-left space-y-3">

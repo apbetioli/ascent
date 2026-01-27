@@ -1,0 +1,27 @@
+# Local Redis + SRH (Serverless Redis HTTP) for development.
+# SRH exposes an Upstash-compatible REST API in front of Redis, so the app
+# can use the same @upstash/redis client without code changes.
+#
+# Start:   docker compose -f docker-compose.redis.yml up -d
+# Stop:    docker compose -f docker-compose.redis.yml down
+#
+# Then set in .env.local:
+#   UPSTASH_REDIS_REST_URL=http://localhost:8079
+#   UPSTASH_REDIS_REST_TOKEN=dev_token
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  srh:
+    image: hiett/serverless-redis-http:latest
+    ports:
+      - "8079:80"
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: dev_token
+      SRH_CONNECTION_STRING: redis://redis:6379
+    depends_on:
+      - redis

@@ -113,9 +113,10 @@ export function GoalProgressDisplay({
       tabIndex={onCardClick ? 0 : undefined}
     >
       <CardHeader>
-        <div className="flex items-center gap-2 -mb-2">
-          <CardTitle className={"text-base"}>{goal.name}</CardTitle>
-          <div className="flex-1" />
+        <div className="flex items-center justify-between gap-2 -mb-2">
+          <CardTitle className="text-base flex-1 text-start">
+            {goal.name}
+          </CardTitle>
           {isSurpassed && (
             <Badge
               variant="default"
@@ -154,7 +155,9 @@ export function GoalProgressDisplay({
           {deadlineStatus && !isComplete && (
             <span
               className={`flex items-center gap-1 ${
-                isOverdue && deadlineStatus !== "Due today" ? "text-destructive" : ""
+                isOverdue && deadlineStatus !== "Due today"
+                  ? "text-destructive"
+                  : ""
               }`}
             >
               <Calendar className="h-3 w-3" />

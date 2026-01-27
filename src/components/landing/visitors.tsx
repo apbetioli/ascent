@@ -8,19 +8,17 @@ export default async function Visitors() {
   const visitorCount = (await getLiveVisitorsCount()) ?? 0;
 
   return (
-    <div className="w-full max-w-sm mx-auto">
-      <GoalProgressDisplay
-        goal={
-          {
-            name: "Live Visitors",
-            current_amount: visitorCount,
-            target_amount: VISITOR_TARGET,
-            format: "number",
-            deadline: null,
-            color: "#3b82f6", // Blue color
-          } as Tables<"goals">
-        }
-      />
-    </div>
+    <GoalProgressDisplay
+      goal={
+        {
+          name: "Live Visitors (including you)",
+          current_amount: visitorCount,
+          target_amount: VISITOR_TARGET,
+          format: "number",
+          deadline: null,
+          color: "#3b82f6", // Blue color
+        } as Tables<"goals">
+      }
+    />
   );
 }

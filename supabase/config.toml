@@ -148,6 +148,9 @@ enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
 site_url = "http://127.0.0.1:3000"
+# Hosts allowed in X-Forwarded-Host / Host when building email links (suppresses the
+# "values have not been added to GOTRUE_MAILER_EXTERNAL_HOSTS" info log for local dev).
+mailer_external_hosts = ["127.0.0.1", "localhost"]
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = ["http://127.0.0.1:3000/auth/callback", "http://127.0.0.1:3000/auth/callback**", "http://localhost:3000/auth/callback", "http://localhost:3000/auth/callback**"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).

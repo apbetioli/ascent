@@ -6,7 +6,7 @@ export const GOAL_COLORS = [
   "#22C55E", // green
   "#14B8A6", // teal
   "#3B82F6", // blue
-  "#6366F1", // indigo
+  // "#6366F1", // indigo
   "#8B5CF6", // violet
   "#EC4899", // pink
   "#F43F5E", // rose

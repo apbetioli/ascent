@@ -107,9 +107,7 @@ export function PricingCard({
       </CardHeader>
       <CardContent className="text-center">
         <div className="mb-6">
-          <span className="text-5xl font-bold">
-            {priceFormatted ?? "$29"}
-          </span>
+          <span className="text-5xl font-bold">{priceFormatted ?? "$"}</span>
           <span className="text-muted-foreground ml-2">one-time</span>
         </div>
         <ul className="text-left space-y-3">

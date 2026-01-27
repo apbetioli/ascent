@@ -1,7 +1,61 @@
+import { GoalProgressDisplay } from "@/components/shared/goal-progress-display";
 import { Badge } from "@/components/ui/badge";
+import type { Tables } from "@/lib/supabase/types";
+import { getNextColor } from "@/lib/utils/colors";
 import { Sparkles } from "lucide-react";
-import Visitors from "./visitors";
 import { HeroButtons } from "./hero-buttons";
+import Visitors from "./visitors";
+
+type GoalRecurrence = Tables<"goals">["recurrence"];
+
+function createDemoGoal(
+  name: string,
+  current: number,
+  target: number,
+  format: "number" | "currency",
+  index: number,
+  options?: { deadline?: number; recurrence?: GoalRecurrence }
+): Tables<"goals"> {
+  return {
+    id: `demo-${index}`,
+    embed_id: "demo",
+    board_id: "demo",
+    user_id: "demo",
+    name,
+    target_amount: target,
+    current_amount: current,
+    deadline: options?.deadline ?? null,
+    recurrence: options?.recurrence ?? "none",
+    format,
+    color: getNextColor(index),
+    sort_order: index,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
+
+const endOfYear = new Date(
+  new Date().getFullYear(),
+  11,
+  31,
+  23,
+  59,
+  59
+).getTime();
+
+const perfectForGoals: Tables<"goals">[] = [
+  createDemoGoal("Fitness and health goals", 67, 100, "number", 1, {
+    recurrence: "weekly",
+  }),
+  createDemoGoal("Reading challenges", 24, 24, "number", 2, {
+    recurrence: "monthly",
+  }),
+  createDemoGoal("Learning new skills", 32, 50, "number", 3, {}),
+  createDemoGoal("Saving for a big purchase", 7200, 5000, "currency", 4, {}),
+  createDemoGoal("Business milestones", 41000, 50000, "currency", 5, {
+    deadline: endOfYear,
+  }),
+];
 
 export function Hero() {
   return (
@@ -20,96 +74,12 @@ export function Hero() {
 
           <HeroButtons />
 
-          <Badge variant="secondary" className="gap-1">
-            <Sparkles className="h-3 w-3" />
-            Now with real-time updates
-          </Badge>
-          <Visitors />
-
-          {/* Hero Image/Demo */}
-          <div className="w-full max-w-5xl mt-12">
-            <div className="relative rounded-xl border bg-muted/30 p-2 shadow-2xl">
-              <div className="rounded-lg bg-background p-4 md:p-8">
-                <div className="grid gap-4 md:grid-cols-3">
-                  {/* Demo Goal Card 1 */}
-                  <div
-                    className="rounded-lg border p-4"
-                    style={{ borderTopColor: "#22C55E", borderTopWidth: "3px" }}
-                  >
-                    <h3 className="font-semibold mb-1">Save for Vacation</h3>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      12 days left
-                    </p>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium">75%</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full bg-[#22C55E]"
-                          style={{ width: "75%" }}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-between text-sm mt-3">
-                      <span>$3,750 / $5,000</span>
-                    </div>
-                  </div>
-
-                  {/* Demo Goal Card 2 */}
-                  <div
-                    className="rounded-lg border p-4"
-                    style={{ borderTopColor: "#3B82F6", borderTopWidth: "3px" }}
-                  >
-                    <h3 className="font-semibold mb-1">Read 50 Books</h3>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Yearly goal
-                    </p>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium">62%</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full bg-[#3B82F6]"
-                          style={{ width: "62%" }}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-between text-sm mt-3">
-                      <span>31 / 50 books</span>
-                    </div>
-                  </div>
-
-                  {/* Demo Goal Card 3 */}
-                  <div
-                    className="rounded-lg border p-4"
-                    style={{ borderTopColor: "#EF4444", borderTopWidth: "3px" }}
-                  >
-                    <h3 className="font-semibold mb-1">Run 500 Miles</h3>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Monthly recurring
-                    </p>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium">88%</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full bg-[#EF4444]"
-                          style={{ width: "88%" }}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-between text-sm mt-3">
-                      <span>440 / 500 miles</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div className="w-full mt-16">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+              <Visitors />
+              {perfectForGoals.map((goal) => (
+                <GoalProgressDisplay key={goal.id} goal={goal} />
+              ))}
             </div>
           </div>
         </div>

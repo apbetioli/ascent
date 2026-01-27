@@ -11,18 +11,6 @@ import {
 
 const features = [
   {
-    icon: Target,
-    title: "Visual Progress Tracking",
-    description:
-      "Beautiful progress bars and charts that update in real-time as you make progress toward your goals.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Forward & Reverse Goals",
-    description:
-      "Track goals that grow (savings) or shrink (paying off debt) with intuitive visual feedback.",
-  },
-  {
     icon: Repeat,
     title: "Recurring Goals",
     description:
@@ -74,7 +62,7 @@ export function Features() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature) => (
             <div
               key={feature.title}

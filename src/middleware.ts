@@ -14,8 +14,12 @@ export async function middleware(request: NextRequest) {
 
   addVisitor(ip);
 
-  // Skip rate limiting for localhost/development
-  if (!isLocalhost(ip) && pathname !== "/blocked") {
+  // Skip rate limiting for localhost/development (including when testing with spoofed X-Forwarded-For)
+  if (
+    !isLocalhost(ip) &&
+    !isLocalhost(request.nextUrl.hostname) &&
+    pathname !== "/blocked"
+  ) {
     const rateLimitResult = await checkRateLimit(authRateLimiter, ip);
     const { success } = getRateLimitHeaders(rateLimitResult);
     if (!success) {

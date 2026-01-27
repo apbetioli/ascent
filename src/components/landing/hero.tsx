@@ -44,7 +44,7 @@ const endOfYear = new Date(
 ).getTime();
 
 const perfectForGoals: Tables<"goals">[] = [
-  createDemoGoal("Fitness and health goals", 67, 100, "number", 1, {
+  createDemoGoal("Fitness and health goals", 67, 100, "number", 0, {
     recurrence: "weekly",
   }),
   createDemoGoal("Reading challenges", 24, 24, "number", 2, {
@@ -52,7 +52,7 @@ const perfectForGoals: Tables<"goals">[] = [
   }),
   createDemoGoal("Learning new skills", 32, 50, "number", 3, {}),
   createDemoGoal("Saving for a big purchase", 7200, 5000, "currency", 4, {}),
-  createDemoGoal("Business milestones", 41000, 50000, "currency", 5, {
+  createDemoGoal("Business milestones", 41000, 50000, "currency", 6, {
     deadline: endOfYear,
   }),
 ];

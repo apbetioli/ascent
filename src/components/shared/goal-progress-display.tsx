@@ -113,8 +113,8 @@ export function GoalProgressDisplay({
       tabIndex={onCardClick ? 0 : undefined}
     >
       <CardHeader>
-        <div className="flex items-center justify-between gap-2 -mb-2">
-          <CardTitle className="text-base flex-1 text-start">
+        <div className="flex items-start justify-between gap-2 -mb-2 min-h-12">
+          <CardTitle className="text-base flex-1 min-w-0 text-start leading-tight">
             {goal.name}
           </CardTitle>
           {isSurpassed && (

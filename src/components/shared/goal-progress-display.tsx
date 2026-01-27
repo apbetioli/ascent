@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -11,12 +10,11 @@ import {
 import { Progress } from "@/components/ui/progress";
 import type { Tables } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
-import { getContrastTextColor } from "@/lib/utils/colors";
 import {
   calculateProgressPercentage,
   formatDeadlineStatus,
 } from "@/lib/utils/progress";
-import { AlertCircleIcon, Calendar, Repeat, Sparkles } from "lucide-react";
+import { AlertCircle, Calendar, CheckCircle2, Repeat } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface GoalProgressDisplayProps {
@@ -112,59 +110,51 @@ export function GoalProgressDisplay({
       role={onCardClick ? "button" : undefined}
       tabIndex={onCardClick ? 0 : undefined}
     >
-      <CardHeader>
-        <div className="flex items-start justify-between gap-2 -mb-2 min-h-12">
-          <CardTitle className="text-base flex-1 min-w-0 text-start leading-tight">
-            {goal.name}
-          </CardTitle>
-          {isSurpassed && (
-            <Badge
-              variant="default"
-              className="gap-1"
-              style={{
-                backgroundColor: goal.color,
-                color: getContrastTextColor(goal.color),
-              }}
-            >
-              <AlertCircleIcon className="h-3 w-3" />
-              Surpassed!
-            </Badge>
-          )}
-          {isComplete && !isSurpassed && (
-            <Badge
-              variant="default"
-              className="gap-1"
-              style={{
-                backgroundColor: goal.color,
-                color: getContrastTextColor(goal.color),
-              }}
-            >
-              <Sparkles className="h-3 w-3" />
-              Complete!
-            </Badge>
-          )}
-          {contextMenuEl}
+      <CardHeader className="gap-0.5">
+        <div className="flex flex-col gap-0.5 min-h-12">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="text-base flex-1 min-w-0 text-start leading-tight">
+              {goal.name}
+            </CardTitle>
+            <div className="flex items-center gap-1 shrink-0">
+              {isSurpassed && (
+                <AlertCircle
+                  className="h-5 w-5"
+                  style={{ color: goal.color }}
+                  aria-hidden
+                />
+              )}
+              {isComplete && !isSurpassed && (
+                <CheckCircle2
+                  className="h-5 w-5"
+                  style={{ color: goal.color }}
+                  aria-hidden
+                />
+              )}
+              {contextMenuEl}
+            </div>
+          </div>
+          <CardDescription className="flex flex-wrap gap-2 text-xs min-h-[20px] leading-tight -mt-0.5">
+            {goal.recurrence && goal.recurrence !== "none" && (
+              <span className="flex items-center gap-1">
+                <Repeat className="h-3 w-3" />
+                {goal.recurrence}
+              </span>
+            )}
+            {deadlineStatus && !isComplete && (
+              <span
+                className={`flex items-center gap-1 ${
+                  isOverdue && deadlineStatus !== "Due today"
+                    ? "text-destructive"
+                    : ""
+                }`}
+              >
+                <Calendar className="h-3 w-3" />
+                {deadlineStatus}
+              </span>
+            )}
+          </CardDescription>
         </div>
-        <CardDescription className="flex flex-wrap gap-2 text-xs min-h-[20px]">
-          {goal.recurrence && goal.recurrence !== "none" && (
-            <span className="flex items-center gap-1">
-              <Repeat className="h-3 w-3" />
-              {goal.recurrence}
-            </span>
-          )}
-          {deadlineStatus && !isComplete && (
-            <span
-              className={`flex items-center gap-1 ${
-                isOverdue && deadlineStatus !== "Due today"
-                  ? "text-destructive"
-                  : ""
-              }`}
-            >
-              <Calendar className="h-3 w-3" />
-              {deadlineStatus}
-            </span>
-          )}
-        </CardDescription>
       </CardHeader>
 
       <CardContent className={"space-y-2"}>

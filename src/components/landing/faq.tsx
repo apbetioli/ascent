@@ -11,7 +11,7 @@ const faqs = [
   {
     question: "Is this a one-time payment or a subscription?",
     answer:
-      "GoalTrack is a one-time payment of $29. You pay once and get lifetime access to all features, including future updates. No recurring charges, ever.",
+      "GoalTrack is a one-time payment. You pay once and get lifetime access to all features, including future updates. No recurring charges, ever.",
   },
   {
     question: "What types of goals can I track?",

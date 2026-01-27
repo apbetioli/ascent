@@ -1,5 +1,3 @@
-import { CheckCircle2 } from "lucide-react";
-
 const steps = [
   {
     number: "01",
@@ -50,31 +48,6 @@ export function HowItWorks() {
               </div>
             </div>
           ))}
-        </div>
-
-        <div className="mt-16 max-w-3xl mx-auto">
-          <div className="bg-muted/50 rounded-lg p-6 md:p-8">
-            <h3 className="font-semibold text-xl mb-4 text-center">
-              Perfect For
-            </h3>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {[
-                "Saving for a big purchase",
-                "Paying off debt",
-                "Fitness and health goals",
-                "Reading challenges",
-                "Learning new skills",
-                "Business milestones",
-                "Daily habits",
-                "Annual targets",
-              ].map((item) => (
-                <div key={item} className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </section>

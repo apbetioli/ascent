@@ -125,13 +125,12 @@ export function GoalProgressDisplay({
               {isSurpassed && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex cursor-help" tabIndex={0}>
-                      <AlertCircle
-                        className="h-5 w-5"
-                        style={{ color: goal.color }}
-                        aria-hidden
-                      />
-                    </span>
+                    <AlertCircle
+                      className="h-5 w-5 cursor-help"
+                      style={{ color: goal.color }}
+                      aria-hidden
+                      tabIndex={0}
+                    />
                   </TooltipTrigger>
                   <TooltipContent>Goal surpassed!</TooltipContent>
                 </Tooltip>
@@ -139,13 +138,12 @@ export function GoalProgressDisplay({
               {isComplete && !isSurpassed && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex cursor-help" tabIndex={0}>
-                      <CheckCircle2
-                        className="h-5 w-5"
-                        style={{ color: goal.color }}
-                        aria-hidden
-                      />
-                    </span>
+                    <CheckCircle2
+                      className="h-5 w-5 cursor-help"
+                      style={{ color: goal.color }}
+                      aria-hidden
+                      tabIndex={0}
+                    />
                   </TooltipTrigger>
                   <TooltipContent>Goal complete!</TooltipContent>
                 </Tooltip>

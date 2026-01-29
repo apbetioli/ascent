@@ -529,17 +529,17 @@ export function CreateGoalDialog({
           step="any"
         />
       </div>
-      <div className="flex flex-wrap justify-between gap-2">
+      <div className="flex flex-wrap justify-between">
         {([1, 5, 10, 100] as const).map((n) => (
           <Button
             key={n}
             type="button"
-            variant="outline"
-            size="sm"
+            variant="secondary"
+            size="lg"
             disabled={isLoading || isAddingRecord}
             onClick={() => addRecordByAmount(n)}
           >
-            +{n}
+            <span className="text-md font-semibold">+{n}</span>
           </Button>
         ))}
       </div>

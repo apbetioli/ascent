@@ -121,7 +121,8 @@ export function GoalProgressDisplay({
             <CardTitle className="text-base flex-1 min-w-0 text-start leading-tight">
               {goal.name}
             </CardTitle>
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
+              {contextMenuEl}
               {isSurpassed && (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -148,7 +149,6 @@ export function GoalProgressDisplay({
                   <TooltipContent>Goal complete!</TooltipContent>
                 </Tooltip>
               )}
-              {contextMenuEl}
             </div>
           </div>
           <CardDescription className="flex flex-wrap gap-2 text-xs min-h-[20px] leading-tight -mt-0.5">

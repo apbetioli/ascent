@@ -15,28 +15,23 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme()
-  const [mounted, setMounted] = React.useState(false)
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
 
-  // Avoid hydration mismatch
+  // Avoid hydration mismatch for theme-dependent icon only
   React.useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
-  if (!mounted) {
-    return (
-      <Button variant="ghost" size="icon" className="h-8 w-8">
-        <Sun className="h-4 w-4" />
-        <span className="sr-only">Toggle theme</span>
-      </Button>
-    )
-  }
-
+  // Always render the same DropdownMenu structure so Radix ID generation
+  // matches between server and client (avoids hydration mismatch in sibling nav dropdown)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-8 w-8">
-          {resolvedTheme === "dark" ? (
+          {!mounted ? (
+            <Sun className="h-4 w-4" />
+          ) : resolvedTheme === "dark" ? (
             <Moon className="h-4 w-4" />
           ) : (
             <Sun className="h-4 w-4" />
@@ -61,5 +56,5 @@ export function ThemeToggle() {
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

@@ -26,14 +26,12 @@ export default async function BoardPage({ params }: BoardPageProps) {
   const user = await getAuthenticatedUser(supabase);
   const { getBoard, getGoalsByBoard } = createServerQueries(supabase);
 
-  // Get board with goals
   const board = await getBoard(boardId, user.id);
 
   if (!board) {
     notFound();
   }
 
-  // Get goals for this board
   const goals = await getGoalsByBoard(boardId);
 
   return (

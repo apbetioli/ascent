@@ -31,14 +31,12 @@ export default async function PublicBoardPage({
   const { getBoardByPublicSlug, getGoalsByBoard } =
     createServerQueries(supabase);
 
-  // Get board by public_slug
   const board = await getBoardByPublicSlug(publicSlug);
 
   if (!board) {
     notFound();
   }
 
-  // Get goals for this board
   const goals = await getGoalsByBoard(board.id);
 
   return (

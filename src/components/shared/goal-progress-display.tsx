@@ -8,6 +8,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { Tables } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
 import {
@@ -118,18 +123,32 @@ export function GoalProgressDisplay({
             </CardTitle>
             <div className="flex items-center gap-1 shrink-0">
               {isSurpassed && (
-                <AlertCircle
-                  className="h-5 w-5"
-                  style={{ color: goal.color }}
-                  aria-hidden
-                />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex cursor-help" tabIndex={0}>
+                      <AlertCircle
+                        className="h-5 w-5"
+                        style={{ color: goal.color }}
+                        aria-hidden
+                      />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>Goal surpassed!</TooltipContent>
+                </Tooltip>
               )}
               {isComplete && !isSurpassed && (
-                <CheckCircle2
-                  className="h-5 w-5"
-                  style={{ color: goal.color }}
-                  aria-hidden
-                />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex cursor-help" tabIndex={0}>
+                      <CheckCircle2
+                        className="h-5 w-5"
+                        style={{ color: goal.color }}
+                        aria-hidden
+                      />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>Goal complete!</TooltipContent>
+                </Tooltip>
               )}
               {contextMenuEl}
             </div>

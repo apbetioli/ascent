@@ -236,6 +236,7 @@ export function useSupabase() {
           | "format"
           | "color"
           | "sort_order"
+          | "board_id"
         >
       >
     ): Promise<void> => {
@@ -249,6 +250,7 @@ export function useSupabase() {
           | "format"
           | "color"
           | "sort_order"
+          | "board_id"
         >
       > = { ...updates };
       if (updates.name) {

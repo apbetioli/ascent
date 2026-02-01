@@ -153,9 +153,9 @@ function BoardColumn({ board, initialGoals, onGoalsChange }: BoardColumnProps) {
       >
         <div className="flex flex-col gap-2 p-3 min-w-0 min-h-[120px]">
           {sortedGoals.length === 0 ? (
-            <Card className="flex flex-col items-center justify-center py-8">
-              <Target className="mb-2 h-10 w-10 text-muted-foreground" />
-              <CardTitle className="mb-1 text-sm">No goals yet</CardTitle>
+            <Card className="flex flex-col items-center justify-center py-6">
+              <Target className="mb-0 h-10 w-10 text-muted-foreground" />
+              <CardTitle className="mb-0 text-sm">No goals yet</CardTitle>
               <CardDescription className="text-center text-xs">
                 Use + to add a goal or drag one here
               </CardDescription>

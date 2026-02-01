@@ -235,6 +235,7 @@ export function useSupabase() {
           | "recurrence"
           | "format"
           | "color"
+          | "sort_order"
         >
       >
     ): Promise<void> => {
@@ -247,6 +248,7 @@ export function useSupabase() {
           | "recurrence"
           | "format"
           | "color"
+          | "sort_order"
         >
       > = { ...updates };
       if (updates.name) {

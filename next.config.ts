@@ -1,5 +1,5 @@
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false, //Avoids supabase errors abort controller
   images: {
     remotePatterns: [
       {

@@ -85,13 +85,43 @@ export function useRealtimeBoardGoals(
         },
         (payload: RealtimePostgresChangesPayload<Tables<"goals">>) => {
           if (payload.new && "id" in payload.new) {
-            setGoals((prev) =>
-              prev.map((g) =>
-                g.id === (payload.new as Tables<"goals">).id
-                  ? (payload.new as Tables<"goals">)
-                  : g
-              )
-            );
+            const updated = payload.new as Tables<"goals">;
+            setGoals((prev) => {
+              const existing = prev.find((g) => g.id === updated.id);
+              if (existing) {
+                // Goal moved to another board (filter no longer matches, we may not get this; handled below)
+                if (updated.board_id !== boardId) {
+                  return prev.filter((g) => g.id !== updated.id);
+                }
+                return prev.map((g) => (g.id === updated.id ? updated : g));
+              }
+              // Goal moved here from another board (INSERT not always sent for UPDATE)
+              return [...prev, updated].sort(
+                (a, b) => a.sort_order - b.sort_order
+              );
+            });
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "goals",
+          // No filter: receive all goal UPDATEs so we can remove goals that moved away
+          // (when board_id changes, the source channel often doesn't receive the event)
+        },
+        (payload: RealtimePostgresChangesPayload<Tables<"goals">>) => {
+          if (payload.new && "id" in payload.new) {
+            const updated = payload.new as Tables<"goals">;
+            if (updated.board_id !== boardId) {
+              setGoals((prev) =>
+                prev.some((g) => g.id === updated.id)
+                  ? prev.filter((g) => g.id !== updated.id)
+                  : prev
+              );
+            }
           }
         }
       )

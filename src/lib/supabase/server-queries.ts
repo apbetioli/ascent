@@ -42,7 +42,7 @@ export function createServerQueries(supabase: SupabaseClientType) {
       .from("boards")
       .select("*")
       .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: true });
 
     if (error) return [];
     return data ?? [];

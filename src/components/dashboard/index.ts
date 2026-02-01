@@ -1,5 +1,6 @@
 export { DashboardNav } from "./nav";
 export { BoardsList } from "./boards-list";
+export { BoardsTrelloView } from "./boards-trello-view";
 export { BoardHeader } from "./board-header";
 export { CreateBoardDialog } from "./create-board-dialog";
 export { GoalsList } from "./goals-list";

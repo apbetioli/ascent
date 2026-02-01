@@ -177,7 +177,7 @@ export function GoalProgressDisplay({
       <CardContent className={"space-y-2"}>
         {/* Progress Bar */}
         <div className="space-y-1">
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between items-center text-sm">
             <div className="flex items-center gap-1">
               <span className="font-bold text-lg">
                 {formatAmount(goal.current_amount)}

@@ -35,7 +35,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
   const goals = await getGoalsByBoard(boardId);
 
   return (
-    <div className="container mx-auto space-y-6">
+    <div className="container mx-auto space-y-6 py-6">
       <BoardHeader board={board}>
         <CreateGoalDialog boardId={boardId} existingGoalsCount={goals.length} />
       </BoardHeader>

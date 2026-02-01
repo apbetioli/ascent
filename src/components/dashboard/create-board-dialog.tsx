@@ -52,7 +52,6 @@ export function CreateBoardDialog() {
       toast.success("Board created successfully");
       setOpen(false);
       setName("");
-      router.push(`/boards/${board.id}`);
       router.refresh();
     } catch (error) {
       toast.error("An unexpected error occurred");

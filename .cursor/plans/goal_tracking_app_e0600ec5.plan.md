@@ -334,7 +334,7 @@ Pre-defined palette with 12 colors (auto-assigned on goal creation):
 
 ### 6. Embeddable Widget
 
-- Route: `/embed/[embedId] `(uses goal's UUID `embed_id`)
+- Route: `/embed/[embedId]` (uses goal's UUID `embed_id`)
 - Renders minimal card with progress bar, percentage, and remaining value
 - Uses `X-Frame-Options: ALLOWALL` for iframe embedding
 - Automatically available for all goals on public boards
@@ -375,6 +375,7 @@ Pre-defined palette with 12 colors (auto-assigned on goal creation):
 6. Stripe webhook sets `has_paid = true` in profiles table
 7. On first login, auto-create default board via database trigger or API
 8. Redirect to `/boards`
+
 ```typescript
 // Supabase Auth - Magic Link
 await supabase.auth.signInWithOtp({ email });
@@ -382,7 +383,6 @@ await supabase.auth.signInWithOtp({ email });
 // Supabase Auth - Google OAuth
 await supabase.auth.signInWithOAuth({ provider: "google" });
 ```
-
 
 ---
 
@@ -526,9 +526,9 @@ create unique index idx_goals_board_name
 4. Board `source` set to `'google_sheets'`
 5. User clicks "Sync Now" (or enable auto-sync polling)
 6. App syncs:
+  - Rows in sheet → upsert goals by name
+  - Goals NOT in sheet → delete from database
 
-   - Rows in sheet → upsert goals by name
-   - Goals NOT in sheet → delete from database
 ```typescript
 async function syncSheetBoard(boardId: string, rows: SheetRow[]) {
   const sheetGoalNames = rows.map((r) => r.name);
@@ -556,7 +556,6 @@ async function syncSheetBoard(boardId: string, rows: SheetRow[]) {
 }
 ```
 
-
 ### Key Points
 
 - **No Apps Script** - Pure Google Sheets API via OAuth
@@ -564,3 +563,4 @@ async function syncSheetBoard(boardId: string, rows: SheetRow[]) {
 - **No orphans** - Deleted/renamed rows handled automatically on sync
 - **Clean separation** - Board is fully app-managed OR fully sheet-managed
 - **Name as identifier** - Goal name must be unique within board
+

@@ -1,7 +1,6 @@
 import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { createServerQueries } from "@/lib/supabase/server-queries";
-import { BoardsList } from "@/components/dashboard/boards-list";
-import { CreateBoardDialog } from "@/components/dashboard/create-board-dialog";
+import { BoardsTrelloView } from "@/components/dashboard/boards-trello-view";
 
 export const metadata = {
   title: "Boards",
@@ -10,24 +9,29 @@ export const metadata = {
 export default async function BoardsPage() {
   const supabase = await createClient();
   const user = await getAuthenticatedUser(supabase);
-  const { getBoards } = createServerQueries(supabase);
+  const { getBoards, getGoalsByUser } = createServerQueries(supabase);
 
-  // Get user's boards (single board created only on signup via DB trigger)
-  const boards = await getBoards(user.id);
+  const [boards, allGoals] = await Promise.all([
+    getBoards(user.id),
+    getGoalsByUser(user.id),
+  ]);
+
+  const goalsByBoardId = allGoals.reduce<Record<string, typeof allGoals>>(
+    (acc, goal) => {
+      if (!acc[goal.board_id]) acc[goal.board_id] = [];
+      acc[goal.board_id].push(goal);
+      return acc;
+    },
+    {}
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Boards</h1>
-          <p className="text-muted-foreground">
-            Organize your goals into boards
-          </p>
-        </div>
-        <CreateBoardDialog />
-      </div>
-
-      <BoardsList boards={boards} />
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <BoardsTrelloView
+        boards={boards}
+        goalsByBoardId={goalsByBoardId}
+        className="min-h-0 flex-1"
+      />
     </div>
   );
 }

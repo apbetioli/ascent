@@ -1,38 +1,12 @@
 "use client";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { BoardOptionsMenu } from "@/components/dashboard/board-options-menu";
 import { Input } from "@/components/ui/input";
 import { useSupabase } from "@/lib/hooks/use-supabase";
 import type { Tables } from "@/lib/supabase/types";
-import {
-  Check,
-  Copy,
-  ExternalLink,
-  Globe,
-  Lock,
-  MoreHorizontal,
-  Trash2,
-  X,
-} from "lucide-react";
-import Link from "next/link";
+import { Check, Globe, Lock, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -45,10 +19,8 @@ interface BoardHeaderProps {
 export function BoardHeader({ board, children }: BoardHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(board.name);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const router = useRouter();
-  const { updateBoard, deleteBoard } = useSupabase();
+  const { updateBoard } = useSupabase();
 
   const handleSaveName = async () => {
     if (!name.trim()) {
@@ -65,42 +37,6 @@ export function BoardHeader({ board, children }: BoardHeaderProps) {
       toast.error("Failed to update board name");
       console.error(error);
     }
-  };
-
-  const handleTogglePublic = async () => {
-    try {
-      await updateBoard(board.id, { is_public: !board.is_public });
-      toast.success(
-        board.is_public ? "Board is now private" : "Board is now public"
-      );
-      router.refresh();
-    } catch (error) {
-      toast.error("Failed to update board visibility");
-      console.error(error);
-    }
-  };
-
-  const handleDelete = async () => {
-    setIsDeleting(true);
-
-    try {
-      await deleteBoard(board.id);
-      toast.success("Board deleted");
-      router.push("/boards");
-      router.refresh();
-    } catch (error) {
-      toast.error("Failed to delete board");
-      console.error(error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleCopyPublicLink = () => {
-    if (!board.public_slug) return;
-    const url = `${window.location.origin}/public/${board.public_slug}`;
-    navigator.clipboard.writeText(url);
-    toast.success("Public link copied to clipboard");
   };
 
   return (
@@ -173,80 +109,9 @@ export function BoardHeader({ board, children }: BoardHeaderProps) {
         {!isEditing && children}
 
         {!isEditing && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleTogglePublic}>
-              {board.is_public ? (
-                <>
-                  <Lock className="mr-2 h-4 w-4" />
-                  Make Private
-                </>
-              ) : (
-                <>
-                  <Globe className="mr-2 h-4 w-4" />
-                  Make Public
-                </>
-              )}
-            </DropdownMenuItem>
-            {board.is_public && board.public_slug && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleCopyPublicLink}>
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copy Public Link
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link
-                    href={`/public/${board.public_slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    View Public Page
-                  </Link>
-                </DropdownMenuItem>
-              </>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onClick={() => setShowDeleteDialog(true)}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete Board
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          <BoardOptionsMenu board={board} triggerVariant="outline" />
         )}
       </div>
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Board</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete &quot;{board.name}&quot;? This
-              will also delete all goals and records in this board. This action
-              cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

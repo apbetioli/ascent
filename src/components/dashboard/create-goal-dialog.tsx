@@ -70,6 +70,8 @@ interface CreateGoalDialogProps {
   goal?: Tables<"goals">;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** When true, do not render the default "New Goal" trigger (use your own button) */
+  hideDefaultTrigger?: boolean;
   onEmbedClick?: () => void;
   onDeleteClick?: () => void;
 }
@@ -80,6 +82,7 @@ export function CreateGoalDialog({
   goal,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
+  hideDefaultTrigger = false,
   onEmbedClick,
   onDeleteClick,
 }: CreateGoalDialogProps) {
@@ -839,9 +842,12 @@ export function CreateGoalDialog({
     </DialogContent>
   );
 
+  const showDefaultTrigger =
+    !isEditMode && !hideDefaultTrigger && controlledOpen === undefined;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {!isEditMode && (
+      {showDefaultTrigger && (
         <DialogTrigger asChild>
           <Button>
             <Plus className="mr-2 h-4 w-4" />

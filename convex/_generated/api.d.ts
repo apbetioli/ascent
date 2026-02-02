@@ -13,6 +13,7 @@ import type * as auth from "../auth.js";
 import type * as boards from "../boards.js";
 import type * as goals from "../goals.js";
 import type * as http from "../http.js";
+import type * as magic_links from "../magic_links.js";
 import type * as pending_payments from "../pending_payments.js";
 import type * as profiles from "../profiles.js";
 import type * as records from "../records.js";
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   boards: typeof boards;
   goals: typeof goals;
   http: typeof http;
+  magic_links: typeof magic_links;
   pending_payments: typeof pending_payments;
   profiles: typeof profiles;
   records: typeof records;

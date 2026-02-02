@@ -11,11 +11,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  if (result.paid && result.email && result.customerId) {
+  if (result.paid && result.email) {
     try {
       await fetchMutation(api.pending_payments.addPendingPayment, {
         email: result.email,
-        stripeCustomerId: result.customerId,
+        ...(result.customerId && { stripeCustomerId: result.customerId }),
         paymentProvider: paymentProvider.getProviderName(),
       });
     } catch (error) {

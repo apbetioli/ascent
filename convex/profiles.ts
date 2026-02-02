@@ -86,6 +86,39 @@ export const updateProfile = mutation({
   },
 });
 
+/**
+ * Set hasPaid (and payment fields) for an existing profile by email.
+ * Called from payment-success route after Stripe verification. No-op if no user/profile for email.
+ */
+export const setHasPaidByEmail = mutation({
+  args: {
+    email: v.string(),
+    paymentProvider: v.string(),
+    stripeCustomerId: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", args.email))
+      .unique();
+    if (!user) return null;
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .unique();
+    if (!profile) return null;
+    await ctx.db.patch(profile._id, {
+      hasPaid: true,
+      paymentProvider: args.paymentProvider,
+      ...(args.stripeCustomerId != null && {
+        paymentCustomerId: args.stripeCustomerId,
+      }),
+    });
+    return null;
+  },
+});
+
 export const ensureProfileAndDefaultBoard = mutation({
   args: {
     userId: v.id("users"),
@@ -114,7 +147,9 @@ export const ensureProfileAndDefaultBoard = mutation({
         timezone: "UTC",
         ...(pending && {
           paymentProvider: pending.paymentProvider,
-          paymentCustomerId: pending.stripeCustomerId,
+          ...(pending.stripeCustomerId != null && {
+            paymentCustomerId: pending.stripeCustomerId,
+          }),
         }),
       });
       const boards = await ctx.db

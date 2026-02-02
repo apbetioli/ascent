@@ -14,11 +14,17 @@ import { addVisitor } from "./lib/redis/visitors";
 const authMiddleware = convexAuthNextjsMiddleware(
   async (request: NextRequest, { convexAuth }) => {
     const pathname = request.nextUrl.pathname;
+    const hasAuthCode = request.nextUrl.searchParams.has("code");
     const isPublicRoute =
       pathname === "/" ||
       pathname.startsWith("/login") ||
       pathname.startsWith("/api/") ||
       pathname.startsWith("/auth/");
+
+    // Let magic link / OAuth callback through so auth can exchange the code and set cookies
+    if (hasAuthCode) {
+      return NextResponse.next({ request });
+    }
 
     if (!(await convexAuth.isAuthenticated()) && !isPublicRoute) {
       return nextjsMiddlewareRedirect(request, "/login");

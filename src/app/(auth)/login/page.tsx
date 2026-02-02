@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useUser } from "@/lib/hooks/use-user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,16 +21,30 @@ import { Loader2, Mail } from "lucide-react";
 import Link from "next/link";
 
 export default function LoginPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   const redirect = searchParams.get("redirect") || "/boards";
   const emailParam = searchParams.get("email");
+  const fromPayment = searchParams.get("fromPayment") === "1";
+  const hasAuthCode = searchParams.get("code") != null;
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   const { signIn } = useAuthActions();
+  const { isAuthenticated, loading: authLoading } = useUser();
+
+  // Redirect authenticated users (e.g. after magic link code exchange lands on /login with cookies).
+  // When fromPayment=1 and not yet authenticated, show the login form. Once authenticated (e.g.
+  // after magic link callback), always redirect so they land on /boards.
+  const skipRedirectForPayment =
+    fromPayment && !hasAuthCode && !isAuthenticated;
+  useEffect(() => {
+    if (authLoading || !isAuthenticated || skipRedirectForPayment) return;
+    router.replace(redirect);
+  }, [isAuthenticated, authLoading, redirect, router, skipRedirectForPayment]);
 
   useEffect(() => {
     if (emailParam) {
@@ -42,9 +57,10 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      // Magic link lands on /login so middleware (public route) can run code exchange, then we redirect
       await signIn("email", {
         email,
-        redirectTo: redirect,
+        redirectTo: `/login?redirect=${encodeURIComponent(redirect)}`,
       });
       setMagicLinkSent(true);
       toast.success("Check your email for the magic link!");
@@ -74,6 +90,14 @@ export default function LoginPage() {
       setIsGoogleLoading(false);
     }
   };
+
+  if (authLoading || (isAuthenticated && redirect && !skipRedirectForPayment)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (magicLinkSent) {
     return (
@@ -115,7 +139,11 @@ export default function LoginPage() {
           <Link href="/" className="inline-block">
             <CardTitle className="text-2xl font-bold">GoalTrack</CardTitle>
           </Link>
-          <CardDescription>Sign in to your account to continue</CardDescription>
+          <CardDescription>
+            {fromPayment
+              ? "Payment successful! Sign in with the email below to access your account."
+              : "Sign in to your account to continue"}
+          </CardDescription>
           {error && (
             <p className="text-sm text-destructive mt-2">
               Authentication failed. Please try again.

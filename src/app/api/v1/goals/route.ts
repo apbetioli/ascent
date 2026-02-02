@@ -1,16 +1,19 @@
-import { createServiceClient } from "@/lib/supabase/server";
-import { createServerQueries } from "@/lib/supabase/server-queries";
-import { withApiAuth, apiSuccess, apiError } from "@/lib/api";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "convex/_generated/api";
+import type { Id } from "convex/_generated/dataModel";
+import { withApiAuth, apiSuccess } from "@/lib/api";
+import { convexGoalToApi } from "@/lib/api/convex-to-api";
 
 /**
  * GET /api/v1/goals
  * List all goals for the authenticated user
  */
 export const GET = withApiAuth(async ({ userId }) => {
-  const supabase = await createServiceClient();
-  const { getGoalsByUser } = createServerQueries(supabase);
+  const goals = await fetchQuery(api.goals.listGoalsByUser, {
+    userId: userId as Id<"users">,
+  });
 
-  const goals = await getGoalsByUser(userId);
-
-  return apiSuccess({ goals });
+  return apiSuccess({
+    goals: goals.map(convexGoalToApi),
+  });
 });

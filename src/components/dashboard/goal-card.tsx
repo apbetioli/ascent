@@ -26,8 +26,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSupabase } from "@/lib/hooks/use-supabase";
-import type { Tables } from "@/lib/supabase/types";
+import type { ConvexGoal } from "@/lib/convex-types";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
+import type { Id } from "convex/_generated/dataModel";
 import { Code, Copy, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -35,29 +37,32 @@ import { toast } from "sonner";
 import { CreateGoalDialog } from "./create-goal-dialog";
 
 interface GoalCardProps {
-  goal: Tables<"goals">;
+  goal: ConvexGoal;
+  boardId: Id<"boards">;
 }
 
-export function GoalCard({ goal }: GoalCardProps) {
+export function GoalCard({ goal, boardId }: GoalCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showEmbedDialog, setShowEmbedDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const router = useRouter();
-  const { getUser, createRecord, deleteGoal } = useSupabase();
+  const userId = useQuery(api.profiles.getCurrentUserId);
+  const createRecord = useMutation(api.records.createRecord);
+  const deleteGoal = useMutation(api.goals.deleteGoal);
 
   const handleCopyEmbedCode = () => {
-    const embedCode = `<iframe src="${process.env.NEXT_PUBLIC_APP_URL}/embed/${goal.embed_id}" width="400" height="200" frameborder="0" style="border-radius: 8px;"></iframe>`;
+    const embedCode = `<iframe src="${process.env.NEXT_PUBLIC_APP_URL}/embed/${goal.embedId}" width="400" height="200" frameborder="0" style="border-radius: 8px;"></iframe>`;
     navigator.clipboard.writeText(embedCode);
     toast.success("Embed code copied to clipboard!");
   };
 
   const handleDelete = async () => {
+    if (!userId) return;
     setIsDeleting(true);
-
     try {
-      await deleteGoal(goal.id);
+      await deleteGoal({ goalId: goal._id, userId });
       toast.success("Goal deleted");
       setShowDeleteDialog(false);
       setShowEditDialog(false);
@@ -72,17 +77,15 @@ export function GoalCard({ goal }: GoalCardProps) {
 
   const handlePlusOne = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const user = await getUser();
-    if (!user) {
+    if (!userId) {
       toast.error("You must be logged in");
       return;
     }
     try {
       await createRecord({
-        goal_id: goal.id,
-        user_id: user.id,
+        goalId: goal._id,
+        userId,
         amount: 1,
-        description: null,
         timestamp: Date.now(),
       });
       toast.success("Progress added");
@@ -162,7 +165,7 @@ export function GoalCard({ goal }: GoalCardProps) {
       </AlertDialog>
 
       <CreateGoalDialog
-        boardId={goal.board_id}
+        boardId={boardId}
         existingGoalsCount={0}
         goal={goal}
         open={showEditDialog}
@@ -182,7 +185,7 @@ export function GoalCard({ goal }: GoalCardProps) {
           <div className="space-y-4">
             <div className="p-3 bg-muted rounded-md">
               <code className="text-xs break-all">
-                {`<iframe src="${process.env.NEXT_PUBLIC_APP_URL}/embed/${goal.embed_id}" width="400" height="200" frameborder="0" style="border-radius: 8px;"></iframe>`}
+                {`<iframe src="${process.env.NEXT_PUBLIC_APP_URL}/embed/${goal.embedId}" width="400" height="200" frameborder="0" style="border-radius: 8px;"></iframe>`}
               </code>
             </div>
             <Button onClick={handleCopyEmbedCode} className="w-full">

@@ -1,19 +1,18 @@
 "use client";
 
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { useRealtimeBoardGoals } from "@/lib/hooks";
-import type { Tables } from "@/lib/supabase/types";
+import { useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
+import type { Id } from "convex/_generated/dataModel";
 import { Target } from "lucide-react";
 import { GoalCard } from "./goal-card";
 
 interface GoalsListProps {
-  goals: Tables<"goals">[];
-  boardId: string;
+  boardId: Id<"boards">;
 }
 
-export function GoalsList({ goals: initialGoals, boardId }: GoalsListProps) {
-  // Subscribe to real-time updates for all goals on this board
-  const goals = useRealtimeBoardGoals(boardId, initialGoals);
+export function GoalsList({ boardId }: GoalsListProps) {
+  const goals = useQuery(api.goals.listGoalsByBoard, { boardId }) ?? [];
 
   if (goals.length === 0) {
     return (
@@ -27,13 +26,12 @@ export function GoalsList({ goals: initialGoals, boardId }: GoalsListProps) {
     );
   }
 
-  // Sort by sort_order
-  const sortedGoals = [...goals].sort((a, b) => a.sort_order - b.sort_order);
+  const sortedGoals = [...goals].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {sortedGoals.map((goal) => (
-        <GoalCard key={goal.id} goal={goal} />
+        <GoalCard key={goal._id} goal={goal} boardId={boardId} />
       ))}
     </div>
   );

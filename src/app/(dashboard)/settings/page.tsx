@@ -1,27 +1,56 @@
-import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
-import { createServerQueries } from "@/lib/supabase/server-queries";
+import { fetchQuery } from "convex/nextjs";
+import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
+import { api } from "convex/_generated/api";
+import type { Id } from "convex/_generated/dataModel";
 import { SettingsPage } from "@/components/dashboard/settings-page";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Settings",
 };
 
 export default async function Settings() {
-  const supabase = await createClient();
-  const user = await getAuthenticatedUser(supabase);
-  const { getProfile, getApiTokensLimited } = createServerQueries(supabase);
+  const token = await convexAuthNextjsToken();
+  if (!token) {
+    redirect("/login?redirect=/settings");
+  }
 
-  // Get user profile
-  const profile = await getProfile(user.id);
+  const userId = await fetchQuery(api.profiles.getCurrentUserId, {}, { token });
+  if (!userId) {
+    redirect("/login?redirect=/settings");
+  }
 
-  // Get API tokens
-  const tokens = await getApiTokensLimited(user.id);
+  const profile = await fetchQuery(
+    api.profiles.getProfile,
+    { userId },
+    { token }
+  );
+  const tokens = await fetchQuery(
+    api.api_tokens.listApiTokensLimited,
+    { userId },
+    { token }
+  );
+
+  const user = await fetchQuery(api.profiles.getCurrentUser, {}, { token });
+  if (!user) {
+    redirect("/login?redirect=/settings");
+  }
 
   return (
     <SettingsPage
-      user={user}
+      user={{ id: userId, email: user.email ?? undefined }}
       profile={profile}
-      tokens={tokens}
+      tokens={tokens.map(
+        (t: {
+          _id: Id<"api_tokens">;
+          _creationTime: number;
+          name: string;
+        }) => ({
+          id: t._id,
+          name: t.name,
+          created_at: new Date(t._creationTime).toISOString(),
+        })
+      )}
     />
   );
 }

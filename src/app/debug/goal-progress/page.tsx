@@ -1,7 +1,6 @@
 "use client";
 
 import { GoalProgressDisplay } from "@/components/shared/goal-progress-display";
-import type { Tables } from "@/lib/supabase/types";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,24 +10,33 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 
-// Helper to create mock goal data
-function createMockGoal(overrides: Partial<Tables<"goals">>): Tables<"goals"> {
-  return {
-    id: "mock-goal-id",
-    embed_id: "mock-embed-id",
-    board_id: "mock-board-id",
-    user_id: "mock-user-id",
+type MockGoal = {
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline?: number | null;
+  recurrence: string;
+  format: "number" | "currency";
+  color: string;
+  current_amount: number;
+  target_amount: number;
+};
+
+function createMockGoal(overrides: Partial<MockGoal>): MockGoal {
+  const base = {
     name: "Sample Goal",
-    target_amount: 1000,
-    current_amount: 0,
+    targetAmount: 1000,
+    currentAmount: 0,
     deadline: null,
     recurrence: "none",
-    format: "currency",
+    format: "currency" as const,
     color: "#3B82F6",
-    sort_order: 0,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
     ...overrides,
+  };
+  return {
+    ...base,
+    current_amount: base.currentAmount,
+    target_amount: base.targetAmount,
   };
 }
 
@@ -79,8 +87,8 @@ export default function GoalProgressDebugPage() {
               <GoalProgressDisplay
                 goal={createMockGoal({
                   name: "New Goal",
-                  current_amount: 0,
-                  target_amount: 1000,
+                  currentAmount: 0,
+                  targetAmount: 1000,
                 })}
               />
             </div>
@@ -92,8 +100,8 @@ export default function GoalProgressDebugPage() {
               <GoalProgressDisplay
                 goal={createMockGoal({
                   name: "Quarter Complete",
-                  current_amount: 250,
-                  target_amount: 1000,
+                  currentAmount: 250,
+                  targetAmount: 1000,
                 })}
               />
             </div>
@@ -105,8 +113,8 @@ export default function GoalProgressDebugPage() {
               <GoalProgressDisplay
                 goal={createMockGoal({
                   name: "Halfway There",
-                  current_amount: 500,
-                  target_amount: 1000,
+                  currentAmount: 500,
+                  targetAmount: 1000,
                 })}
               />
             </div>
@@ -118,8 +126,8 @@ export default function GoalProgressDebugPage() {
               <GoalProgressDisplay
                 goal={createMockGoal({
                   name: "Almost Done",
-                  current_amount: 750,
-                  target_amount: 1000,
+                  currentAmount: 750,
+                  targetAmount: 1000,
                 })}
               />
             </div>
@@ -131,8 +139,8 @@ export default function GoalProgressDebugPage() {
               <GoalProgressDisplay
                 goal={createMockGoal({
                   name: "Completed Goal",
-                  current_amount: 1000,
-                  target_amount: 1000,
+                  currentAmount: 1000,
+                  targetAmount: 1000,
                 })}
               />
             </div>
@@ -144,8 +152,8 @@ export default function GoalProgressDebugPage() {
               <GoalProgressDisplay
                 goal={createMockGoal({
                   name: "Surpassed Goal",
-                  current_amount: 1200,
-                  target_amount: 1000,
+                  currentAmount: 1200,
+                  targetAmount: 1000,
                 })}
               />
             </div>
@@ -212,7 +220,7 @@ export default function GoalProgressDebugPage() {
                 goal={createMockGoal({
                   name: "Overdue Goal",
                   deadline: now - 1 * oneDay,
-                  current_amount: 500,
+                  currentAmount: 500,
                 })}
               />
             </div>
@@ -225,7 +233,7 @@ export default function GoalProgressDebugPage() {
                 goal={createMockGoal({
                   name: "Very Overdue",
                   deadline: now - 5 * oneDay,
-                  current_amount: 300,
+                  currentAmount: 300,
                 })}
               />
             </div>
@@ -238,8 +246,8 @@ export default function GoalProgressDebugPage() {
                 goal={createMockGoal({
                   name: "Overdue but Done",
                   deadline: now - 3 * oneDay,
-                  current_amount: 1000,
-                  target_amount: 1000,
+                  currentAmount: 1000,
+                  targetAmount: 1000,
                 })}
               />
             </div>
@@ -324,8 +332,8 @@ export default function GoalProgressDebugPage() {
                 goal={createMockGoal({
                   name: "Money Goal",
                   format: "currency",
-                  current_amount: 750,
-                  target_amount: 1000,
+                  currentAmount: 750,
+                  targetAmount: 1000,
                 })}
               />
             </div>
@@ -338,8 +346,8 @@ export default function GoalProgressDebugPage() {
                 goal={createMockGoal({
                   name: "Count Goal",
                   format: "number",
-                  current_amount: 750,
-                  target_amount: 1000,
+                  currentAmount: 750,
+                  targetAmount: 1000,
                 })}
               />
             </div>
@@ -351,16 +359,46 @@ export default function GoalProgressDebugPage() {
           <h2 className="text-2xl font-semibold">Color States</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { name: "Red", color: "#EF4444", current_amount: 1000, target_amount: 1000 }, // Complete
-              { name: "Orange", color: "#F97316", current_amount: 1200, target_amount: 1000 }, // Surpassed
-              { name: "Yellow", color: "#EAB308", current_amount: 600 }, // In Progress
-              { name: "Green", color: "#22C55E", current_amount: 1000, target_amount: 1000 }, // Complete
-              { name: "Teal", color: "#14B8A6", current_amount: 1300, target_amount: 1000 }, // Surpassed
-              { name: "Blue", color: "#3B82F6", current_amount: 600 }, // In Progress
-              { name: "Indigo", color: "#6366F1", current_amount: 1000, target_amount: 1000 }, // Complete
-              { name: "Violet", color: "#8B5CF6", current_amount: 1150, target_amount: 1000 }, // Surpassed
-              { name: "Pink", color: "#EC4899", current_amount: 600 }, // In Progress
-            ].map(({ name, color, current_amount, target_amount = 1000 }) => (
+              {
+                name: "Red",
+                color: "#EF4444",
+                currentAmount: 1000,
+                targetAmount: 1000,
+              }, // Complete
+              {
+                name: "Orange",
+                color: "#F97316",
+                currentAmount: 1200,
+                targetAmount: 1000,
+              }, // Surpassed
+              { name: "Yellow", color: "#EAB308", currentAmount: 600 }, // In Progress
+              {
+                name: "Green",
+                color: "#22C55E",
+                currentAmount: 1000,
+                targetAmount: 1000,
+              }, // Complete
+              {
+                name: "Teal",
+                color: "#14B8A6",
+                currentAmount: 1300,
+                targetAmount: 1000,
+              }, // Surpassed
+              { name: "Blue", color: "#3B82F6", currentAmount: 600 }, // In Progress
+              {
+                name: "Indigo",
+                color: "#6366F1",
+                currentAmount: 1000,
+                targetAmount: 1000,
+              }, // Complete
+              {
+                name: "Violet",
+                color: "#8B5CF6",
+                currentAmount: 1150,
+                targetAmount: 1000,
+              }, // Surpassed
+              { name: "Pink", color: "#EC4899", currentAmount: 600 }, // In Progress
+            ].map(({ name, color, currentAmount, targetAmount = 1000 }) => (
               <div key={color}>
                 <h3 className="text-sm font-medium mb-3 text-muted-foreground">
                   {name}
@@ -369,8 +407,8 @@ export default function GoalProgressDebugPage() {
                   goal={createMockGoal({
                     name: `${name} Goal`,
                     color,
-                    current_amount,
-                    target_amount,
+                    currentAmount,
+                    targetAmount,
                   })}
                 />
               </div>
@@ -389,7 +427,7 @@ export default function GoalProgressDebugPage() {
               <GoalProgressDisplay
                 goal={createMockGoal({
                   name: "Goal with Menu",
-                  current_amount: 750,
+                  currentAmount: 750,
                 })}
                 contextMenu={mockContextMenu}
               />
@@ -402,7 +440,7 @@ export default function GoalProgressDebugPage() {
               <GoalProgressDisplay
                 goal={createMockGoal({
                   name: "Goal with Footer",
-                  current_amount: 750,
+                  currentAmount: 750,
                 })}
                 footer={mockFooter}
               />
@@ -415,7 +453,7 @@ export default function GoalProgressDebugPage() {
               <GoalProgressDisplay
                 goal={createMockGoal({
                   name: "Full Featured",
-                  current_amount: 750,
+                  currentAmount: 750,
                 })}
                 contextMenu={mockContextMenu}
                 footer={mockFooter}
@@ -435,8 +473,8 @@ export default function GoalProgressDebugPage() {
               <GoalProgressDisplay
                 goal={createMockGoal({
                   name: "Complex State 1",
-                  current_amount: 1200,
-                  target_amount: 1000,
+                  currentAmount: 1200,
+                  targetAmount: 1000,
                   deadline: now - 2 * oneDay,
                   recurrence: "weekly",
                 })}
@@ -450,8 +488,8 @@ export default function GoalProgressDebugPage() {
               <GoalProgressDisplay
                 goal={createMockGoal({
                   name: "Complex State 2",
-                  current_amount: 1000,
-                  target_amount: 1000,
+                  currentAmount: 1000,
+                  targetAmount: 1000,
                   deadline: now,
                   recurrence: "daily",
                 })}
@@ -467,7 +505,7 @@ export default function GoalProgressDebugPage() {
                   name: "Complex State 3",
                   format: "number",
                   recurrence: "monthly",
-                  current_amount: 750,
+                  currentAmount: 750,
                 })}
               />
             </div>
@@ -479,7 +517,7 @@ export default function GoalProgressDebugPage() {
               <GoalProgressDisplay
                 goal={createMockGoal({
                   name: "Everything Combined",
-                  current_amount: 850,
+                  currentAmount: 850,
                   deadline: now + 3 * oneDay,
                   recurrence: "yearly",
                   format: "currency",

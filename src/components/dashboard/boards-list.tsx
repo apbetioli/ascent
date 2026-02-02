@@ -7,13 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { Tables } from "@/lib/supabase/types";
+import type { ConvexBoard } from "@/lib/convex-types";
 import { formatDistanceToNow } from "date-fns";
 import { Globe, LayoutDashboard, Lock } from "lucide-react";
 import Link from "next/link";
 
 interface BoardsListProps {
-  boards: Tables<"boards">[];
+  boards: ConvexBoard[];
 }
 
 export function BoardsList({ boards }: BoardsListProps) {
@@ -32,13 +32,13 @@ export function BoardsList({ boards }: BoardsListProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {boards.map((board) => (
-        <Link key={board.id} href={`/boards/${board.id}`}>
+        <Link key={board._id} href={`/boards/${board._id}`}>
           <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <CardTitle className="text-lg">{board.name}</CardTitle>
-                <Badge variant={board.is_public ? "default" : "secondary"}>
-                  {board.is_public ? (
+                <Badge variant={board.isPublic ? "default" : "secondary"}>
+                  {board.isPublic ? (
                     <>
                       <Globe className="h-3 w-3 mr-1" />
                       Public
@@ -53,7 +53,7 @@ export function BoardsList({ boards }: BoardsListProps) {
               </div>
               <CardDescription>
                 Created{" "}
-                {formatDistanceToNow(new Date(board.created_at), {
+                {formatDistanceToNow(new Date(board._creationTime), {
                   addSuffix: true,
                 })}
               </CardDescription>

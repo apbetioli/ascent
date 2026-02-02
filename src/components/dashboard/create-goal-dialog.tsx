@@ -32,8 +32,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSupabase } from "@/lib/hooks/use-supabase";
-import type { Tables } from "@/lib/supabase/types";
+import type { ConvexGoal } from "@/lib/convex-types";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
+import type { Id } from "convex/_generated/dataModel";
 import { createGoalSchema, updateGoalSchema } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 import { GOAL_COLORS, getNextColor } from "@/lib/utils/colors";
@@ -65,9 +67,9 @@ interface FormState {
 }
 
 interface CreateGoalDialogProps {
-  boardId: string;
+  boardId: Id<"boards">;
   existingGoalsCount: number;
-  goal?: Tables<"goals">;
+  goal?: ConvexGoal;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   /** When true, do not render the default "New Goal" trigger (use your own button) */
@@ -97,9 +99,9 @@ export function CreateGoalDialog({
 
   const [formState, setFormState] = useState<FormState>(() => ({
     name: goal?.name ?? "",
-    targetAmount: goal?.target_amount.toString() ?? "",
+    targetAmount: goal?.targetAmount.toString() ?? "",
     initialAmount: "",
-    currentValue: goal?.current_amount.toString() ?? "",
+    currentValue: goal?.currentAmount.toString() ?? "",
     deadline: goal?.deadline ? new Date(goal.deadline) : undefined,
     recurrence: (goal?.recurrence as Recurrence) ?? "none",
     amountFormat: goal?.format ?? "number",
@@ -121,11 +123,11 @@ export function CreateGoalDialog({
     setFormState((prev) => ({ ...prev, [field]: value }));
   };
 
-  const getFormStateFromGoal = (goal: Tables<"goals">): FormState => ({
+  const getFormStateFromGoal = (goal: ConvexGoal): FormState => ({
     name: goal.name,
-    targetAmount: goal.target_amount.toString(),
+    targetAmount: goal.targetAmount.toString(),
     initialAmount: "",
-    currentValue: goal.current_amount.toString(),
+    currentValue: goal.currentAmount.toString(),
     deadline: goal.deadline ? new Date(goal.deadline) : undefined,
     recurrence: goal.recurrence as Recurrence,
     amountFormat: goal.format ?? "number",
@@ -144,7 +146,10 @@ export function CreateGoalDialog({
   });
 
   const router = useRouter();
-  const { getUser, createGoal, updateGoal, createRecord } = useSupabase();
+  const userId = useQuery(api.profiles.getCurrentUserId);
+  const createGoal = useMutation(api.goals.createGoal);
+  const updateGoal = useMutation(api.goals.updateGoal);
+  const createRecord = useMutation(api.records.createRecord);
 
   // Auto-save function for edit mode
   const autoSave = useCallback(async () => {
@@ -181,33 +186,33 @@ export function CreateGoalDialog({
     if (!validation.success) return;
 
     try {
-      const updateData: {
+      const updatePayload: {
         name?: string;
-        target_amount?: number;
+        targetAmount?: number;
         deadline?: number | null;
         recurrence?: Recurrence;
         format?: "number" | "currency";
         color?: string;
       } = {
         name: trimmedName,
-        deadline: formState.deadline ? formState.deadline.getTime() : null,
+        deadline: formState.deadline ? formState.deadline.getTime() : undefined,
         recurrence: formState.recurrence,
         format: formState.amountFormat,
         color: formState.color,
       };
 
-      // Only include target_amount if it's a valid number
       if (!isNaN(target) && target > 0) {
-        updateData.target_amount = target;
+        updatePayload.targetAmount = target;
       }
 
-      await updateGoal(goal.id, updateData);
+      if (!userId) return;
+      await updateGoal({ goalId: goal._id, userId, ...updatePayload });
       previousFormStateRef.current = { ...formState };
       router.refresh();
     } catch (error) {
       console.error("Auto-save failed:", error);
     }
-  }, [isEditMode, goal, formState, updateGoal, router]);
+  }, [isEditMode, goal, formState, updateGoal, router, userId]);
 
   // Reset form when goal changes (edit mode)
   useEffect(() => {
@@ -332,7 +337,8 @@ export function CreateGoalDialog({
         toast.error(validation.error.issues[0].message);
         return;
       }
-      await updateGoal(goal.id, { name: trimmed });
+      if (!userId) return;
+      await updateGoal({ goalId: goal._id, userId, name: trimmed });
       updateFormField("name", trimmed);
       // Update previous state to prevent auto-save from triggering
       previousFormStateRef.current = { ...formState, name: trimmed };
@@ -355,19 +361,16 @@ export function CreateGoalDialog({
   };
 
   const addRecordByAmount = async (amount: number) => {
-    if (!goal) return;
-    const user = await getUser();
-    if (!user) {
-      toast.error("You must be logged in");
+    if (!goal || !userId) {
+      if (!userId) toast.error("You must be logged in");
       return;
     }
     setIsAddingRecord(true);
     try {
       await createRecord({
-        goal_id: goal.id,
-        user_id: user.id,
+        goalId: goal._id,
+        userId,
         amount,
-        description: null,
         timestamp: Date.now(),
       });
       const next = (parseFloat(formState.currentValue) || 0) + amount;
@@ -388,25 +391,23 @@ export function CreateGoalDialog({
     if (!goal) return;
     const parsed = parseFloat(formState.currentValue);
     if (isNaN(parsed) || parsed < 0) {
-      updateFormField("currentValue", goal.current_amount.toString());
+      updateFormField("currentValue", goal.currentAmount.toString());
       return;
     }
     const prev = parseFloat(currentValueOnFocusRef.current);
     if (isNaN(prev)) return;
     const delta = parsed - prev;
     if (delta === 0) return;
-    const user = await getUser();
-    if (!user) {
+    if (!userId) {
       toast.error("You must be logged in");
       return;
     }
     setIsAddingRecord(true);
     try {
       await createRecord({
-        goal_id: goal.id,
-        user_id: user.id,
+        goalId: goal._id,
+        userId,
         amount: delta,
-        description: null,
         timestamp: Date.now(),
       });
       currentValueOnFocusRef.current = formState.currentValue;
@@ -461,30 +462,29 @@ export function CreateGoalDialog({
     setIsLoading(true);
 
     try {
-      const user = await getUser();
-      if (!user) {
+      if (!userId) {
         toast.error("You must be logged in");
         return;
       }
 
       const initialValue = initial ?? 0;
-      const newGoal = await createGoal({
-        board_id: boardId,
-        user_id: user.id,
+      const newGoalId = await createGoal({
+        boardId,
+        userId,
         name: formState.name.trim(),
-        target_amount: target,
-        deadline: formState.deadline ? formState.deadline.getTime() : null,
+        targetAmount: target,
+        deadline: formState.deadline ? formState.deadline.getTime() : undefined,
         recurrence: formState.recurrence,
         format: formState.amountFormat,
         color: formState.color,
-        sort_order: existingGoalsCount,
+        sortOrder: existingGoalsCount,
       });
 
-      if (initialValue > 0 && newGoal) {
+      if (initialValue > 0 && newGoalId) {
         try {
           await createRecord({
-            goal_id: newGoal.id,
-            user_id: user.id,
+            goalId: newGoalId,
+            userId,
             amount: initialValue,
             description: "Initial value",
             timestamp: Date.now(),

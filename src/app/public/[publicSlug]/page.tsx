@@ -1,7 +1,7 @@
 import { PublicBoardView } from "@/components/public/board-view";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { createServiceClient } from "@/lib/supabase/server";
-import { createServerQueries } from "@/lib/supabase/server-queries";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "convex/_generated/api";
 import { Target } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,10 +12,9 @@ interface PublicBoardPageProps {
 
 export async function generateMetadata({ params }: PublicBoardPageProps) {
   const { publicSlug } = await params;
-  const supabase = await createServiceClient();
-  const { getBoardByPublicSlug } = createServerQueries(supabase);
-
-  const board = await getBoardByPublicSlug(publicSlug);
+  const board = await fetchQuery(api.boards.getBoardByPublicSlug, {
+    publicSlug,
+  });
 
   return {
     title: board?.name ?? "Public Board",
@@ -27,17 +26,18 @@ export default async function PublicBoardPage({
   params,
 }: PublicBoardPageProps) {
   const { publicSlug } = await params;
-  const supabase = await createServiceClient();
-  const { getBoardByPublicSlug, getGoalsByBoard } =
-    createServerQueries(supabase);
 
-  const board = await getBoardByPublicSlug(publicSlug);
+  const board = await fetchQuery(api.boards.getBoardByPublicSlug, {
+    publicSlug,
+  });
 
   if (!board) {
     notFound();
   }
 
-  const goals = await getGoalsByBoard(board.id);
+  const goals = await fetchQuery(api.goals.listGoalsByBoard, {
+    boardId: board._id,
+  });
 
   return (
     <div className="min-h-screen bg-background">

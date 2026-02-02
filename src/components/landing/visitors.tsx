@@ -1,6 +1,5 @@
 import { getLiveVisitorsCount } from "@/lib/redis/visitors";
 import { GoalProgressDisplay } from "@/components/shared/goal-progress-display";
-import { Tables } from "@/lib/supabase/types";
 
 const VISITOR_TARGET = 20;
 
@@ -9,16 +8,17 @@ export default async function Visitors() {
 
   return (
     <GoalProgressDisplay
-      goal={
-        {
-          name: "Live Visitors (including you)",
-          current_amount: visitorCount,
-          target_amount: VISITOR_TARGET,
-          format: "number",
-          deadline: null,
-          color: "#3b82f6", // Blue color
-        } as Tables<"goals">
-      }
+      goal={{
+        name: "Live Visitors (including you)",
+        currentAmount: visitorCount,
+        targetAmount: VISITOR_TARGET,
+        current_amount: visitorCount,
+        target_amount: VISITOR_TARGET,
+        format: "number",
+        deadline: undefined,
+        color: "#3b82f6",
+        recurrence: "none",
+      }}
     />
   );
 }

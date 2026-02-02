@@ -1,21 +1,28 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { generateApiToken } from "@/lib/api";
+import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
+import { fetchQuery, fetchMutation } from "convex/nextjs";
+import { api } from "convex/_generated/api";
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient();
+    const token = await convexAuthNextjsToken();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!user) {
+    const userId = await fetchQuery(
+      api.profiles.getCurrentUserId,
+      {},
+      { token }
+    );
+
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
-    const { name } = body;
+    const { name } = body as { name?: string };
 
     if (!name || typeof name !== "string" || name.trim().length === 0) {
       return NextResponse.json(
@@ -24,26 +31,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate token
-    const { token, hashedToken } = generateApiToken();
+    const { token: apiToken } = await fetchMutation(
+      api.api_tokens.createApiToken,
+      {
+        userId,
+        name: name.trim(),
+      }
+    );
 
-    // Store hashed token in database
-    const { error } = await supabase.from("api_tokens").insert({
-      user_id: user.id,
-      name: name.trim(),
-      hashed_token: hashedToken,
-    });
-
-    if (error) {
-      console.error("Failed to create token:", error);
-      return NextResponse.json(
-        { error: "Failed to create token" },
-        { status: 500 }
-      );
-    }
-
-    // Return the unhashed token (only time user will see it)
-    return NextResponse.json({ token }, { status: 201 });
+    return NextResponse.json({ token: apiToken }, { status: 201 });
   } catch (error) {
     console.error("Token creation error:", error);
     return NextResponse.json(

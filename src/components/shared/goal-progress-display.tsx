@@ -13,7 +13,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Tables } from "@/lib/supabase/types";
+import type { ConvexGoal } from "@/lib/convex-types";
 import { cn } from "@/lib/utils";
 import {
   calculateProgressPercentage,
@@ -22,8 +22,30 @@ import {
 import { AlertCircle, Calendar, CheckCircle2, Repeat } from "lucide-react";
 import { useEffect, useState } from "react";
 
+/** Supports Convex shape (camelCase) and legacy snake_case for embed/public views */
+type GoalLike =
+  | ConvexGoal
+  | {
+      name: string;
+      current_amount: number;
+      target_amount: number;
+      deadline?: number | null;
+      format: "number" | "currency";
+      color: string;
+      recurrence: string;
+    };
+
+function normalizeGoal(goal: GoalLike) {
+  const currentAmount =
+    "currentAmount" in goal ? goal.currentAmount : goal.current_amount;
+  const targetAmount =
+    "targetAmount" in goal ? goal.targetAmount : goal.target_amount;
+  const deadline = "deadline" in goal ? goal.deadline : goal.deadline;
+  return { ...goal, currentAmount, targetAmount, deadline };
+}
+
 interface GoalProgressDisplayProps {
-  goal: Tables<"goals">;
+  goal: GoalLike;
   cardClassName?: string;
   contextMenu?: React.ReactNode;
   footer?: React.ReactNode;
@@ -32,33 +54,33 @@ interface GoalProgressDisplayProps {
 }
 
 export function GoalProgressDisplay({
-  goal,
+  goal: goalProp,
   cardClassName,
   contextMenu,
   footer,
   contextMenuHoverOnly,
   onCardClick,
 }: GoalProgressDisplayProps) {
+  const goal = normalizeGoal(goalProp);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
 
   useEffect(() => {
-    // Update current time periodically to check for overdue due dates
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
-    }, 60000); // Update every minute
-
+    }, 60000);
     return () => clearInterval(interval);
   }, []);
 
   const percentage = calculateProgressPercentage(
-    goal.current_amount,
-    goal.target_amount
+    goal.currentAmount,
+    goal.targetAmount
   );
 
   const isSurpassed = percentage > 100;
   const isComplete = percentage >= 100;
-  const deadlineStatus = formatDeadlineStatus(goal.deadline);
-  const isOverdue = goal.deadline && goal.deadline < currentTime && !isComplete;
+  const deadlineStatus = formatDeadlineStatus(goal.deadline ?? null);
+  const isOverdue =
+    goal.deadline != null && goal.deadline < currentTime && !isComplete;
 
   const formatAmount = (amount: number) => {
     if (goal.format === "currency") {
@@ -152,7 +174,7 @@ export function GoalProgressDisplay({
             </div>
           </div>
           <CardDescription className="flex flex-wrap gap-2 text-xs min-h-[20px] leading-tight -mt-0.5">
-            {goal.recurrence && goal.recurrence !== "none" && (
+            {goal.recurrence && String(goal.recurrence) !== "none" && (
               <span className="flex items-center gap-1">
                 <Repeat className="h-3 w-3" />
                 {goal.recurrence}
@@ -180,10 +202,10 @@ export function GoalProgressDisplay({
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center gap-1">
               <span className="font-bold text-lg">
-                {formatAmount(goal.current_amount)}
+                {formatAmount(goal.currentAmount)}
               </span>
               <span className="text-muted-foreground">
-                / {formatAmount(goal.target_amount)}
+                / {formatAmount(goal.targetAmount)}
               </span>
             </div>
             <span className="font-medium">{Math.round(percentage)}%</span>

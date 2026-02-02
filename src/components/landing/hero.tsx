@@ -1,12 +1,10 @@
 import { GoalProgressDisplay } from "@/components/shared/goal-progress-display";
 import { Badge } from "@/components/ui/badge";
-import type { Tables } from "@/lib/supabase/types";
 import { getNextColor } from "@/lib/utils/colors";
-import { Sparkles } from "lucide-react";
 import { HeroButtons } from "./hero-buttons";
 import Visitors from "./visitors";
 
-type GoalRecurrence = Tables<"goals">["recurrence"];
+type GoalRecurrence = "none" | "daily" | "weekly" | "monthly" | "yearly";
 
 function createDemoGoal(
   name: string,
@@ -15,22 +13,17 @@ function createDemoGoal(
   format: "number" | "currency",
   index: number,
   options?: { deadline?: number; recurrence?: GoalRecurrence }
-): Tables<"goals"> {
+) {
   return {
-    id: `demo-${index}`,
-    embed_id: "demo",
-    board_id: "demo",
-    user_id: "demo",
     name,
-    target_amount: target,
+    targetAmount: target,
+    currentAmount: current,
     current_amount: current,
-    deadline: options?.deadline ?? null,
+    target_amount: target,
+    deadline: options?.deadline,
     recurrence: options?.recurrence ?? "none",
     format,
     color: getNextColor(index),
-    sort_order: index,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   };
 }
 
@@ -43,7 +36,7 @@ const endOfYear = new Date(
   59
 ).getTime();
 
-const perfectForGoals: Tables<"goals">[] = [
+const perfectForGoals = [
   createDemoGoal("Fitness and health goals", 67, 100, "number", 0, {
     recurrence: "weekly",
   }),
@@ -77,8 +70,8 @@ export function Hero() {
           <div className="w-full mt-16">
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
               <Visitors />
-              {perfectForGoals.map((goal) => (
-                <GoalProgressDisplay key={goal.id} goal={goal} />
+              {perfectForGoals.map((goal, i) => (
+                <GoalProgressDisplay key={i} goal={goal} />
               ))}
             </div>
           </div>

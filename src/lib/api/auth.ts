@@ -1,26 +1,20 @@
-import { createServiceClient } from "@/lib/supabase/server";
-import { createServerQueries } from "@/lib/supabase/server-queries";
-import { createHash } from "crypto";
+import { fetchAction } from "convex/nextjs";
+import { api } from "convex/_generated/api";
 
 /**
- * Hash a token for storage/comparison
- */
-export function hashToken(token: string): string {
-  return createHash("sha256").update(token).digest("hex");
-}
-
-/**
- * Generate a new API token (returns unhashed token for user, plus hashed for storage)
+ * Generate a new API token (Convex creates and stores; this is only for reference).
+ * Actual token creation is done via Convex mutation api.api_tokens.createApiToken.
  */
 export function generateApiToken(): { token: string; hashedToken: string } {
   const token = `gt_${crypto.randomUUID().replace(/-/g, "")}`;
-  const hashedToken = hashToken(token);
+  // Hashing is done in Convex; this is only for legacy compatibility if needed
+  const hashedToken = "";
   return { token, hashedToken };
 }
 
 /**
- * Authenticate a request using Bearer token
- * Returns the user_id if valid, null otherwise
+ * Authenticate a request using Bearer token.
+ * Returns the Convex userId if valid, null otherwise.
  */
 export async function authenticateApiRequest(
   request: Request
@@ -31,15 +25,18 @@ export async function authenticateApiRequest(
     return null;
   }
 
-  const token = authHeader.slice(7); // Remove "Bearer " prefix
-  const hashedToken = hashToken(token);
+  const token = authHeader.slice(7).trim();
+  if (!token) return null;
 
-  const supabase = await createServiceClient();
-  const { getApiTokenByHash } = createServerQueries(supabase);
-
-  const apiToken = await getApiTokenByHash(hashedToken);
-
-  return apiToken?.user_id ?? null;
+  try {
+    const userId = await fetchAction(api.api_tokens.getUserIdForApiAuth, {
+      token,
+    });
+    return userId;
+  } catch (error) {
+    console.error("API auth error:", error);
+    return null;
+  }
 }
 
 /**
@@ -50,10 +47,7 @@ export function apiError(
   status: number,
   headers?: Record<string, string>
 ): Response {
-  return Response.json(
-    { error: message },
-    { status, headers }
-  );
+  return Response.json({ error: message }, { status, headers });
 }
 
 /**

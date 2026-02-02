@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSupabase } from "@/lib/hooks/use-supabase";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
+import type { Id } from "convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,13 +45,17 @@ import {
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Plus, Trash2, Copy, Key, Loader2 } from "lucide-react";
-import type { User } from "@supabase/supabase-js";
-import type { Tables } from "@/lib/supabase/types";
 
 interface SettingsPageProps {
-  user: User;
-  profile: Tables<"profiles"> | null;
-  tokens: Array<{ id: string; name: string; created_at: string }>;
+  user: { id: Id<"users">; email?: string };
+  profile: {
+    _id: Id<"profiles">;
+    userId: Id<"users">;
+    name?: string;
+    timezone: string;
+    hasPaid: boolean;
+  } | null;
+  tokens: Array<{ id: Id<"api_tokens">; name: string; created_at: string }>;
 }
 
 const TIMEZONES = [
@@ -76,13 +82,18 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
   const [newToken, setNewToken] = useState<string | null>(null);
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
   const router = useRouter();
-  const { updateProfile, deleteApiToken, createApiToken } = useSupabase();
+  const updateProfileMutation = useMutation(api.profiles.updateProfile);
+  const createApiTokenMutation = useMutation(api.api_tokens.createApiToken);
+  const deleteApiTokenMutation = useMutation(api.api_tokens.deleteApiToken);
+  const currentUserId = useQuery(api.profiles.getCurrentUserId);
 
   const handleSaveProfile = async () => {
+    if (!currentUserId) return;
     setIsSaving(true);
 
     try {
-      await updateProfile(user.id, {
+      await updateProfileMutation({
+        userId: currentUserId,
         name: name.trim(),
         timezone,
       });
@@ -97,7 +108,8 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
   };
 
   const handleCreateToken = async () => {
-    if (!newTokenName.trim()) {
+    if (!newTokenName.trim() || !currentUserId) {
+      if (!currentUserId) return;
       toast.error("Please enter a token name");
       return;
     }
@@ -105,7 +117,10 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
     setIsCreatingToken(true);
 
     try {
-      const data = await createApiToken(newTokenName.trim());
+      const data = await createApiTokenMutation({
+        userId: currentUserId,
+        name: newTokenName.trim(),
+      });
       setNewToken(data.token);
       setNewTokenName("");
       router.refresh();
@@ -117,9 +132,10 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
     }
   };
 
-  const handleDeleteToken = async (tokenId: string) => {
+  const handleDeleteToken = async (tokenId: Id<"api_tokens">) => {
+    if (!currentUserId) return;
     try {
-      await deleteApiToken(tokenId);
+      await deleteApiTokenMutation({ tokenId, userId: currentUserId });
       toast.success("Token deleted");
       router.refresh();
     } catch (error) {
@@ -313,7 +329,9 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => handleDeleteToken(token.id)}
+                          onClick={() =>
+                            handleDeleteToken(token.id as Id<"api_tokens">)
+                          }
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
                           Delete

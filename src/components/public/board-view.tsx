@@ -1,23 +1,26 @@
 "use client";
 
-import { useRealtimeBoardGoals } from "@/lib/hooks";
+import { useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Target } from "lucide-react";
-import type { Tables } from "@/lib/supabase/types";
 import { GoalProgressDisplay } from "@/components/shared/goal-progress-display";
+import type { ConvexBoard, ConvexGoal } from "@/lib/convex-types";
 
 interface PublicBoardViewProps {
-  board: Tables<"boards">;
-  goals: Tables<"goals">[];
+  board: ConvexBoard;
+  goals: ConvexGoal[];
 }
 
 export function PublicBoardView({
   board,
   goals: initialGoals,
 }: PublicBoardViewProps) {
-  const goals = useRealtimeBoardGoals(board.id, initialGoals);
+  const goals =
+    useQuery(api.goals.listGoalsByBoard, { boardId: board._id }) ??
+    initialGoals;
 
-  const sortedGoals = [...goals].sort((a, b) => a.sort_order - b.sort_order);
+  const sortedGoals = [...goals].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
     <div className="space-y-6">
@@ -31,7 +34,7 @@ export function PublicBoardView({
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {sortedGoals.map((goal) => (
             <GoalProgressDisplay
-              key={goal.id}
+              key={goal._id}
               goal={goal}
               cardClassName="relative overflow-hidden transition-all hover:shadow-md"
             />

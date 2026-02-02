@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useSupabase } from "@/lib/hooks/use-supabase";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,9 +29,8 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
-  const { signInWithOtp, signInWithOAuth } = useSupabase();
+  const { signIn } = useAuthActions();
 
-  // Pre-fill email from URL parameter
   useEffect(() => {
     if (emailParam) {
       setEmail(emailParam);
@@ -43,15 +42,16 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await signInWithOtp(email, {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
+      await signIn("email", {
+        email,
+        redirectTo: redirect,
       });
       setMagicLinkSent(true);
       toast.success("Check your email for the magic link!");
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unexpected error occurred";
-      toast.error(errorMessage);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -61,14 +61,16 @@ export default function LoginPage() {
     setIsGoogleLoading(true);
 
     try {
-      await signInWithOAuth(
-        "google",
-        `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`
-      );
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unexpected error occurred";
-      toast.error(errorMessage);
+      const result = await signIn("google", { redirectTo: redirect });
+      if (result.redirect) {
+        window.location.href = result.redirect.toString();
+        return;
+      }
+      setIsGoogleLoading(false);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      toast.error(message);
       setIsGoogleLoading(false);
     }
   };
@@ -87,8 +89,8 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center text-sm text-muted-foreground">
-            Click the link in the email to sign in. If you don&apos;t see it, check
-            your spam folder.
+            Click the link in the email to sign in. If you don&apos;t see it,
+            check your spam folder.
           </CardContent>
           <CardFooter className="justify-center">
             <Button
@@ -113,9 +115,7 @@ export default function LoginPage() {
           <Link href="/" className="inline-block">
             <CardTitle className="text-2xl font-bold">GoalTrack</CardTitle>
           </Link>
-          <CardDescription>
-            Sign in to your account to continue
-          </CardDescription>
+          <CardDescription>Sign in to your account to continue</CardDescription>
           {error && (
             <p className="text-sm text-destructive mt-2">
               Authentication failed. Please try again.

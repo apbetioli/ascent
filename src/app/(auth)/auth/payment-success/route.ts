@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
 import { stripe } from "@/lib/payments/stripe";
 import { paymentProvider } from "@/lib/payments";
+import { fetchMutation } from "convex/nextjs";
+import { api } from "convex/_generated/api";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -13,11 +14,12 @@ export async function GET(request: Request) {
 
   if (!stripe) {
     console.error("Stripe is not configured");
-    return NextResponse.redirect(`${origin}/#pricing?error=configuration_error`);
+    return NextResponse.redirect(
+      `${origin}/#pricing?error=configuration_error`
+    );
   }
 
   try {
-    // Verify the Stripe session
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     if (session.payment_status !== "paid") {
@@ -35,82 +37,21 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/#pricing?error=missing_email`);
     }
 
-    const supabase = await createServiceClient();
-
-    // Find user by email
-    const { data: users } = await supabase.auth.admin.listUsers();
-    let user = users?.users.find((u) => u.email === email);
-    let userId = user?.id;
-
-    // If user doesn't exist, create them
-    if (!user) {
-      const { data: newUser, error: createError } =
-        await supabase.auth.admin.createUser({
-          email: email,
-          email_confirm: true, // Auto-confirm email since they paid
-          user_metadata: {
-            created_via: "stripe_checkout",
-          },
-        });
-
-      if (createError || !newUser.user) {
-        console.error("Failed to create user:", createError);
-        return NextResponse.redirect(
-          `${origin}/login?error=user_creation_failed&email=${encodeURIComponent(
-            email
-          )}`
-        );
-      }
-
-      user = newUser.user;
-      userId = newUser.user.id;
-    }
-
-    // Ensure profile exists and is marked as paid
     const customerId = session.customer as string;
-    const { error: profileError } = await supabase.from("profiles").upsert(
-      {
-        id: userId!,
-        has_paid: true,
-        payment_provider: paymentProvider.getProviderName(),
-        payment_customer_id: customerId,
-      },
-      {
-        onConflict: "id",
-      }
+
+    await fetchMutation(api.pending_payments.addPendingPayment, {
+      email,
+      stripeCustomerId: customerId,
+      paymentProvider: paymentProvider.getProviderName(),
+    });
+
+    return NextResponse.redirect(
+      `${origin}/login?email=${encodeURIComponent(email)}&fromPayment=1&redirect=/boards`
     );
-
-    if (profileError) {
-      console.error("Failed to update profile:", profileError);
-      // Continue anyway - user exists, profile update can happen via webhook
-    }
-
-    // Generate a magic link token for auto-login
-    const { data: linkData, error: linkError } =
-      await supabase.auth.admin.generateLink({
-        type: "magiclink",
-        email: email,
-        options: {
-          redirectTo: `${origin}/auth/callback?next=/boards`,
-        },
-      });
-
-    if (linkError || !linkData?.properties?.hashed_token) {
-      console.error("Failed to generate magic link:", linkError);
-      // Fallback: redirect to login with email pre-filled
-      return NextResponse.redirect(
-        `${origin}/login?email=${encodeURIComponent(email)}&redirect=/boards`
-      );
-    }
-
-    // Redirect to callback route with the token
-    // The callback will verify the token and set the session
-    const callbackUrl = `${origin}/auth/callback?token=${encodeURIComponent(
-      linkData.properties.hashed_token
-    )}&type=magiclink&next=/boards`;
-    return NextResponse.redirect(callbackUrl);
   } catch (error) {
     console.error("Payment success error:", error);
-    return NextResponse.redirect(`${origin}/#pricing?error=verification_failed`);
+    return NextResponse.redirect(
+      `${origin}/#pricing?error=verification_failed`
+    );
   }
 }

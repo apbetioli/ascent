@@ -84,9 +84,9 @@ export const updateGoalSchema = z.object({
   sort_order: z.number().int().min(0).optional(),
 });
 
-// Record schemas
+// Record schemas (goal_id accepts Convex Id or UUID)
 export const createRecordSchema = z.object({
-  goal_id: z.string().uuid("Invalid goal ID"),
+  goal_id: z.string().min(1, "Invalid goal ID"),
   amount: z.number().refine((val) => val !== 0, "Amount cannot be zero"),
   description: z.string().max(500, "Description is too long").optional(),
   timestamp: z

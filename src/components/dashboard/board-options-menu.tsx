@@ -18,8 +18,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSupabase } from "@/lib/hooks/use-supabase";
-import type { Tables } from "@/lib/supabase/types";
+import type { ConvexBoard } from "@/lib/convex-types";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
 import {
   Copy,
   ExternalLink,
@@ -34,7 +35,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 interface BoardOptionsMenuProps {
-  board: Tables<"boards">;
+  board: ConvexBoard;
   triggerClassName?: string;
   triggerVariant?: "ghost" | "outline";
   align?: "start" | "center" | "end";
@@ -49,13 +50,20 @@ export function BoardOptionsMenu({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const router = useRouter();
-  const { updateBoard, deleteBoard } = useSupabase();
+  const userId = useQuery(api.profiles.getCurrentUserId);
+  const updateBoard = useMutation(api.boards.updateBoard);
+  const deleteBoard = useMutation(api.boards.deleteBoard);
 
   const handleTogglePublic = async () => {
+    if (!userId) return;
     try {
-      await updateBoard(board.id, { is_public: !board.is_public });
+      await updateBoard({
+        boardId: board._id,
+        userId,
+        isPublic: !board.isPublic,
+      });
       toast.success(
-        board.is_public ? "Board is now private" : "Board is now public"
+        board.isPublic ? "Board is now private" : "Board is now public"
       );
       router.refresh();
     } catch (error) {
@@ -65,9 +73,10 @@ export function BoardOptionsMenu({
   };
 
   const handleDelete = async () => {
+    if (!userId) return;
     setIsDeleting(true);
     try {
-      await deleteBoard(board.id);
+      await deleteBoard({ boardId: board._id, userId });
       toast.success("Board deleted");
       router.push("/boards");
       router.refresh();
@@ -80,8 +89,8 @@ export function BoardOptionsMenu({
   };
 
   const handleCopyPublicLink = () => {
-    if (!board.public_slug) return;
-    const url = `${window.location.origin}/public/${board.public_slug}`;
+    if (!board.publicSlug) return;
+    const url = `${window.location.origin}/public/${board.publicSlug}`;
     navigator.clipboard.writeText(url);
     toast.success("Public link copied to clipboard");
   };
@@ -101,7 +110,7 @@ export function BoardOptionsMenu({
         </DropdownMenuTrigger>
         <DropdownMenuContent align={align}>
           <DropdownMenuItem onClick={handleTogglePublic}>
-            {board.is_public ? (
+            {board.isPublic ? (
               <>
                 <Lock className="mr-2 h-4 w-4" />
                 Make Private
@@ -113,7 +122,7 @@ export function BoardOptionsMenu({
               </>
             )}
           </DropdownMenuItem>
-          {board.is_public && board.public_slug && (
+          {board.isPublic && board.publicSlug && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleCopyPublicLink}>
@@ -122,7 +131,7 @@ export function BoardOptionsMenu({
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/public/${board.public_slug}`}
+                  href={`/public/${board.publicSlug}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

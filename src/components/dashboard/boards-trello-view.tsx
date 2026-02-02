@@ -8,12 +8,11 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  closestCenter,
-  pointerWithin,
   rectIntersection,
   getFirstCollision,
   useDroppable,
   type CollisionDetection,
+  closestCenter,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -26,9 +25,10 @@ import { BoardOptionsMenu } from "@/components/dashboard/board-options-menu";
 import { CreateGoalDialog } from "@/components/dashboard/create-goal-dialog";
 import { GoalCard } from "@/components/dashboard/goal-card";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { useRealtimeBoardGoals } from "@/lib/hooks";
-import { useSupabase } from "@/lib/hooks/use-supabase";
-import type { Tables } from "@/lib/supabase/types";
+import type { ConvexBoard, ConvexGoal } from "@/lib/convex-types";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
+import type { Id } from "convex/_generated/dataModel";
 import { Plus, Target } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -36,14 +36,14 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 interface SortableGoalCardProps {
-  goal: Tables<"goals">;
-  boardId: string;
+  goal: ConvexGoal;
+  boardId: Id<"boards">;
 }
 
 function SortableGoalCard({ goal, boardId }: SortableGoalCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useSortable({
-      id: goal.id,
+      id: goal._id,
       data: { type: "goal" as const, boardId },
       transition: null,
     });
@@ -84,34 +84,34 @@ function SortableGoalCard({ goal, boardId }: SortableGoalCardProps) {
       {...listeners}
       onClickCapture={handleClickCapture}
     >
-      <GoalCard goal={goal} />
+      <GoalCard goal={goal} boardId={boardId} />
     </div>
   );
 }
 
 interface BoardColumnProps {
-  board: Tables<"boards">;
-  initialGoals: Tables<"goals">[];
-  onGoalsChange: (boardId: string, goals: Tables<"goals">[]) => void;
+  board: ConvexBoard;
+  onGoalsLoad?: (boardId: Id<"boards">, goals: ConvexGoal[]) => void;
 }
 
-function BoardColumn({ board, initialGoals, onGoalsChange }: BoardColumnProps) {
-  const goals = useRealtimeBoardGoals(board.id, initialGoals);
+function BoardColumn({ board, onGoalsLoad }: BoardColumnProps) {
+  const goals =
+    useQuery(api.goals.listGoalsByBoard, { boardId: board._id }) ?? [];
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const sortedGoals = useMemo(
-    () => [...goals].sort((a, b) => a.sort_order - b.sort_order),
+    () => [...goals].sort((a, b) => a.sortOrder - b.sortOrder),
     [goals]
   );
 
-  const goalIds = sortedGoals.map((g) => g.id);
-
   useEffect(() => {
-    onGoalsChange(board.id, sortedGoals);
-  }, [board.id, sortedGoals, onGoalsChange]);
+    onGoalsLoad?.(board._id, sortedGoals);
+  }, [board._id, sortedGoals, onGoalsLoad]);
+
+  const goalIds = sortedGoals.map((g) => g._id);
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
-    id: board.id,
+    id: board._id,
     data: { type: "board" as const },
   });
 
@@ -119,7 +119,7 @@ function BoardColumn({ board, initialGoals, onGoalsChange }: BoardColumnProps) {
     <div className="flex w-[340px] min-w-[340px] max-w-[340px] shrink-0 flex-col rounded-lg border bg-card">
       <div className="flex shrink-0 items-center justify-between gap-2 border-b px-3 py-2">
         <Link
-          href={`/boards/${board.id}`}
+          href={`/boards/${board._id}`}
           className="min-w-0 flex-1 truncate font-semibold uppercase tracking-wide text-foreground hover:underline"
         >
           {board.name}
@@ -135,7 +135,7 @@ function BoardColumn({ board, initialGoals, onGoalsChange }: BoardColumnProps) {
             <Plus className="h-4 w-4" />
           </Button>
           <CreateGoalDialog
-            boardId={board.id}
+            boardId={board._id}
             existingGoalsCount={goals.length}
             open={addDialogOpen}
             onOpenChange={setAddDialogOpen}
@@ -144,7 +144,6 @@ function BoardColumn({ board, initialGoals, onGoalsChange }: BoardColumnProps) {
           <BoardOptionsMenu board={board} align="end" />
         </div>
       </div>
-      {/* List is content-sized up to max height, then scrolls inside column */}
       <div
         ref={setDroppableRef}
         className={`max-h-[calc(100dvh-12rem)] min-h-0 overflow-y-auto overflow-x-hidden transition-colors ${
@@ -167,9 +166,9 @@ function BoardColumn({ board, initialGoals, onGoalsChange }: BoardColumnProps) {
             >
               {sortedGoals.map((goal) => (
                 <SortableGoalCard
-                  key={goal.id}
+                  key={goal._id}
                   goal={goal}
-                  boardId={board.id}
+                  boardId={board._id}
                 />
               ))}
             </SortableContext>
@@ -181,22 +180,25 @@ function BoardColumn({ board, initialGoals, onGoalsChange }: BoardColumnProps) {
 }
 
 interface BoardsTrelloViewProps {
-  boards: Tables<"boards">[];
-  goalsByBoardId: Record<string, Tables<"goals">[]>;
+  boards: ConvexBoard[];
   className?: string;
 }
 
-export function BoardsTrelloView({
-  boards,
-  goalsByBoardId: initialGoalsByBoardId,
-  className,
-}: BoardsTrelloViewProps) {
-  const boardIds = useMemo(() => boards.map((b) => b.id), [boards]);
+export function BoardsTrelloView({ boards, className }: BoardsTrelloViewProps) {
+  const boardIds = useMemo(() => boards.map((b) => b._id), [boards]);
   const [goalsByBoardId, setGoalsByBoardId] = useState<
-    Record<string, Tables<"goals">[]>
-  >(initialGoalsByBoardId);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const { updateGoal } = useSupabase();
+    Record<string, ConvexGoal[]>
+  >({});
+  const [activeId, setActiveId] = useState<Id<"goals"> | null>(null);
+  const userId = useQuery(api.profiles.getCurrentUserId);
+  const updateGoal = useMutation(api.goals.updateGoal);
+
+  const onGoalsLoad = useCallback(
+    (boardId: Id<"boards">, goals: ConvexGoal[]) => {
+      setGoalsByBoardId((prev) => ({ ...prev, [boardId]: goals }));
+    },
+    []
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -204,35 +206,19 @@ export function BoardsTrelloView({
     })
   );
 
-  const onGoalsChange = useCallback(
-    (boardId: string, goals: Tables<"goals">[]) => {
-      setGoalsByBoardId((prev) => {
-        const current = prev[boardId] ?? [];
-        if (
-          current.length === goals.length &&
-          current.every((g, i) => goals[i]?.id === g.id)
-        ) {
-          return prev;
-        }
-        return { ...prev, [boardId]: goals };
-      });
-    },
-    []
-  );
-
   const activeGoal = useMemo(() => {
     if (!activeId) return null;
     for (const goals of Object.values(goalsByBoardId)) {
-      const goal = goals.find((g) => g.id === activeId);
+      const goal = goals.find((g) => g._id === activeId);
       if (goal) return goal;
     }
     return null;
   }, [activeId, goalsByBoardId]);
 
   const findBoardIdForGoal = useCallback(
-    (goalId: string): string | null => {
+    (goalId: Id<"goals">): Id<"boards"> | null => {
       for (const [boardId, goals] of Object.entries(goalsByBoardId)) {
-        if (goals.some((g) => g.id === goalId)) return boardId;
+        if (goals.some((g) => g._id === goalId)) return boardId as Id<"boards">;
       }
       return null;
     },
@@ -240,52 +226,53 @@ export function BoardsTrelloView({
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    setActiveId(String(event.active.id));
+    setActiveId(event.active.id as Id<"goals">);
   }, []);
 
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
       const { active, over } = event;
       setActiveId(null);
-      if (!over) return;
+      if (!over || !userId) return;
 
-      const activeIdStr = active.id as string;
-      const overIdStr = over.id as string;
+      const activeIdStr = active.id as Id<"goals">;
+      const overIdStr = over.id as Id<"goals"> | Id<"boards">;
       const sourceBoardId =
-        (active.data.current as { boardId?: string } | undefined)?.boardId ??
-        findBoardIdForGoal(activeIdStr);
+        (active.data.current as { boardId?: Id<"boards"> } | undefined)
+          ?.boardId ?? findBoardIdForGoal(activeIdStr);
 
       if (!sourceBoardId) return;
 
-      const isOverBoard = boardIds.includes(overIdStr);
+      const isOverBoard = boardIds.includes(overIdStr as Id<"boards">);
       const targetBoardId = isOverBoard
-        ? overIdStr
-        : findBoardIdForGoal(overIdStr);
+        ? (overIdStr as Id<"boards">)
+        : findBoardIdForGoal(overIdStr as Id<"goals">);
       if (!targetBoardId) return;
 
-      const sourceGoalIds =
-        goalsByBoardId[sourceBoardId]?.map((g) => g.id) ?? [];
-      const targetGoalIds =
-        goalsByBoardId[targetBoardId]?.map((g) => g.id) ?? [];
+      const sourceGoals = goalsByBoardId[sourceBoardId] ?? [];
+      const targetGoals = goalsByBoardId[targetBoardId] ?? [];
 
       let newIndex: number;
       if (isOverBoard) {
-        newIndex = targetGoalIds.length;
+        newIndex = targetGoals.length;
       } else {
-        const overIndex = targetGoalIds.indexOf(overIdStr);
-        newIndex = overIndex >= 0 ? overIndex : targetGoalIds.length;
+        const overIndex = targetGoals.findIndex((g) => g._id === overIdStr);
+        newIndex = overIndex >= 0 ? overIndex : targetGoals.length;
       }
 
       if (sourceBoardId === targetBoardId) {
-        const oldIndex = sourceGoalIds.indexOf(activeIdStr);
+        const oldIndex = sourceGoals.findIndex((g) => g._id === activeIdStr);
         if (oldIndex === -1 || oldIndex === newIndex) return;
-        const sourceGoals = goalsByBoardId[sourceBoardId] ?? [];
         const reordered = arrayMove(sourceGoals, oldIndex, newIndex);
         try {
           await Promise.all(
             reordered.map((goal, index) => {
-              if (goal.sort_order === index) return Promise.resolve();
-              return updateGoal(goal.id, { sort_order: index });
+              if (goal.sortOrder === index) return Promise.resolve();
+              return updateGoal({
+                goalId: goal._id,
+                userId,
+                sortOrder: index,
+              });
             })
           );
           toast.success("Order updated");
@@ -293,27 +280,24 @@ export function BoardsTrelloView({
           toast.error("Failed to update order");
         }
       } else {
-        const sourceGoals = goalsByBoardId[sourceBoardId] ?? [];
-        const targetGoals = goalsByBoardId[targetBoardId] ?? [];
-        const movedGoal = sourceGoals.find((g) => g.id === activeIdStr);
+        const movedGoal = sourceGoals.find((g) => g._id === activeIdStr);
         if (!movedGoal) return;
 
-        // Optimistic update: move goal in UI immediately
         setGoalsByBoardId((prev) => {
           const next = { ...prev };
           next[sourceBoardId] = (next[sourceBoardId] ?? []).filter(
-            (g) => g.id !== activeIdStr
+            (g) => g._id !== activeIdStr
           );
           const newGoal = {
             ...movedGoal,
-            board_id: targetBoardId,
-            sort_order: newIndex,
+            boardId: targetBoardId,
+            sortOrder: newIndex,
           };
           const targetList = [...(next[targetBoardId] ?? [])];
           targetList.splice(newIndex, 0, newGoal);
           next[targetBoardId] = targetList.map((g, i) => ({
             ...g,
-            sort_order: i,
+            sortOrder: i,
           }));
           return next;
         });
@@ -321,17 +305,24 @@ export function BoardsTrelloView({
         try {
           await Promise.all([
             ...targetGoals
-              .filter((g) => g.sort_order >= newIndex)
-              .map((g) => updateGoal(g.id, { sort_order: g.sort_order + 1 })),
-            updateGoal(activeIdStr, {
-              board_id: targetBoardId,
-              sort_order: newIndex,
+              .filter((g) => g.sortOrder >= newIndex)
+              .map((g) =>
+                updateGoal({
+                  goalId: g._id,
+                  userId,
+                  sortOrder: g.sortOrder + 1,
+                })
+              ),
+            updateGoal({
+              goalId: activeIdStr,
+              userId,
+              boardId: targetBoardId,
+              sortOrder: newIndex,
             }),
           ]);
           toast.success("Goal moved to board");
         } catch {
           toast.error("Failed to move goal");
-          // Revert optimistic update on error
           setGoalsByBoardId((prev) => {
             const next = { ...prev };
             next[sourceBoardId] = sourceGoals;
@@ -341,29 +332,25 @@ export function BoardsTrelloView({
         }
       }
     },
-    [boardIds, goalsByBoardId, findBoardIdForGoal, updateGoal]
+    [boardIds, goalsByBoardId, findBoardIdForGoal, updateGoal, userId]
   );
 
   const collisionDetection: CollisionDetection = useCallback(
     (args) => {
-      const pointerIntersections = pointerWithin(args);
-      const intersections =
-        pointerIntersections.length > 0
-          ? pointerIntersections
-          : rectIntersection(args);
-      let overId = getFirstCollision(intersections, "id");
+      const pointerIntersections = rectIntersection(args);
+      let overId = getFirstCollision(pointerIntersections, "id");
       if (
         overId != null &&
         typeof overId === "string" &&
         overId in goalsByBoardId
       ) {
-        const containerItems = (goalsByBoardId[overId] ?? []).map((g) => g.id);
+        const containerItems = (goalsByBoardId[overId] ?? []).map((g) => g._id);
         if (containerItems.length > 0) {
           const refined = closestCenter({
             ...args,
             droppableContainers: args.droppableContainers.filter(
               (c: { id: unknown }) =>
-                c.id !== overId && containerItems.includes(c.id as string)
+                c.id !== overId && containerItems.includes(c.id as Id<"goals">)
             ),
           });
           const first = getFirstCollision(refined, "id");
@@ -407,14 +394,9 @@ export function BoardsTrelloView({
           <div className="inline-flex items-start gap-4 px-4 pt-4 h-full">
             {boards.map((board) => (
               <BoardColumn
-                key={board.id}
+                key={board._id}
                 board={board}
-                initialGoals={[
-                  ...(goalsByBoardId[board.id] ??
-                    initialGoalsByBoardId[board.id] ??
-                    []),
-                ].sort((a, b) => a.sort_order - b.sort_order)}
-                onGoalsChange={onGoalsChange}
+                onGoalsLoad={onGoalsLoad}
               />
             ))}
           </div>
@@ -423,7 +405,7 @@ export function BoardsTrelloView({
       <DragOverlay dropAnimation={null}>
         {activeGoal ? (
           <div className="w-[316px] shrink-0 cursor-grabbing opacity-90 shadow-lg">
-            <GoalCard goal={activeGoal} />
+            <GoalCard goal={activeGoal} boardId={activeGoal.boardId} />
           </div>
         ) : null}
       </DragOverlay>

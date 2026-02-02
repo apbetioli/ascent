@@ -4,15 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BoardOptionsMenu } from "@/components/dashboard/board-options-menu";
 import { Input } from "@/components/ui/input";
-import { useSupabase } from "@/lib/hooks/use-supabase";
-import type { Tables } from "@/lib/supabase/types";
+import type { ConvexBoard } from "@/lib/convex-types";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
 import { Check, Globe, Lock, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 interface BoardHeaderProps {
-  board: Tables<"boards">;
+  board: ConvexBoard;
   children?: React.ReactNode;
 }
 
@@ -20,16 +21,17 @@ export function BoardHeader({ board, children }: BoardHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(board.name);
   const router = useRouter();
-  const { updateBoard } = useSupabase();
+  const userId = useQuery(api.profiles.getCurrentUserId);
+  const updateBoard = useMutation(api.boards.updateBoard);
 
   const handleSaveName = async () => {
-    if (!name.trim()) {
-      toast.error("Board name cannot be empty");
-      return;
-    }
-
+    if (!name.trim() || !userId) return;
     try {
-      await updateBoard(board.id, { name: name.trim() });
+      await updateBoard({
+        boardId: board._id,
+        userId,
+        name: name.trim(),
+      });
       toast.success("Board name updated");
       setIsEditing(false);
       router.refresh();
@@ -88,10 +90,10 @@ export function BoardHeader({ board, children }: BoardHeaderProps) {
               {board.name}
             </h1>
             <Badge
-              variant={board.is_public ? "default" : "secondary"}
+              variant={board.isPublic ? "default" : "secondary"}
               className="hidden md:inline-flex"
             >
-              {board.is_public ? (
+              {board.isPublic ? (
                 <>
                   <Globe className="h-3 w-3 mr-1" />
                   Public

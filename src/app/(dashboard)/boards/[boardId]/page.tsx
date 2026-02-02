@@ -1,9 +1,11 @@
 import { BoardHeader } from "@/components/dashboard/board-header";
 import { CreateGoalDialog } from "@/components/dashboard/create-goal-dialog";
 import { GoalsList } from "@/components/dashboard/goals-list";
-import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
-import { createServerQueries } from "@/lib/supabase/server-queries";
+import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
+import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
+import { api } from "convex/_generated/api";
+import type { Id } from "convex/_generated/dataModel";
 
 interface BoardPageProps {
   params: Promise<{ boardId: string }>;
@@ -11,10 +13,14 @@ interface BoardPageProps {
 
 export async function generateMetadata({ params }: BoardPageProps) {
   const { boardId } = await params;
-  const supabase = await createClient();
-  const { getBoard } = createServerQueries(supabase);
-  const board = await getBoard(boardId);
-
+  const token = await convexAuthNextjsToken();
+  const board = token
+    ? await fetchQuery(
+        api.boards.getBoard,
+        { boardId: boardId as Id<"boards"> },
+        { token }
+      )
+    : null;
   return {
     title: board?.name ?? "Board",
   };
@@ -22,25 +28,38 @@ export async function generateMetadata({ params }: BoardPageProps) {
 
 export default async function BoardPage({ params }: BoardPageProps) {
   const { boardId } = await params;
-  const supabase = await createClient();
-  const user = await getAuthenticatedUser(supabase);
-  const { getBoard, getGoalsByBoard } = createServerQueries(supabase);
+  const token = await convexAuthNextjsToken();
+  if (!token) notFound();
 
-  const board = await getBoard(boardId, user.id);
+  const userId = await fetchQuery(api.profiles.getCurrentUserId, {}, { token });
+  if (!userId) notFound();
+
+  const board = await fetchQuery(
+    api.boards.getBoard,
+    { boardId: boardId as Id<"boards">, userId },
+    { token }
+  );
 
   if (!board) {
     notFound();
   }
 
-  const goals = await getGoalsByBoard(boardId);
+  const goals = await fetchQuery(
+    api.goals.listGoalsByBoard,
+    { boardId: board._id },
+    { token }
+  );
 
   return (
     <div className="container mx-auto space-y-6 py-6">
       <BoardHeader board={board}>
-        <CreateGoalDialog boardId={boardId} existingGoalsCount={goals.length} />
+        <CreateGoalDialog
+          boardId={board._id}
+          existingGoalsCount={goals.length}
+        />
       </BoardHeader>
 
-      <GoalsList goals={goals} boardId={boardId} />
+      <GoalsList boardId={board._id} />
     </div>
   );
 }

@@ -1,31 +1,41 @@
 import { paymentProvider } from "@/lib/payments";
-import { createClient } from "@/lib/supabase/server";
+import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "convex/_generated/api";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, userId } = body;
+    const { email, userId: bodyUserId } = body as {
+      email?: string;
+      userId?: string;
+    };
 
-    const supabase = await createClient();
+    const token = await convexAuthNextjsToken();
 
-    // If userId is provided, verify user is authenticated and check if already paid
-    if (userId) {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user || user.id !== userId) {
+    if (bodyUserId) {
+      if (!token) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("has_paid")
-        .eq("id", user.id)
-        .single();
+      const userId = await fetchQuery(
+        api.profiles.getCurrentUserId,
+        {},
+        { token }
+      );
 
-      if (profile?.has_paid) {
+      if (!userId || userId !== bodyUserId) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const profile = await fetchQuery(
+        api.profiles.getProfile,
+        { userId },
+        { token }
+      );
+
+      if (profile?.hasPaid) {
         return NextResponse.json(
           { error: "You have already purchased GoalTrack" },
           { status: 400 }
@@ -33,11 +43,9 @@ export async function POST(req: Request) {
       }
     }
 
-    // Create checkout session
-    // Email is optional - if not provided, Stripe will collect it during checkout
     const checkoutUrl = await paymentProvider.createCheckoutUrl(
       email || undefined,
-      userId
+      bodyUserId
     );
 
     return NextResponse.json({ url: checkoutUrl });

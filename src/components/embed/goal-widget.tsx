@@ -1,46 +1,18 @@
 "use client";
 
+import { useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
 import { GoalProgressDisplay } from "@/components/shared/goal-progress-display";
-import { createClient } from "@/lib/supabase/client";
-import type { Tables } from "@/lib/supabase/types";
-import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
-import { useEffect, useMemo, useState } from "react";
+import type { ConvexGoal } from "@/lib/convex-types";
 
 interface EmbedGoalWidgetProps {
-  goal: Tables<"goals">;
+  goal: ConvexGoal;
 }
 
 export function EmbedGoalWidget({ goal: initialGoal }: EmbedGoalWidgetProps) {
-  const [goal, setGoal] = useState(initialGoal);
-  const supabase = useMemo(() => createClient(), []);
-
-  // Subscribe to real-time updates
-  useEffect(() => {
-    const channel = supabase
-      .channel(`embed-goal-${goal.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "goals",
-          filter: `id=eq.${goal.id}`,
-        },
-        (payload: RealtimePostgresChangesPayload<Tables<"goals">>) => {
-          if (payload.new && "id" in payload.new) {
-            setGoal((prev) => ({
-              ...prev,
-              ...payload.new,
-            }));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [goal.id, supabase]);
+  const goal =
+    useQuery(api.goals.getGoalByEmbedId, { embedId: initialGoal.embedId }) ??
+    initialGoal;
 
   return (
     <GoalProgressDisplay

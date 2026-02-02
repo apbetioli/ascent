@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSupabase } from "@/lib/hooks/use-supabase";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,12 +24,13 @@ export function CreateBoardDialog() {
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { getUser, createBoard } = useSupabase();
+  const userId = useQuery(api.profiles.getCurrentUserId);
+  const createBoard = useMutation(api.boards.createBoard);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim()) {
+    if (!name.trim() || !userId) {
       toast.error("Please enter a board name");
       return;
     }
@@ -36,15 +38,8 @@ export function CreateBoardDialog() {
     setIsLoading(true);
 
     try {
-      const user = await getUser();
-
-      if (!user) {
-        toast.error("You must be logged in");
-        return;
-      }
-
-      const board = await createBoard({
-        user_id: user.id,
+      await createBoard({
+        userId,
         name: name.trim(),
         theme: "default",
       });
@@ -99,7 +94,10 @@ export function CreateBoardDialog() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !name.trim()}>
+            <Button
+              type="submit"
+              disabled={isLoading || !name.trim() || !userId}
+            >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Board
             </Button>

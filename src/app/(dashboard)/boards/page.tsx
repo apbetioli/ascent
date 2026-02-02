@@ -1,37 +1,29 @@
-import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
-import { createServerQueries } from "@/lib/supabase/server-queries";
 import { BoardsTrelloView } from "@/components/dashboard/boards-trello-view";
+import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
+import { fetchQuery } from "convex/nextjs";
+import { redirect } from "next/navigation";
+import { api } from "convex/_generated/api";
 
 export const metadata = {
   title: "Boards",
 };
 
 export default async function BoardsPage() {
-  const supabase = await createClient();
-  const user = await getAuthenticatedUser(supabase);
-  const { getBoards, getGoalsByUser } = createServerQueries(supabase);
+  const token = await convexAuthNextjsToken();
+  if (!token) redirect("/login");
 
-  const [boards, allGoals] = await Promise.all([
-    getBoards(user.id),
-    getGoalsByUser(user.id),
-  ]);
+  const user = await fetchQuery(api.profiles.getCurrentUser, {}, { token });
+  if (!user) redirect("/login");
 
-  const goalsByBoardId = allGoals.reduce<Record<string, typeof allGoals>>(
-    (acc, goal) => {
-      if (!acc[goal.board_id]) acc[goal.board_id] = [];
-      acc[goal.board_id].push(goal);
-      return acc;
-    },
-    {}
+  const boards = await fetchQuery(
+    api.boards.listBoards,
+    { userId: user.userId },
+    { token }
   );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <BoardsTrelloView
-        boards={boards}
-        goalsByBoardId={goalsByBoardId}
-        className="min-h-0 flex-1"
-      />
+      <BoardsTrelloView boards={boards} className="min-h-0 flex-1" />
     </div>
   );
 }

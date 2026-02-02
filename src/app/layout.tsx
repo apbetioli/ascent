@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ui/theme-provider";
+import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
+import { ConvexClientProvider } from "@/components/providers/convex-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -53,11 +55,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const ConvexAuthServer = await ConvexAuthNextjsServerProvider({
+    children: <ConvexClientProvider>{children}</ConvexClientProvider>,
+  });
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -69,7 +74,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          {ConvexAuthServer}
           <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>

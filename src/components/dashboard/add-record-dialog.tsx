@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSupabase } from "@/lib/hooks/use-supabase";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
+import type { Id } from "convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,7 +29,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 interface AddRecordDialogProps {
-  goalId: string;
+  goalId: Id<"goals">;
   goalName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -44,7 +46,8 @@ export function AddRecordDialog({
   const [date, setDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { getUser, createRecord } = useSupabase();
+  const userId = useQuery(api.profiles.getCurrentUserId);
+  const createRecordMutation = useMutation(api.records.createRecord);
 
   const resetForm = () => {
     setAmount("");
@@ -61,21 +64,19 @@ export function AddRecordDialog({
       return;
     }
 
+    if (!userId) {
+      toast.error("You must be logged in");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const user = await getUser();
-
-      if (!user) {
-        toast.error("You must be logged in");
-        return;
-      }
-
-      await createRecord({
-        goal_id: goalId,
-        user_id: user.id,
+      await createRecordMutation({
+        goalId,
+        userId,
         amount: amountValue,
-        description: description.trim() || null,
+        description: description.trim() || undefined,
         timestamp: date.getTime(),
       });
 
@@ -173,7 +174,7 @@ export function AddRecordDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !amount}>
+            <Button type="submit" disabled={isLoading || !amount || !userId}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save
             </Button>

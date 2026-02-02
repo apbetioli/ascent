@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "convex/*": ["./convex/*"]
     }
   },
   "include": [
@@ -30,5 +31,16 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "convex/auth.ts",
+    "convex/http.ts",
+    "convex/schema.ts",
+    "convex/profiles.ts",
+    "convex/boards.ts",
+    "convex/goals.ts",
+    "convex/records.ts",
+    "convex/api_tokens.ts",
+    "convex/pending_payments.ts"
+  ]
 }

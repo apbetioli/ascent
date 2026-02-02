@@ -1,4 +1,8 @@
-import { updateSession } from "@/lib/supabase/middleware";
+import {
+  convexAuthNextjsMiddleware,
+  nextjsMiddlewareRedirect,
+} from "@convex-dev/auth/nextjs/server";
+import type { NextFetchEvent } from "next/server";
 import { NextResponse, type NextRequest } from "next/server";
 import {
   authRateLimiter,
@@ -7,14 +11,29 @@ import {
 } from "./lib/redis/rate-limit";
 import { addVisitor } from "./lib/redis/visitors";
 
-export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+const authMiddleware = convexAuthNextjsMiddleware(
+  async (request: NextRequest, { convexAuth }) => {
+    const pathname = request.nextUrl.pathname;
+    const isPublicRoute =
+      pathname === "/" ||
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/api/") ||
+      pathname.startsWith("/auth/");
 
+    if (!(await convexAuth.isAuthenticated()) && !isPublicRoute) {
+      return nextjsMiddlewareRedirect(request, "/login");
+    }
+
+    return NextResponse.next({ request });
+  }
+);
+
+export async function middleware(request: NextRequest, event: NextFetchEvent) {
+  const pathname = request.nextUrl.pathname;
   const ip = getIp(request);
 
   addVisitor(ip);
 
-  // Skip rate limiting for localhost/development (including when testing with spoofed X-Forwarded-For)
   if (
     !isLocalhost(ip) &&
     !isLocalhost(request.nextUrl.hostname) &&
@@ -33,18 +52,14 @@ export async function middleware(request: NextRequest) {
 
   if (pathname.startsWith("/embed/")) {
     const response = NextResponse.next({ request });
-    // Allow iframe embedding for embed routes by removing X-Frame-Options
-    // (not setting it allows embedding from any origin)
     response.headers.delete("X-Frame-Options");
     return response;
   }
 
-  // Authenticate the request
-  return await updateSession(request);
+  return authMiddleware(request, event);
 }
 
 function getIp(request: NextRequest) {
-  // x-forwarded-for & x-real-ip: Only trust in production when behind a trusted proxy
   return (
     request.headers.get("x-forwarded-for")?.split(",")[0] ||
     request.headers.get("x-real-ip") ||
@@ -58,14 +73,6 @@ function isLocalhost(ip: string) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     * - api routes that don't need auth
-     */
     "/",
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],

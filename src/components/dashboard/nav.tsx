@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useSupabase } from "@/lib/hooks/use-supabase";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -15,19 +15,30 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LayoutDashboard, Settings, LogOut, Target } from "lucide-react";
 import { CreateBoardDialog } from "@/components/dashboard/create-board-dialog";
-import type { User } from "@supabase/supabase-js";
-import type { Tables } from "@/lib/supabase/types";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import type { Id } from "convex/_generated/dataModel";
+
+export type DashboardProfile = {
+  _id: Id<"profiles">;
+  _creationTime: number;
+  userId: Id<"users">;
+  name?: string;
+  avatarUrl?: string;
+  paymentProvider?: string;
+  paymentCustomerId?: string;
+  hasPaid: boolean;
+  timezone: string;
+};
 
 interface DashboardNavProps {
-  user: User;
-  profile: Tables<"profiles"> | null;
+  user: { id: Id<"users">; email?: string };
+  profile: DashboardProfile | null;
 }
 
 export function DashboardNav({ user, profile }: DashboardNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { signOut } = useSupabase();
+  const { signOut } = useAuthActions();
 
   const handleSignOut = async () => {
     await signOut();
@@ -81,7 +92,7 @@ export function DashboardNav({ user, profile }: DashboardNavProps) {
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
                   <AvatarImage
-                    src={profile?.avatar_url ?? undefined}
+                    src={profile?.avatarUrl ?? undefined}
                     alt={profile?.name ?? "User"}
                   />
                   <AvatarFallback>{getInitials()}</AvatarFallback>
@@ -94,9 +105,11 @@ export function DashboardNav({ user, profile }: DashboardNavProps) {
                   <p className="text-sm font-medium leading-none">
                     {profile?.name ?? "User"}
                   </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user.email}
-                  </p>
+                  {user.email && (
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
+                  )}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

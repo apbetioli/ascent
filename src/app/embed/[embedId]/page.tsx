@@ -1,5 +1,5 @@
-import { createServiceClient } from "@/lib/supabase/server";
-import { createServerQueries } from "@/lib/supabase/server-queries";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "convex/_generated/api";
 import { notFound } from "next/navigation";
 import { EmbedGoalWidget } from "@/components/embed/goal-widget";
 
@@ -9,10 +9,10 @@ interface EmbedPageProps {
 
 export async function generateMetadata({ params }: EmbedPageProps) {
   const { embedId } = await params;
-  const supabase = await createServiceClient();
-  const { getGoalByEmbedId } = createServerQueries(supabase);
-
-  const goal = await getGoalByEmbedId(embedId);
+  const result = await fetchQuery(api.goals.getGoalByEmbedIdWithBoard, {
+    embedId,
+  });
+  const goal = result?.goal;
 
   return {
     title: goal?.name ?? "Goal Widget",
@@ -22,16 +22,14 @@ export async function generateMetadata({ params }: EmbedPageProps) {
 
 export default async function EmbedPage({ params }: EmbedPageProps) {
   const { embedId } = await params;
-  const supabase = await createServiceClient();
-  const { getGoalByEmbedIdWithBoard } = createServerQueries(supabase);
 
-  // Get goal by embed_id with board information
-  const goal = await getGoalByEmbedIdWithBoard(embedId);
+  const result = await fetchQuery(api.goals.getGoalByEmbedIdWithBoard, {
+    embedId,
+  });
 
-  // Only allow embedding if the board is public
-  if (!goal || !goal.boards?.is_public) {
+  if (!result || !result.board.isPublic) {
     notFound();
   }
 
-  return <EmbedGoalWidget goal={goal} />;
+  return <EmbedGoalWidget goal={result.goal} />;
 }

@@ -18,13 +18,21 @@ export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
-  // Avoid hydration mismatch for theme-dependent icon only
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Always render the same DropdownMenu structure so Radix ID generation
-  // matches between server and client (avoids hydration mismatch in sibling nav dropdown)
+  // Defer Radix DropdownMenu until after mount - Radix generates different IDs
+  // on server vs client, causing hydration mismatch (radix-_R_e* vs radix-_R_3*)
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="icon" className="h-8 w-8" type="button">
+        <Sun className="h-4 w-4" />
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    );
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/payments/stripe";
 import { paymentProvider } from "@/lib/payments";
-import { fetchMutation } from "convex/nextjs";
+import { fetchAction, fetchMutation } from "convex/nextjs";
 import { api } from "convex/_generated/api";
 
 export async function GET(request: Request) {
@@ -37,14 +37,46 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/#pricing?error=missing_email`);
     }
 
-    const customerId = session.customer as string;
+    // Stripe may not create a Customer for one-time payments with customer_email only
+    const customerId =
+      typeof session.customer === "string" ? session.customer : undefined;
 
     await fetchMutation(api.pending_payments.addPendingPayment, {
       email,
-      stripeCustomerId: customerId,
+      ...(customerId != null && { stripeCustomerId: customerId }),
       paymentProvider: paymentProvider.getProviderName(),
     });
 
+    // If user already has a profile, set hasPaid immediately
+    await fetchMutation(api.profiles.setHasPaidByEmail, {
+      email,
+      paymentProvider: paymentProvider.getProviderName(),
+      ...(customerId != null && { stripeCustomerId: customerId }),
+    });
+
+    // Create a magic link and redirect the user to it so they're logged in directly.
+    // Magic link destination is /login?redirect=/boards so code exchange runs on a public route.
+    // SITE_URL (or CONVEX_SITE_URL) must be set in Convex for this to work: npx convex env set SITE_URL http://localhost:3000
+    try {
+      const magicLinkUrl = await fetchAction(
+        api.magic_links.createMagicLinkForEmail,
+        {
+          email,
+          redirectTo: `${origin}/login?redirect=/boards`,
+        }
+      );
+      if (magicLinkUrl) {
+        await fetchMutation(api.magic_links.consumeForEmail, { email });
+        return NextResponse.redirect(magicLinkUrl);
+      }
+      console.warn(
+        "Payment success: createMagicLinkForEmail returned no URL (check SITE_URL in Convex)"
+      );
+    } catch (autoLoginError) {
+      console.error("Auto-login after payment failed:", autoLoginError);
+    }
+
+    // Fallback: send to login page with email prefilled
     return NextResponse.redirect(
       `${origin}/login?email=${encodeURIComponent(email)}&fromPayment=1&redirect=/boards`
     );

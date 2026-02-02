@@ -29,7 +29,7 @@ export const recurrenceSchema = z.enum([
 ]);
 
 export const createGoalSchema = z.object({
-  board_id: z.string().uuid("Invalid board ID"),
+  board_id: z.string().min(1, "Invalid board ID"),
   name: z
     .string()
     .min(1, "Goal name is required")

@@ -40,17 +40,17 @@ export function PricingCard({
   userId,
 }: PricingCardProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [priceFormatted, setPriceFormatted] = useState<string | null>(null);
+  const [priceFormatted, setPriceFormatted] = useState<string | null>('$5');
   const router = useRouter();
 
-  useEffect(() => {
-    fetch("/api/price")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: { formatted?: string } | null) =>
-        setPriceFormatted(data?.formatted ?? null)
-      )
-      .catch(() => setPriceFormatted(null));
-  }, []);
+  // useEffect(() => {
+  //   fetch("/api/price")
+  //     .then((res) => (res.ok ? res.json() : null))
+  //     .then((data: { formatted?: string } | null) =>
+  //       setPriceFormatted(data?.formatted ?? null)
+  //     )
+  //     .catch(() => setPriceFormatted(null));
+  // }, []);
 
   const handleCheckout = async () => {
     setIsLoading(true);
@@ -58,6 +58,7 @@ export function PricingCard({
     try {
       const response = await fetch("/api/checkout", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -79,13 +80,30 @@ export function PricingCard({
       const data = await response.json();
 
       if (!response.ok) {
-        // Redirect to login page instead of throwing error
-        router.push("/login");
+        if (response.status === 401) {
+          // Return to pricing after login so user can try checkout again
+          const returnTo =
+            typeof window !== "undefined"
+              ? `${window.location.pathname}${window.location.hash || "#pricing"}`
+              : "/#pricing";
+          router.push(`/login?redirect=${encodeURIComponent(returnTo)}`);
+          return;
+        }
+        toast.error(
+          (data?.error as string) ||
+            "Failed to start checkout. Please try again."
+        );
+        return;
+      }
+
+      const url = data?.url;
+      if (!url || typeof url !== "string") {
+        toast.error("Invalid checkout response. Please try again.");
         return;
       }
 
       // Redirect to Stripe Checkout
-      window.location.href = data.url;
+      window.location.href = url;
     } catch (error) {
       console.error("Checkout error:", error);
       toast.error("Failed to start checkout. Please try again.");

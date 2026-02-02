@@ -70,8 +70,14 @@ export default defineSchema({
 
   pending_payments: defineTable({
     email: v.string(),
-    stripeCustomerId: v.string(),
+    stripeCustomerId: v.optional(v.string()),
     paymentProvider: v.string(),
     completedAt: v.number(),
+  }).index("by_email", ["email"]),
+
+  magic_link_urls: defineTable({
+    email: v.string(),
+    url: v.string(),
+    createdAt: v.number(),
   }).index("by_email", ["email"]),
 });

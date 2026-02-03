@@ -51,7 +51,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
   );
 
   return (
-    <div className="container mx-auto space-y-6 py-6">
+    <div className="w-full space-y-6 p-6">
       <BoardHeader board={board}>
         <CreateGoalDialog
           boardId={board._id}

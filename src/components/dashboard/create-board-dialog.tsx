@@ -34,7 +34,7 @@ export function CreateBoardDialog() {
     setIsLoading(true);
 
     try {
-      await createBoard({
+      const boardId = await createBoard({
         userId,
         name: name.trim(),
         theme: "default",
@@ -42,7 +42,7 @@ export function CreateBoardDialog() {
 
       setOpen(false);
       setName("");
-      router.refresh();
+      router.push(`/boards/${boardId}`);
     } catch (error) {
       console.error(error);
     } finally {

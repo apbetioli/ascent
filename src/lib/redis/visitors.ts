@@ -10,7 +10,7 @@ export async function addVisitor(ipAddress: string) {
     const added = await redis.sadd(setKey, ipAddress);
     await redis.expire(setKey, 60);
     return added;
-  } catch (error) {
+  } catch {
     console.warn("Redis offline. No new visitors added.");
     return 0;
   }
@@ -23,7 +23,7 @@ export async function getLiveVisitorsCount() {
   try {
     const count = await redis.scard(setKey);
     return count ?? 0;
-  } catch (error) {
+  } catch {
     console.warn("Redis offline. Returning 0 visitors.");
     return 0;
   }

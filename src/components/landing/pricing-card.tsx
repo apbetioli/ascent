@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Check, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface PricingCardProps {
   isLoggedIn: boolean;
@@ -39,17 +39,8 @@ export function PricingCard({
   userId,
 }: PricingCardProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [priceFormatted, setPriceFormatted] = useState<string | null>("$5");
+  const priceFormatted = "$5";
   const router = useRouter();
-
-  // useEffect(() => {
-  //   fetch("/api/price")
-  //     .then((res) => (res.ok ? res.json() : null))
-  //     .then((data: { formatted?: string } | null) =>
-  //       setPriceFormatted(data?.formatted ?? null)
-  //     )
-  //     .catch(() => setPriceFormatted(null));
-  // }, []);
 
   const handleCheckout = async () => {
     setIsLoading(true);

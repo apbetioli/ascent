@@ -1,13 +1,4 @@
-import {
-  Target,
-  TrendingUp,
-  Calendar,
-  Share2,
-  Code,
-  Zap,
-  Repeat,
-  Globe,
-} from "lucide-react";
+import { Calendar, Share2, Code, Zap, Repeat, Globe } from "lucide-react";
 
 const features = [
   {

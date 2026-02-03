@@ -1,12 +1,14 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
+import type { GenericQueryCtx } from "convex/server";
 import { mutation, query } from "./_generated/server";
+import type { DataModel } from "./_generated/dataModel";
 import { v } from "convex/values";
 
 export const getCurrentUserId = query({
   args: {},
   returns: v.union(v.id("users"), v.null()),
   handler: async (ctx) => {
-    return await getAuthUserId(ctx as any);
+    return await getAuthUserId(ctx as GenericQueryCtx<DataModel>);
   },
 });
 
@@ -21,7 +23,7 @@ export const getCurrentUser = query({
     v.null()
   ),
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx as any);
+    const userId = await getAuthUserId(ctx as GenericQueryCtx<DataModel>);
     if (!userId) return null;
     const user = await ctx.db.get("users", userId);
     if (!user) return null;

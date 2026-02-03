@@ -94,8 +94,10 @@ interface BoardColumnProps {
 }
 
 function BoardColumn({ board, onGoalsLoad }: BoardColumnProps) {
-  const goals =
-    useQuery(api.goals.listGoalsByBoard, { boardId: board._id }) ?? [];
+  const goalsQuery = useQuery(api.goals.listGoalsByBoard, {
+    boardId: board._id,
+  });
+  const goals = useMemo(() => goalsQuery ?? [], [goalsQuery]);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const sortedGoals = useMemo(

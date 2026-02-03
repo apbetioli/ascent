@@ -1,5 +1,4 @@
 import { GoalProgressDisplay } from "@/components/shared/goal-progress-display";
-import { Badge } from "@/components/ui/badge";
 import { getNextColor } from "@/lib/utils/colors";
 import { HeroButtons } from "./hero-buttons";
 import Visitors from "./visitors";

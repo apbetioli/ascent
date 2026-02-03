@@ -16,7 +16,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
 import { Loader2, Mail } from "lucide-react";
 import Link from "next/link";
 
@@ -63,11 +62,10 @@ export default function LoginPage() {
         redirectTo: `/login?redirect=${encodeURIComponent(redirect)}`,
       });
       setMagicLinkSent(true);
-      toast.success("Check your email for the magic link!");
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "An unexpected error occurred";
-      toast.error(message);
+      console.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +84,7 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "An unexpected error occurred";
-      toast.error(message);
+      console.error(message);
       setIsGoogleLoading(false);
     }
   };

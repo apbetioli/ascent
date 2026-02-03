@@ -13,7 +13,6 @@ import {
 import { Check, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 interface PricingCardProps {
   isLoggedIn: boolean;
@@ -40,7 +39,7 @@ export function PricingCard({
   userId,
 }: PricingCardProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [priceFormatted, setPriceFormatted] = useState<string | null>('$5');
+  const [priceFormatted, setPriceFormatted] = useState<string | null>("$5");
   const router = useRouter();
 
   // useEffect(() => {
@@ -73,7 +72,6 @@ export function PricingCard({
       if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text();
         console.error("Non-JSON response:", text);
-        toast.error("Failed to start checkout. Please try again.");
         return;
       }
 
@@ -89,24 +87,16 @@ export function PricingCard({
           router.push(`/login?redirect=${encodeURIComponent(returnTo)}`);
           return;
         }
-        toast.error(
-          (data?.error as string) ||
-            "Failed to start checkout. Please try again."
-        );
         return;
       }
 
       const url = data?.url;
-      if (!url || typeof url !== "string") {
-        toast.error("Invalid checkout response. Please try again.");
-        return;
-      }
+      if (!url || typeof url !== "string") return;
 
       // Redirect to Stripe Checkout
       window.location.href = url;
     } catch (error) {
       console.error("Checkout error:", error);
-      toast.error("Failed to start checkout. Please try again.");
     } finally {
       setIsLoading(false);
     }

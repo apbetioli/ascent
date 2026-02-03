@@ -42,7 +42,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Plus, Trash2, Copy, Key, Loader2 } from "lucide-react";
 
@@ -97,10 +96,8 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
         name: name.trim(),
         timezone,
       });
-      toast.success("Settings saved");
       router.refresh();
     } catch (error) {
-      toast.error("Failed to save settings");
       console.error(error);
     } finally {
       setIsSaving(false);
@@ -108,11 +105,7 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
   };
 
   const handleCreateToken = async () => {
-    if (!newTokenName.trim() || !currentUserId) {
-      if (!currentUserId) return;
-      toast.error("Please enter a token name");
-      return;
-    }
+    if (!newTokenName.trim() || !currentUserId) return;
 
     setIsCreatingToken(true);
 
@@ -126,7 +119,6 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
       router.refresh();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create API token");
     } finally {
       setIsCreatingToken(false);
     }
@@ -136,10 +128,8 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
     if (!currentUserId) return;
     try {
       await deleteApiTokenMutation({ tokenId, userId: currentUserId });
-      toast.success("Token deleted");
       router.refresh();
     } catch (error) {
-      toast.error("Failed to delete token");
       console.error(error);
     }
   };
@@ -147,7 +137,6 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
   const handleCopyToken = () => {
     if (newToken) {
       navigator.clipboard.writeText(newToken);
-      toast.success("Token copied to clipboard");
     }
   };
 

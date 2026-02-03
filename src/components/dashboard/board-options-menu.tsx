@@ -32,7 +32,6 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
 
 interface BoardOptionsMenuProps {
   board: ConvexBoard;
@@ -62,12 +61,8 @@ export function BoardOptionsMenu({
         userId,
         isPublic: !board.isPublic,
       });
-      toast.success(
-        board.isPublic ? "Board is now private" : "Board is now public"
-      );
       router.refresh();
     } catch (error) {
-      toast.error("Failed to update board visibility");
       console.error(error);
     }
   };
@@ -77,11 +72,9 @@ export function BoardOptionsMenu({
     setIsDeleting(true);
     try {
       await deleteBoard({ boardId: board._id, userId });
-      toast.success("Board deleted");
       router.push("/boards");
       router.refresh();
     } catch (error) {
-      toast.error("Failed to delete board");
       console.error(error);
     } finally {
       setIsDeleting(false);
@@ -92,7 +85,6 @@ export function BoardOptionsMenu({
     if (!board.publicSlug) return;
     const url = `${window.location.origin}/public/${board.publicSlug}`;
     navigator.clipboard.writeText(url);
-    toast.success("Public link copied to clipboard");
   };
 
   return (

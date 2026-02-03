@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import { Plus, Loader2 } from "lucide-react";
 
 export function CreateBoardDialog() {
@@ -30,10 +29,7 @@ export function CreateBoardDialog() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim() || !userId) {
-      toast.error("Please enter a board name");
-      return;
-    }
+    if (!name.trim() || !userId) return;
 
     setIsLoading(true);
 
@@ -44,12 +40,10 @@ export function CreateBoardDialog() {
         theme: "default",
       });
 
-      toast.success("Board created successfully");
       setOpen(false);
       setName("");
       router.refresh();
     } catch (error) {
-      toast.error("An unexpected error occurred");
       console.error(error);
     } finally {
       setIsLoading(false);

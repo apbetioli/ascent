@@ -10,7 +10,6 @@ import { api } from "convex/_generated/api";
 import { Check, Globe, Lock, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
 
 interface BoardHeaderProps {
   board: ConvexBoard;
@@ -32,11 +31,9 @@ export function BoardHeader({ board, children }: BoardHeaderProps) {
         userId,
         name: name.trim(),
       });
-      toast.success("Board name updated");
       setIsEditing(false);
       router.refresh();
     } catch (error) {
-      toast.error("Failed to update board name");
       console.error(error);
     }
   };

@@ -23,7 +23,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { toast } from "sonner";
 import { Loader2, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -59,15 +58,8 @@ export function AddRecordDialog({
     e.preventDefault();
 
     const amountValue = parseFloat(amount);
-    if (isNaN(amountValue) || amountValue === 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-
-    if (!userId) {
-      toast.error("You must be logged in");
-      return;
-    }
+    if (isNaN(amountValue) || amountValue === 0) return;
+    if (!userId) return;
 
     setIsLoading(true);
 
@@ -80,12 +72,10 @@ export function AddRecordDialog({
         timestamp: date.getTime(),
       });
 
-      toast.success("Record added successfully");
       onOpenChange(false);
       resetForm();
       router.refresh();
     } catch (error) {
-      toast.error("An unexpected error occurred");
       console.error(error);
     } finally {
       setIsLoading(false);

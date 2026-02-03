@@ -33,7 +33,6 @@ import { Plus, Target } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 
 interface SortableGoalCardProps {
   goal: ConvexGoal;
@@ -275,9 +274,8 @@ export function BoardsTrelloView({ boards, className }: BoardsTrelloViewProps) {
               });
             })
           );
-          toast.success("Order updated");
         } catch {
-          toast.error("Failed to update order");
+          // Failed to update order
         }
       } else {
         const movedGoal = sourceGoals.find((g) => g._id === activeIdStr);
@@ -320,9 +318,7 @@ export function BoardsTrelloView({ boards, className }: BoardsTrelloViewProps) {
               sortOrder: newIndex,
             }),
           ]);
-          toast.success("Goal moved to board");
         } catch {
-          toast.error("Failed to move goal");
           setGoalsByBoardId((prev) => {
             const next = { ...prev };
             next[sourceBoardId] = sourceGoals;

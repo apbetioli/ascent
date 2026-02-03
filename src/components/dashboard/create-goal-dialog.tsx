@@ -53,7 +53,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 
 interface FormState {
   name: string;
@@ -295,10 +294,7 @@ export function CreateGoalDialog({
 
   const handleSaveName = async () => {
     const trimmed = formState.name.trim();
-    if (!trimmed) {
-      toast.error("Goal name cannot be empty");
-      return;
-    }
+    if (!trimmed) return;
     if (trimmed === (isEditMode && goal ? goal.name : "")) {
       setIsEditingName(false);
       return;
@@ -333,19 +329,14 @@ export function CreateGoalDialog({
       }
 
       const validation = updateGoalSchema.safeParse(validationData);
-      if (!validation.success) {
-        toast.error(validation.error.issues[0].message);
-        return;
-      }
+      if (!validation.success) return;
       if (!userId) return;
       await updateGoal({ goalId: goal._id, userId, name: trimmed });
       updateFormField("name", trimmed);
       // Update previous state to prevent auto-save from triggering
       previousFormStateRef.current = { ...formState, name: trimmed };
-      toast.success("Goal name updated");
       router.refresh();
     } catch (e) {
-      toast.error("Failed to update goal name");
       console.error(e);
     } finally {
       setIsLoading(false);
@@ -361,10 +352,7 @@ export function CreateGoalDialog({
   };
 
   const addRecordByAmount = async (amount: number) => {
-    if (!goal || !userId) {
-      if (!userId) toast.error("You must be logged in");
-      return;
-    }
+    if (!goal || !userId) return;
     setIsAddingRecord(true);
     try {
       await createRecord({
@@ -377,10 +365,8 @@ export function CreateGoalDialog({
       const nextStr = next.toString();
       updateFormField("currentValue", nextStr);
       currentValueOnFocusRef.current = nextStr;
-      toast.success("Progress added");
       router.refresh();
     } catch (e) {
-      toast.error("Failed to add progress");
       console.error(e);
     } finally {
       setIsAddingRecord(false);
@@ -398,10 +384,7 @@ export function CreateGoalDialog({
     if (isNaN(prev)) return;
     const delta = parsed - prev;
     if (delta === 0) return;
-    if (!userId) {
-      toast.error("You must be logged in");
-      return;
-    }
+    if (!userId) return;
     setIsAddingRecord(true);
     try {
       await createRecord({
@@ -411,10 +394,8 @@ export function CreateGoalDialog({
         timestamp: Date.now(),
       });
       currentValueOnFocusRef.current = formState.currentValue;
-      toast.success("Progress updated");
       router.refresh();
     } catch (e) {
-      toast.error("Failed to update progress");
       updateFormField("currentValue", currentValueOnFocusRef.current);
       console.error(e);
     } finally {
@@ -452,20 +433,13 @@ export function CreateGoalDialog({
       const targetError = validation.error.issues.find(
         (issue) => issue.path[0] === "target_amount"
       );
-      const errorMessage = targetError
-        ? targetError.message
-        : validation.error.issues[0].message;
-      toast.error(errorMessage);
       return;
     }
 
     setIsLoading(true);
 
     try {
-      if (!userId) {
-        toast.error("You must be logged in");
-        return;
-      }
+      if (!userId) return;
 
       const initialValue = initial ?? 0;
       const newGoalId = await createGoal({
@@ -491,17 +465,12 @@ export function CreateGoalDialog({
           });
         } catch (recordError) {
           console.error("Failed to create initial record:", recordError);
-          toast.warning(
-            "Goal created but failed to set initial amount. You can add it manually."
-          );
         }
       }
 
-      toast.success("Goal created successfully");
       setOpen(false);
       router.refresh();
     } catch (error) {
-      toast.error("An unexpected error occurred");
       console.error(error);
     } finally {
       setIsLoading(false);

@@ -33,7 +33,6 @@ import type { Id } from "convex/_generated/dataModel";
 import { Code, Copy, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
 import { CreateGoalDialog } from "./create-goal-dialog";
 
 interface GoalCardProps {
@@ -55,7 +54,6 @@ export function GoalCard({ goal, boardId }: GoalCardProps) {
   const handleCopyEmbedCode = () => {
     const embedCode = `<iframe src="${process.env.NEXT_PUBLIC_APP_URL}/embed/${goal.embedId}" width="400" height="200" frameborder="0" style="border-radius: 8px;"></iframe>`;
     navigator.clipboard.writeText(embedCode);
-    toast.success("Embed code copied to clipboard!");
   };
 
   const handleDelete = async () => {
@@ -63,12 +61,10 @@ export function GoalCard({ goal, boardId }: GoalCardProps) {
     setIsDeleting(true);
     try {
       await deleteGoal({ goalId: goal._id, userId });
-      toast.success("Goal deleted");
       setShowDeleteDialog(false);
       setShowEditDialog(false);
       router.refresh();
     } catch (error) {
-      toast.error("Failed to delete goal");
       console.error(error);
     } finally {
       setIsDeleting(false);
@@ -77,10 +73,7 @@ export function GoalCard({ goal, boardId }: GoalCardProps) {
 
   const handlePlusOne = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!userId) {
-      toast.error("You must be logged in");
-      return;
-    }
+    if (!userId) return;
     try {
       await createRecord({
         goalId: goal._id,
@@ -88,10 +81,8 @@ export function GoalCard({ goal, boardId }: GoalCardProps) {
         amount: 1,
         timestamp: Date.now(),
       });
-      toast.success("Progress added");
       router.refresh();
     } catch (error) {
-      toast.error("Failed to add progress");
       console.error(error);
     }
   };

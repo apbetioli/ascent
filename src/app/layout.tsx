@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { ConvexClientProvider } from "@/components/providers/convex-provider";
@@ -75,7 +74,6 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           {ConvexAuthServer}
-          <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>
     </html>

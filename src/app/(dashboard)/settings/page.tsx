@@ -26,7 +26,7 @@ export default async function Settings() {
     { token }
   );
   const tokens = await fetchQuery(
-    api.api_tokens.listApiTokensLimited,
+    api.apiTokens.listApiTokensLimited,
     { userId },
     { token }
   );
@@ -41,11 +41,7 @@ export default async function Settings() {
       user={{ id: userId, email: user.email ?? undefined }}
       profile={profile}
       tokens={tokens.map(
-        (t: {
-          _id: Id<"api_tokens">;
-          _creationTime: number;
-          name: string;
-        }) => ({
+        (t: { _id: Id<"apiTokens">; _creationTime: number; name: string }) => ({
           id: t._id,
           name: t.name,
           created_at: new Date(t._creationTime).toISOString(),

@@ -124,10 +124,10 @@ create table profiles (
 -- RLS: Users can only read/update their own profile
 ```
 
-### api_tokens
+### apiTokens
 
 ```sql
-create table api_tokens (
+create table apiTokens (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references profiles on delete cascade not null,
   name text not null,

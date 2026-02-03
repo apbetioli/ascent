@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
   if (result.paid && result.email) {
     try {
-      await fetchMutation(api.pending_payments.addPendingPayment, {
+      await fetchMutation(api.payments.addPendingPayment, {
         email: result.email,
         ...(result.customerId && { stripeCustomerId: result.customerId }),
         paymentProvider: paymentProvider.getProviderName(),

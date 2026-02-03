@@ -137,7 +137,7 @@ export const ensureProfileAndDefaultBoard = mutation({
     if (!existing) {
       const pending = args.email
         ? await ctx.db
-            .query("pending_payments")
+            .query("payments")
             .withIndex("by_email", (q) => q.eq("email", args.email!))
             .first()
         : null;

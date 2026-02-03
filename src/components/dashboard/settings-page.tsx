@@ -54,7 +54,7 @@ interface SettingsPageProps {
     timezone: string;
     hasPaid: boolean;
   } | null;
-  tokens: Array<{ id: Id<"api_tokens">; name: string; created_at: string }>;
+  tokens: Array<{ id: Id<"apiTokens">; name: string; created_at: string }>;
 }
 
 const TIMEZONES = [
@@ -82,8 +82,8 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
   const router = useRouter();
   const updateProfileMutation = useMutation(api.profiles.updateProfile);
-  const createApiTokenMutation = useMutation(api.api_tokens.createApiToken);
-  const deleteApiTokenMutation = useMutation(api.api_tokens.deleteApiToken);
+  const createApiTokenMutation = useMutation(api.apiTokens.createApiToken);
+  const deleteApiTokenMutation = useMutation(api.apiTokens.deleteApiToken);
   const currentUserId = useQuery(api.profiles.getCurrentUserId);
 
   const handleSaveProfile = async () => {
@@ -124,7 +124,7 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
     }
   };
 
-  const handleDeleteToken = async (tokenId: Id<"api_tokens">) => {
+  const handleDeleteToken = async (tokenId: Id<"apiTokens">) => {
     if (!currentUserId) return;
     try {
       await deleteApiTokenMutation({ tokenId, userId: currentUserId });
@@ -319,7 +319,7 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={() =>
-                            handleDeleteToken(token.id as Id<"api_tokens">)
+                            handleDeleteToken(token.id as Id<"apiTokens">)
                           }
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >

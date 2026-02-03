@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     const { token: apiToken } = await fetchMutation(
-      api.api_tokens.createApiToken,
+      api.apiTokens.createApiToken,
       {
         userId,
         name: name.trim(),

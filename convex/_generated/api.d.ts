@@ -8,13 +8,13 @@
  * @module
  */
 
-import type * as api_tokens from "../api_tokens.js";
+import type * as apiTokens from "../apiTokens.js";
 import type * as auth from "../auth.js";
 import type * as boards from "../boards.js";
 import type * as goals from "../goals.js";
 import type * as http from "../http.js";
-import type * as magic_links from "../magic_links.js";
-import type * as pending_payments from "../pending_payments.js";
+import type * as magicLinks from "../magicLinks.js";
+import type * as pendingPayments from "../pendingPayments.js";
 import type * as profiles from "../profiles.js";
 import type * as records from "../records.js";
 
@@ -25,13 +25,13 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  api_tokens: typeof api_tokens;
+  apiTokens: typeof apiTokens;
   auth: typeof auth;
   boards: typeof boards;
   goals: typeof goals;
   http: typeof http;
-  magic_links: typeof magic_links;
-  pending_payments: typeof pending_payments;
+  magicLinks: typeof magicLinks;
+  pendingPayments: typeof pendingPayments;
   profiles: typeof profiles;
   records: typeof records;
 }>;

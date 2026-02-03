@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     const customerId =
       typeof session.customer === "string" ? session.customer : undefined;
 
-    await fetchMutation(api.pending_payments.addPendingPayment, {
+    await fetchMutation(api.payments.addPendingPayment, {
       email,
       ...(customerId != null && { stripeCustomerId: customerId }),
       paymentProvider: paymentProvider.getProviderName(),
@@ -59,14 +59,14 @@ export async function GET(request: Request) {
     // SITE_URL (or CONVEX_SITE_URL) must be set in Convex for this to work: npx convex env set SITE_URL http://localhost:3000
     try {
       const magicLinkUrl = await fetchAction(
-        api.magic_links.createMagicLinkForEmail,
+        api.magicLinks.createMagicLinkForEmail,
         {
           email,
           redirectTo: `${origin}/login?redirect=/boards`,
         }
       );
       if (magicLinkUrl) {
-        await fetchMutation(api.magic_links.consumeForEmail, { email });
+        await fetchMutation(api.magicLinks.consumeForEmail, { email });
         return NextResponse.redirect(magicLinkUrl);
       }
       console.warn(

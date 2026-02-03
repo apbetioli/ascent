@@ -7,9 +7,9 @@ export const addPendingPayment = mutation({
     stripeCustomerId: v.optional(v.string()),
     paymentProvider: v.string(),
   },
-  returns: v.id("pending_payments"),
+  returns: v.id("payments"),
   handler: async (ctx, args) => {
-    return await ctx.db.insert("pending_payments", {
+    return await ctx.db.insert("payments", {
       email: args.email,
       ...(args.stripeCustomerId != null && {
         stripeCustomerId: args.stripeCustomerId,
@@ -31,7 +31,7 @@ export const getAndConsumePendingPaymentByEmail = mutation({
   ),
   handler: async (ctx, args) => {
     const pending = await ctx.db
-      .query("pending_payments")
+      .query("payments")
       .withIndex("by_email", (q) => q.eq("email", args.email))
       .first();
     if (!pending) return null;

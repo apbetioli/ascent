@@ -21,7 +21,7 @@ export const getUserIdForApiAuth = action({
     if (!args.token?.trim()) return null;
     const hashedToken = await hashToken(args.token.trim());
     const userId: Id<"users"> | null = await ctx.runQuery(
-      internal.api_tokens.getUserIdByHashedToken,
+      internal.apiTokens.getUserIdByHashedToken,
       { hashedToken }
     );
     return userId;
@@ -30,11 +30,11 @@ export const getUserIdForApiAuth = action({
 
 export const createApiToken = mutation({
   args: { userId: v.id("users"), name: v.string() },
-  returns: v.object({ token: v.string(), tokenId: v.id("api_tokens") }),
+  returns: v.object({ token: v.string(), tokenId: v.id("apiTokens") }),
   handler: async (ctx, args) => {
     const token = `gt_${crypto.randomUUID().replace(/-/g, "")}`;
     const hashedToken = await hashToken(token);
-    const tokenId = await ctx.db.insert("api_tokens", {
+    const tokenId = await ctx.db.insert("apiTokens", {
       userId: args.userId,
       name: args.name.trim(),
       hashedToken,
@@ -48,7 +48,7 @@ export const listApiTokens = query({
   returns: v.array(v.any()),
   handler: async (ctx, args) => {
     return await ctx.db
-      .query("api_tokens")
+      .query("apiTokens")
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .order("desc")
       .collect();
@@ -60,7 +60,7 @@ export const listApiTokensLimited = query({
   returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const tokens = await ctx.db
-      .query("api_tokens")
+      .query("apiTokens")
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .order("desc")
       .collect();
@@ -73,7 +73,7 @@ export const listApiTokensLimited = query({
 });
 
 export const deleteApiToken = mutation({
-  args: { tokenId: v.id("api_tokens"), userId: v.id("users") },
+  args: { tokenId: v.id("apiTokens"), userId: v.id("users") },
   returns: v.null(),
   handler: async (ctx, args) => {
     const token = await ctx.db.get(args.tokenId);
@@ -88,7 +88,7 @@ export const getUserIdByHashedToken = internalQuery({
   returns: v.union(v.id("users"), v.null()),
   handler: async (ctx, args) => {
     const token = await ctx.db
-      .query("api_tokens")
+      .query("apiTokens")
       .withIndex("by_hashedToken", (q) => q.eq("hashedToken", args.hashedToken))
       .unique();
     return token?.userId ?? null;

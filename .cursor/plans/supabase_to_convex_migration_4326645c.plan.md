@@ -9,10 +9,10 @@ isProject: false
 
 ## Current architecture (summary)
 
-- **Data**: Supabase Postgres — `profiles`, `api_tokens`, `boards`, `goals`, `records` with RLS and triggers (e.g. `current_amount` on goals, `public_slug` on boards, profile + default board on signup).
+- **Data**: Supabase Postgres — `profiles`, `apiTokens`, `boards`, `goals`, `records` with RLS and triggers (e.g. `current_amount` on goals, `public_slug` on boards, profile + default board on signup).
 - **Auth**: Supabase Auth — magic link + Google OAuth; session via cookies; `getUser()` in server components and `getSession()` / `onAuthStateChange` on client.
 - **Realtime**: Supabase Realtime — Postgres change streams for goals (single goal and board goals) in [use-realtime-goal.ts](src/lib/hooks/use-realtime-goal.ts), [goal-widget.tsx](src/components/embed/goal-widget.tsx), [goals-list.tsx](src/components/dashboard/goals-list.tsx), [board-view.tsx](src/components/public/board-view.tsx).
-- **API**: Next.js API routes under `/api/v1/goals`, `/api/tokens` — Bearer token auth via [lib/api/auth.ts](src/lib/api/auth.ts) (hash lookup in `api_tokens`); rate limiting (Redis) and Stripe checkout/webhook/payment-success all use Supabase for user and profile.
+- **API**: Next.js API routes under `/api/v1/goals`, `/api/tokens` — Bearer token auth via [lib/api/auth.ts](src/lib/api/auth.ts) (hash lookup in `apiTokens`); rate limiting (Redis) and Stripe checkout/webhook/payment-success all use Supabase for user and profile.
 
 ## Target architecture
 
@@ -32,11 +32,11 @@ isProject: false
 Define in [convex/schema.ts](convex/schema.ts) (new):
 
 - **profiles**: `userId` (string, from Convex Auth identity id or email), `name`, `avatarUrl`, `paymentProvider`, `paymentCustomerId`, `hasPaid`, `timezone`, plus `_creationTime`. Index by `userId` for lookups.
-- **api_tokens**: `userId`, `name`, `hashedToken`; index by `hashedToken` for auth.
+- **apiTokens**: `userId`, `name`, `hashedToken`; index by `hashedToken` for auth.
 - **boards**: `userId`, `name`, `isPublic`, `publicSlug` (optional), `theme`. Indexes: `by_userId`, `by_publicSlug` (for public slug lookup when `isPublic`).
 - **goals**: `boardId`, `userId`, `embedId` (unique), `name`, `targetAmount`, `currentAmount`, `deadline`, `recurrence`, `format`, `color`, `sortOrder`. Indexes: `by_boardId_sortOrder`, `by_userId`, `by_embedId`.
 - **records**: `goalId`, `userId`, `amount`, `description`, `timestamp`. Index: `by_goalId_timestamp`.
-- **pending_payments** (new): `email`, `stripeCustomerId`, `paymentProvider`, `completedAt` — used by payment-success and webhook to mark users as paid on first sign-in when no Convex user exists yet.
+- **payments** (new): `email`, `stripeCustomerId`, `paymentProvider`, `completedAt` — used by payment-success and webhook to mark users as paid on first sign-in when no Convex user exists yet.
 
 Use Convex validators (`v.object`, `v.string()`, etc.) and table names without underscores to match Convex style (e.g. `userId`, `boardId`). Map existing Supabase snake_case fields to camelCase in the schema.
 
@@ -47,7 +47,7 @@ Use Convex validators (`v.object`, `v.string()`, etc.) and table names without u
 - **Goals**: `listGoalsByBoard(boardId)`, `getGoal(goalId, userId?)`, `getGoalByEmbedId(embedId)`, `getGoalByEmbedIdWithBoard(embedId)` (for embed page); `createGoal`, `updateGoal`, `deleteGoal`. Enforce ownership in mutations (goal’s `userId` or board’s `userId`).
 - **Records**: `listRecordsByGoal(goalId)`, `getRecord(recordId)`; `createRecord`, `updateRecord`, `deleteRecord`. On create/update/delete, recompute goal’s `currentAmount` (sum of records for that goal) in the same mutation or in a small internal mutation called from the record mutation — replacing Supabase trigger.
 - **API tokens**: `createApiToken(userId, name)` (returns plaintext token once), `listApiTokens(userId)`, `deleteApiToken(id, userId)`; internal `getUserIdByHashedToken(hashedToken)` for HTTP auth.
-- **Auth onboarding**: When a user first signs in (Convex Auth), ensure profile and default board exist. Do this in a Convex Auth callback or in a mutation that runs after login (e.g. “ensureProfileAndDefaultBoard”) and call it from the client or from a Convex Auth hook — creating profile and one board “My Goals” if missing; optionally check `pending_payments` by email and set `profile.hasPaid` and payment fields.
+- **Auth onboarding**: When a user first signs in (Convex Auth), ensure profile and default board exist. Do this in a Convex Auth callback or in a mutation that runs after login (e.g. “ensureProfileAndDefaultBoard”) and call it from the client or from a Convex Auth hook — creating profile and one board “My Goals” if missing; optionally check `payments` by email and set `profile.hasPaid` and payment fields.
 
 All mutations that modify data used in realtime (goals, records) will automatically drive reactive `useQuery` updates; no separate “realtime” layer.
 
@@ -87,9 +87,9 @@ Remove all usage of `createClient`, `createServiceClient`, `createServerQueries`
 ## 8. Payments (Stripe + Convex)
 
 - **Checkout** [src/app/api/checkout/route.ts](src/app/api/checkout/route.ts): Get current user from Convex Auth (server). If `userId` in body, verify it matches session. Query Convex for profile; if `hasPaid`, return 400. Call existing Stripe checkout URL creation (pass email/userId in metadata as today). No Supabase.
-- **Payment success** [src/app/(auth)/auth/payment-success/route.ts](src/app/(auth)/auth/payment-success/route.ts): Verify Stripe session. Instead of creating a user in Supabase, store in Convex `pending_payments` (email, stripeCustomerId, paymentProvider, completedAt). Redirect to login with email prefilled (and e.g. `?fromPayment=1`). Do **not** create Convex Auth user from server (Convex Auth does not support server-side user creation the same way). When user later signs in with that email (magic link or OAuth), the onboarding flow in Convex (profile creation + default board) checks `pending_payments` by email and sets profile `hasPaid`, `paymentProvider`, `paymentCustomerId`, then clears or marks the pending payment so it’s not applied twice.
-- **Stripe webhook** [src/app/api/webhooks/stripe/route.ts](src/app/api/webhooks/stripe/route.ts): Keep existing Stripe event handling. For “payment completed”: write the same row to Convex `pending_payments` (by email/customerId). Do not create Supabase users; rely on payment-success redirect + next sign-in to attach payment to Convex profile.
-- **Auth callback**: After Convex Auth login, ensure “ensureProfileAndDefaultBoard” (or equivalent) runs and attaches any `pending_payments` for the user’s email to the new profile.
+- **Payment success** [src/app/(auth)/auth/payment-success/route.ts](src/app/(auth)/auth/payment-success/route.ts): Verify Stripe session. Instead of creating a user in Supabase, store in Convex `payments` (email, stripeCustomerId, paymentProvider, completedAt). Redirect to login with email prefilled (and e.g. `?fromPayment=1`). Do **not** create Convex Auth user from server (Convex Auth does not support server-side user creation the same way). When user later signs in with that email (magic link or OAuth), the onboarding flow in Convex (profile creation + default board) checks `payments` by email and sets profile `hasPaid`, `paymentProvider`, `paymentCustomerId`, then clears or marks the pending payment so it’s not applied twice.
+- **Stripe webhook** [src/app/api/webhooks/stripe/route.ts](src/app/api/webhooks/stripe/route.ts): Keep existing Stripe event handling. For “payment completed”: write the same row to Convex `payments` (by email/customerId). Do not create Supabase users; rely on payment-success redirect + next sign-in to attach payment to Convex profile.
+- **Auth callback**: After Convex Auth login, ensure “ensureProfileAndDefaultBoard” (or equivalent) runs and attaches any `payments` for the user’s email to the new profile.
 
 ## 9. Cleanup and config
 
@@ -136,10 +136,10 @@ flowchart LR
 ## Implementation order (suggested)
 
 1. Convex init, schema, and Convex Auth setup (no removal of Supabase yet).
-2. Convex queries/mutations for boards, goals, records, profiles, api_tokens; internal helpers for token auth and goal currentAmount.
+2. Convex queries/mutations for boards, goals, records, profiles, apiTokens; internal helpers for token auth and goal currentAmount.
 3. Convex Auth in Next.js (login, callback, middleware, getAuthenticatedUser replacement, useUser replacement).
 4. Dashboard and public/embed pages + all components switched to Convex (and Convex Auth); remove Supabase from app code.
 5. REST API: Convex HTTP routes for v1 + token creation (or keep Next.js routes that call Convex).
-6. Payments: checkout, payment-success, webhook updated to Convex + pending_payments.
+6. Payments: checkout, payment-success, webhook updated to Convex + payments.
 7. Remove Supabase packages and code; optional data migration script.
 

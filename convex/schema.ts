@@ -25,7 +25,7 @@ export default defineSchema({
     timezone: v.string(),
   }).index("by_userId", ["userId"]),
 
-  api_tokens: defineTable({
+  apiTokens: defineTable({
     userId: v.id("users"),
     name: v.string(),
     hashedToken: v.string(),
@@ -68,14 +68,14 @@ export default defineSchema({
     timestamp: v.number(),
   }).index("by_goalId_timestamp", ["goalId", "timestamp"]),
 
-  pending_payments: defineTable({
+  payments: defineTable({
     email: v.string(),
     stripeCustomerId: v.optional(v.string()),
     paymentProvider: v.string(),
     completedAt: v.number(),
   }).index("by_email", ["email"]),
 
-  magic_link_urls: defineTable({
+  magicLinks: defineTable({
     email: v.string(),
     url: v.string(),
     createdAt: v.number(),

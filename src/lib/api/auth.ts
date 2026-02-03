@@ -3,7 +3,7 @@ import { api } from "convex/_generated/api";
 
 /**
  * Generate a new API token (Convex creates and stores; this is only for reference).
- * Actual token creation is done via Convex mutation api.api_tokens.createApiToken.
+ * Actual token creation is done via Convex mutation api.apiTokens.createApiToken.
  */
 export function generateApiToken(): { token: string; hashedToken: string } {
   const token = `gt_${crypto.randomUUID().replace(/-/g, "")}`;
@@ -29,7 +29,7 @@ export async function authenticateApiRequest(
   if (!token) return null;
 
   try {
-    const userId = await fetchAction(api.api_tokens.getUserIdForApiAuth, {
+    const userId = await fetchAction(api.apiTokens.getUserIdForApiAuth, {
       token,
     });
     return userId;

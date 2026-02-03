@@ -40,7 +40,7 @@
     "convex/boards.ts",
     "convex/goals.ts",
     "convex/records.ts",
-    "convex/api_tokens.ts",
-    "convex/pending_payments.ts"
+    "convex/apiTokens.ts",
+    "convex/payments.ts"
   ]
 }

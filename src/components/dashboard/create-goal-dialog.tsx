@@ -189,7 +189,7 @@ export function CreateGoalDialog({
       const updatePayload: {
         name?: string;
         targetAmount?: number;
-        deadline?: number | null;
+        deadline?: number;
         recurrence?: Recurrence;
         format?: "number" | "currency";
         color?: string;

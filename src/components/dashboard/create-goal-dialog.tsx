@@ -429,10 +429,6 @@ export function CreateGoalDialog({
     });
 
     if (!validation.success) {
-      // Show the first error message, prioritizing target_amount errors
-      const targetError = validation.error.issues.find(
-        (issue) => issue.path[0] === "target_amount"
-      );
       return;
     }
 

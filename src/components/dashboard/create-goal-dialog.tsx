@@ -107,7 +107,7 @@ export function CreateGoalDialog({
     color: goal?.color ?? getNextColor(existingGoalsCount),
   }));
   const [isLoading, setIsLoading] = useState(false);
-  const [isEditingName, setIsEditingName] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(!isEditMode);
   const [isAddingRecord, setIsAddingRecord] = useState(false);
   const currentValueOnFocusRef = useRef<string>("");
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -280,6 +280,12 @@ export function CreateGoalDialog({
       nameInputRef.current?.focus();
     }
   }, [isEditingName]);
+
+  useEffect(() => {
+    if (open) {
+      nameInputRef.current?.focus();
+    }
+  }, [open]);
 
   const resetForm = () => {
     if (isEditMode && goal) {
@@ -569,7 +575,7 @@ export function CreateGoalDialog({
   );
 
   const settingsSection = (
-    <div className="grid gap-4">
+    <div className="grid gap-4 mb-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="grid gap-2">
           <Label htmlFor={isEditMode ? "edit-target" : "target"}>
@@ -755,10 +761,7 @@ export function CreateGoalDialog({
   );
 
   const dialogContent = (
-    <DialogContent
-      className="sm:max-w-[500px]"
-      showCloseButton={!isEditMode || !(onEmbedClick || onDeleteClick)}
-    >
+    <DialogContent className="sm:max-w-[500px]" showCloseButton={false}>
       <form onSubmit={handleSubmit}>
         {editHeader}
 
@@ -780,27 +783,30 @@ export function CreateGoalDialog({
           </>
         ) : (
           <>
-            <DialogHeader>
-              <DialogTitle className="sr-only">
+            <DialogHeader className="sr-only">
+              <DialogTitle>
                 {formState.name.trim() || "Create New Goal"}
               </DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">{inlineNameEdit}</div>
-              {settingsSection}
-            </div>
+            <div className="flex items-center pr-12 mb-2">{inlineNameEdit}</div>
+            <div className="grid gap-4 pt-4">{settingsSection}</div>
           </>
         )}
 
         <DialogFooter>
           {!isEditMode && (
-            <Button
-              type="submit"
-              disabled={isLoading || !formState.name.trim()}
-            >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Goal
-            </Button>
+            <>
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading || !formState.name.trim()}
+              >
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create Goal
+              </Button>
+            </>
           )}
         </DialogFooter>
       </form>

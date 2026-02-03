@@ -11,9 +11,8 @@ export default async function DashboardLayout({
 }) {
   const token = await convexAuthNextjsToken();
   let data = await fetchQuery(api.profiles.getCurrentProfile, {}, { token });
-  if (!data?.userId) redirect("/login");
 
-  if (!data.profile) {
+  if (!data?.profile) {
     await fetchMutation(
       api.profiles.ensureProfileAndDefaultBoard,
       {},

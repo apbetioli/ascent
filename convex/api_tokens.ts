@@ -1,4 +1,5 @@
 import { action, internalQuery, mutation, query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
@@ -16,12 +17,14 @@ async function hashToken(token: string): Promise<string> {
 export const getUserIdForApiAuth = action({
   args: { token: v.string() },
   returns: v.union(v.id("users"), v.null()),
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<Id<"users"> | null> => {
     if (!args.token?.trim()) return null;
     const hashedToken = await hashToken(args.token.trim());
-    return await ctx.runQuery(internal.api_tokens.getUserIdByHashedToken, {
-      hashedToken,
-    });
+    const userId: Id<"users"> | null = await ctx.runQuery(
+      internal.api_tokens.getUserIdByHashedToken,
+      { hashedToken }
+    );
+    return userId;
   },
 });
 

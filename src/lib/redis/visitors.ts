@@ -6,15 +6,25 @@ export async function addVisitor(ipAddress: string) {
   if (!redis) {
     return;
   }
-  const added = await redis.sadd(setKey, ipAddress);
-  await redis.expire(setKey, 60);
-  return added;
+  try {
+    const added = await redis.sadd(setKey, ipAddress);
+    await redis.expire(setKey, 60);
+    return added;
+  } catch (error) {
+    console.warn("Redis offline. No new visitors added.");
+    return 0;
+  }
 }
 
 export async function getLiveVisitorsCount() {
   if (!redis) {
     return;
   }
-  const count = await redis.scard(setKey);
-  return count ?? 0;
+  try {
+    const count = await redis.scard(setKey);
+    return count ?? 0;
+  } catch (error) {
+    console.warn("Redis offline. Returning 0 visitors.");
+    return 0;
+  }
 }

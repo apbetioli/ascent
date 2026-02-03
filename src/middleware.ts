@@ -1,62 +1,48 @@
 import {
   convexAuthNextjsMiddleware,
+  createRouteMatcher,
   nextjsMiddlewareRedirect,
 } from "@convex-dev/auth/nextjs/server";
 import type { NextFetchEvent } from "next/server";
 import { NextResponse, type NextRequest } from "next/server";
-import {
-  authRateLimiter,
-  checkRateLimit,
-  getRateLimitHeaders,
-} from "./lib/redis/rate-limit";
+import { authRateLimiter, checkRateLimit } from "./lib/redis/rate-limit";
 import { addVisitor } from "./lib/redis/visitors";
+
+const isSignInPage = createRouteMatcher(["/login"]);
+const isProtectedRoute = createRouteMatcher(["/(boards|settings|api)(.*)"]);
+const isPublicRoute = createRouteMatcher(["/public"]);
+const isEmbedRoute = createRouteMatcher(["/embed"]);
+const isBlockedRoute = createRouteMatcher(["/blocked"]);
 
 const authMiddleware = convexAuthNextjsMiddleware(
   async (request: NextRequest, { convexAuth }) => {
-    const pathname = request.nextUrl.pathname;
-    const hasAuthCode = request.nextUrl.searchParams.has("code");
-    const isPublicRoute =
-      pathname === "/" ||
-      pathname.startsWith("/login") ||
-      pathname.startsWith("/api/") ||
-      pathname.startsWith("/auth/");
-
-    // Let magic link / OAuth callback through so auth can exchange the code and set cookies
-    if (hasAuthCode) {
-      return NextResponse.next({ request });
+    if (isSignInPage(request) && (await convexAuth.isAuthenticated())) {
+      return nextjsMiddlewareRedirect(request, "/boards");
     }
-
-    if (!(await convexAuth.isAuthenticated()) && !isPublicRoute) {
+    if (isProtectedRoute(request) && !(await convexAuth.isAuthenticated())) {
       return nextjsMiddlewareRedirect(request, "/login");
     }
-
     return NextResponse.next({ request });
   }
 );
 
 export async function middleware(request: NextRequest, event: NextFetchEvent) {
-  const pathname = request.nextUrl.pathname;
   const ip = getIp(request);
 
-  addVisitor(ip);
-
-  if (
-    !isLocalhost(ip) &&
-    !isLocalhost(request.nextUrl.hostname) &&
-    pathname !== "/blocked"
-  ) {
+  if (!isLocalhost(request) && !isBlockedRoute(request)) {
     const rateLimitResult = await checkRateLimit(authRateLimiter, ip);
-    const { success } = getRateLimitHeaders(rateLimitResult);
-    if (!success) {
-      return NextResponse.redirect(new URL("/blocked", request.url));
+    if (!rateLimitResult.success) {
+      return nextjsMiddlewareRedirect(request, "/blocked");
     }
   }
 
-  if (pathname.startsWith("/public/")) {
+  addVisitor(ip);
+
+  if (isPublicRoute(request)) {
     return NextResponse.next({ request });
   }
 
-  if (pathname.startsWith("/embed/")) {
+  if (isEmbedRoute(request)) {
     const response = NextResponse.next({ request });
     response.headers.delete("X-Frame-Options");
     return response;
@@ -73,8 +59,13 @@ function getIp(request: NextRequest) {
   );
 }
 
-function isLocalhost(ip: string) {
-  return ip === "127.0.0.1" || ip === "::1" || ip === "localhost";
+function isLocalhost(request: NextRequest) {
+  const ip = getIp(request);
+  return (
+    ip === "127.0.0.1" ||
+    ip === "::1" ||
+    request.nextUrl.hostname === "localhost"
+  );
 }
 
 export const config = {

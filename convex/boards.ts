@@ -1,8 +1,11 @@
+import { getAuthUserId } from "@convex-dev/auth/server";
+import type { GenericQueryCtx } from "convex/server";
+import type { DataModel } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 export const listBoards = query({
-  args: { userId: v.id("users") },
+  args: {},
   returns: v.array(
     v.object({
       _id: v.id("boards"),
@@ -14,10 +17,12 @@ export const listBoards = query({
       theme: v.string(),
     })
   ),
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx as GenericQueryCtx<DataModel>);
+    if (!userId) return [];
     return await ctx.db
       .query("boards")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
       .order("asc")
       .collect();
   },

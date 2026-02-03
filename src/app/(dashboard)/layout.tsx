@@ -10,44 +10,27 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const token = await convexAuthNextjsToken();
+  let data = await fetchQuery(api.profiles.getCurrentProfile, {}, { token });
+  if (!data?.userId) redirect("/login");
 
-  if (!token) {
-    redirect("/login");
-  }
-
-  const user = await fetchQuery(api.profiles.getCurrentUser, {}, { token });
-  if (!user) {
-    redirect("/login");
-  }
-
-  let profile = await fetchQuery(
-    api.profiles.getProfile,
-    { userId: user.userId },
-    { token }
-  );
-
-  if (!profile) {
+  if (!data.profile) {
     await fetchMutation(
       api.profiles.ensureProfileAndDefaultBoard,
-      { userId: user.userId, email: user.email, name: user.name },
-      { token }
+      {},
+      {
+        token,
+      }
     );
-    profile = await fetchQuery(
-      api.profiles.getProfile,
-      { userId: user.userId },
-      { token }
-    );
+    data = await fetchQuery(api.profiles.getCurrentProfile, {}, { token });
   }
-
-  if (!profile?.hasPaid) {
-    redirect("/#pricing");
-  }
+  if (!data?.profile) redirect("/login");
+  if (!data.profile.hasPaid) redirect("/#pricing");
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-background">
       <DashboardNav
-        user={{ id: user.userId, email: user.email ?? undefined }}
-        profile={profile}
+        user={{ id: data.userId, email: data.email ?? undefined }}
+        profile={data.profile}
       />
       <main className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
         {children}

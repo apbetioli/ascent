@@ -17,6 +17,7 @@ import type * as magicLinks from "../magicLinks.js";
 import type * as pendingPayments from "../pendingPayments.js";
 import type * as profiles from "../profiles.js";
 import type * as records from "../records.js";
+import type * as resendOTP from "../resendOTP.js";
 
 import type {
   ApiFromModules,
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   pendingPayments: typeof pendingPayments;
   profiles: typeof profiles;
   records: typeof records;
+  resendOTP: typeof resendOTP;
 }>;
 
 /**

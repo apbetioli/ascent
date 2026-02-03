@@ -28,16 +28,17 @@ export default function LoginPage() {
   const fromPayment = searchParams.get("fromPayment") === "1";
   const hasAuthCode = searchParams.get("code") != null;
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
 
   const { signIn } = useAuthActions();
   const { isAuthenticated, loading: authLoading } = useUser();
 
-  // Redirect authenticated users (e.g. after magic link code exchange lands on /login with cookies).
-  // When fromPayment=1 and not yet authenticated, show the login form. Once authenticated (e.g.
-  // after magic link callback), always redirect so they land on /boards.
+  // Redirect authenticated users (e.g. after OTP verification).
+  // When fromPayment=1 and not yet authenticated, show the login form. Once authenticated,
+  // always redirect so they land on /boards.
   const skipRedirectForPayment =
     fromPayment && !hasAuthCode && !isAuthenticated;
   useEffect(() => {
@@ -51,17 +52,30 @@ export default function LoginPage() {
     }
   }, [emailParam]);
 
-  const handleMagicLink = async (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Magic link lands on /login so middleware (public route) can run code exchange, then we redirect
-      await signIn("email", {
-        email,
-        redirectTo: `/login?redirect=${encodeURIComponent(redirect)}`,
-      });
-      setMagicLinkSent(true);
+      await signIn("resend-otp", { email });
+      setOtpSent(true);
+      setCode("");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      console.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      await signIn("resend-otp", { email, code });
+      // On success, useUser/isAuthenticated will update and useEffect will redirect
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "An unexpected error occurred";
@@ -97,7 +111,7 @@ export default function LoginPage() {
     );
   }
 
-  if (magicLinkSent) {
+  if (otpSent) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted">
         <Card className="w-full max-w-md">
@@ -107,19 +121,47 @@ export default function LoginPage() {
             </div>
             <CardTitle>Check your email</CardTitle>
             <CardDescription>
-              We sent a magic link to <strong>{email}</strong>
+              We sent a code to <strong>{email}</strong>
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center text-sm text-muted-foreground">
-            Click the link in the email to sign in. If you don&apos;t see it,
-            check your spam folder.
+          <CardContent>
+            <form onSubmit={handleVerifyCode} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="code">Verification code</Label>
+                <Input
+                  id="code"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="Enter 8-digit code"
+                  value={code}
+                  onChange={(e) =>
+                    setCode(e.target.value.replace(/\D/g, "").slice(0, 8))
+                  }
+                  required
+                  disabled={isLoading}
+                  maxLength={8}
+                  className="text-center text-lg tracking-widest"
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || code.length < 8}
+              >
+                {isLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Continue
+              </Button>
+            </form>
           </CardContent>
           <CardFooter className="justify-center">
             <Button
               variant="ghost"
               onClick={() => {
-                setMagicLinkSent(false);
-                setEmail("");
+                setOtpSent(false);
+                setCode("");
               }}
             >
               Use a different email
@@ -191,7 +233,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <form onSubmit={handleMagicLink} className="space-y-4">
+          <form onSubmit={handleSendCode} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -214,7 +256,7 @@ export default function LoginPage() {
               ) : (
                 <Mail className="mr-2 h-4 w-4" />
               )}
-              Send Magic Link
+              Send code
             </Button>
           </form>
         </CardContent>

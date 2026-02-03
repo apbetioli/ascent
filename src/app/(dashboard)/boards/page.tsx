@@ -1,7 +1,6 @@
 import { BoardsTrelloView } from "@/components/dashboard/boards-trello-view";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { fetchQuery } from "convex/nextjs";
-import { redirect } from "next/navigation";
 import { api } from "convex/_generated/api";
 
 export const metadata = {
@@ -9,16 +8,10 @@ export const metadata = {
 };
 
 export default async function BoardsPage() {
-  const token = await convexAuthNextjsToken();
-  if (!token) redirect("/login");
-
-  const user = await fetchQuery(api.profiles.getCurrentUser, {}, { token });
-  if (!user) redirect("/login");
-
   const boards = await fetchQuery(
     api.boards.listBoards,
-    { userId: user.userId },
-    { token }
+    {},
+    { token: await convexAuthNextjsToken() }
   );
 
   return (

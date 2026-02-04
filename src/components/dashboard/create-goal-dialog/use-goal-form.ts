@@ -9,6 +9,7 @@ import { getNextColor } from "@/lib/utils/colors";
 import type { Recurrence } from "@/lib/utils/progress";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { ZodError } from "zod";
 
 export interface FormState {
   name: string;
@@ -26,6 +27,12 @@ interface UseGoalFormOptions {
   existingGoalsCount: number;
   goal?: ConvexGoal;
 }
+
+const FORM_FIELD_TO_ERROR_KEY: Partial<Record<keyof FormState, string>> = {
+  name: "name",
+  targetAmount: "target_amount",
+  initialAmount: "initial_amount",
+};
 
 function getFormStateFromGoal(goal: ConvexGoal): FormState {
   return {
@@ -53,6 +60,18 @@ function getEmptyFormState(existingGoalsCount: number): FormState {
   };
 }
 
+function getHasEdits(formState: FormState, goal: ConvexGoal): boolean {
+  return (
+    formState.name.trim() !== goal.name ||
+    formState.targetAmount !== goal.targetAmount.toString() ||
+    formState.recurrence !== goal.recurrence ||
+    formState.amountFormat !== (goal.format ?? "number") ||
+    formState.color !== goal.color ||
+    (formState.deadline?.getTime() ?? null) !== (goal.deadline ?? null) ||
+    formState.currentValue !== goal.currentAmount.toString()
+  );
+}
+
 function buildUpdatePayload(formState: FormState) {
   const target = parseFloat(formState.targetAmount);
   const data = {
@@ -65,6 +84,15 @@ function buildUpdatePayload(formState: FormState) {
   };
   const result = updateGoalSchema.safeParse(data);
   return result.success ? result.data : null;
+}
+
+function formatZodErrors(error: ZodError): Record<string, string> {
+  const errors: Record<string, string> = {};
+  for (const issue of error.issues) {
+    const key = issue.path.join(".");
+    if (key && !errors[key]) errors[key] = issue.message;
+  }
+  return errors;
 }
 
 export function useGoalForm({
@@ -89,22 +117,20 @@ export function useGoalForm({
   const currentValueOnFocusRef = useRef<string>("");
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  const updateFormField = useCallback(<K extends keyof FormState>(field: K, value: FormState[K]) => {
-    setFormState((prev) => ({ ...prev, [field]: value }));
-    const errorKeys: Partial<Record<keyof FormState, string>> = {
-      name: "name",
-      targetAmount: "target_amount",
-      initialAmount: "initial_amount",
-    };
-    const errorKey = errorKeys[field];
-    if (errorKey) {
-      setFieldErrors((prev) => {
-        const next = { ...prev };
-        delete next[errorKey];
-        return next;
-      });
-    }
-  }, []);
+  const updateFormField = useCallback(
+    <K extends keyof FormState>(field: K, value: FormState[K]) => {
+      setFormState((prev) => ({ ...prev, [field]: value }));
+      const errorKey = FORM_FIELD_TO_ERROR_KEY[field];
+      if (errorKey) {
+        setFieldErrors((prev) => {
+          const next = { ...prev };
+          delete next[errorKey];
+          return next;
+        });
+      }
+    },
+    []
+  );
 
   const resetForm = useCallback(() => {
     if (isEditMode && goal) {
@@ -141,7 +167,9 @@ export function useGoalForm({
         goalId: goal._id,
         userId,
         name: payload.name,
-        ...(payload.target_amount != null && { targetAmount: payload.target_amount }),
+        ...(payload.target_amount != null && {
+          targetAmount: payload.target_amount,
+        }),
         deadline: payload.deadline ?? undefined,
         recurrence: payload.recurrence,
         format: payload.format,
@@ -167,42 +195,21 @@ export function useGoalForm({
     } finally {
       setIsLoading(false);
     }
-  }, [
-    isEditMode,
-    goal,
-    formState,
-    userId,
-    updateGoal,
-    createRecord,
-    router,
-  ]);
+  }, [isEditMode, goal, formState, userId, updateGoal, createRecord, router]);
 
-  const hasEdits =
-    isEditMode &&
-    goal &&
-    (formState.name.trim() !== goal.name ||
-      formState.targetAmount !== goal.targetAmount.toString() ||
-      formState.recurrence !== goal.recurrence ||
-      formState.amountFormat !== (goal.format ?? "number") ||
-      formState.color !== goal.color ||
-      (formState.deadline?.getTime() ?? null) !== (goal.deadline ?? null) ||
-      formState.currentValue !== goal.currentAmount.toString());
+  const hasEdits = isEditMode && goal && getHasEdits(formState, goal);
 
   const handleSaveName = useCallback(() => {
     const trimmed = formState.name.trim();
     if (!trimmed) return;
-    if (trimmed === (isEditMode && goal ? goal.name : "")) {
-      setIsEditingName(false);
-      return;
-    }
-    if (!isEditMode) {
-      updateFormField("name", trimmed);
+    const originalName = isEditMode && goal ? goal.name : "";
+    if (trimmed === originalName) {
       setIsEditingName(false);
       return;
     }
     updateFormField("name", trimmed);
     setIsEditingName(false);
-  }, [formState, isEditMode, goal, updateFormField]);
+  }, [formState.name, isEditMode, goal, updateFormField]);
 
   const handleCancelNameEdit = useCallback(() => {
     if (isEditMode && goal) {
@@ -256,13 +263,7 @@ export function useGoalForm({
       });
 
       if (!validation.success) {
-        const errors: Record<string, string> = {};
-        for (const issue of validation.error.issues) {
-          const key = issue.path.join(".");
-          if (!key || errors[key]) continue;
-          errors[key] = issue.message;
-        }
-        setFieldErrors(errors);
+        setFieldErrors(formatZodErrors(validation.error));
         return;
       }
 
@@ -275,7 +276,9 @@ export function useGoalForm({
           userId,
           name: formState.name.trim(),
           targetAmount: target,
-          deadline: formState.deadline ? formState.deadline.getTime() : undefined,
+          deadline: formState.deadline
+            ? formState.deadline.getTime()
+            : undefined,
           recurrence: formState.recurrence,
           format: formState.amountFormat,
           color: formState.color,

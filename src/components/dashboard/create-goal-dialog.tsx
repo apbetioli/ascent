@@ -106,7 +106,15 @@ export function CreateGoalDialog({
     amountFormat: goal?.format ?? "number",
     color: goal?.color ?? getNextColor(existingGoalsCount),
   }));
+  /** Field errors from Zod validation (keys match schema: name, target_amount, initial_amount) */
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  const formFieldToErrorKey: Partial<Record<keyof FormState, string>> = {
+    name: "name",
+    targetAmount: "target_amount",
+    initialAmount: "initial_amount",
+  };
   const [isEditingName, setIsEditingName] = useState(!isEditMode);
   const [isAddingRecord, setIsAddingRecord] = useState(false);
   const currentValueOnFocusRef = useRef<string>("");
@@ -120,6 +128,14 @@ export function CreateGoalDialog({
     value: FormState[K]
   ) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
+    const errorKey = formFieldToErrorKey[field];
+    if (errorKey) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[errorKey];
+        return next;
+      });
+    }
   };
 
   const getFormStateFromGoal = (goal: ConvexGoal): FormState => ({
@@ -295,6 +311,7 @@ export function CreateGoalDialog({
     } else {
       setFormState(getEmptyFormState());
     }
+    setFieldErrors({});
     setIsEditingName(false);
   };
 
@@ -435,6 +452,13 @@ export function CreateGoalDialog({
     });
 
     if (!validation.success) {
+      const errors: Record<string, string> = {};
+      for (const issue of validation.error.issues) {
+        const key = issue.path.join(".");
+        if (!key || errors[key]) continue;
+        errors[key] = issue.message;
+      }
+      setFieldErrors(errors);
       return;
     }
 
@@ -520,23 +544,31 @@ export function CreateGoalDialog({
     </div>
   );
 
+  const nameError = fieldErrors.name;
+
   const inlineNameEdit = (
-    <div className="min-h-[2.5rem] flex items-center">
-      {isEditingName ? (
-        <div className="flex items-center gap-1 flex-1">
-          <Input
-            ref={nameInputRef}
-            value={formState.name}
-            onChange={(e) => updateFormField("name", e.target.value)}
-            onBlur={handleCancelNameEdit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSaveName();
-              if (e.key === "Escape") handleCancelNameEdit();
-            }}
-            disabled={isLoading}
-            className="text-lg font-semibold h-9"
-            placeholder="Enter a title for your goal"
-          />
+    <div className="min-h-[2.5rem] flex flex-col gap-1 flex-1 min-w-0">
+      <div className="flex items-center gap-1 min-w-0">
+        {isEditingName ? (
+          <>
+            <Input
+              ref={nameInputRef}
+              value={formState.name}
+              onChange={(e) => updateFormField("name", e.target.value)}
+              onBlur={handleCancelNameEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSaveName();
+                if (e.key === "Escape") handleCancelNameEdit();
+              }}
+              disabled={isLoading}
+              className={cn(
+                "text-lg font-semibold h-9 flex-1 min-w-0",
+                nameError && "border-destructive aria-invalid"
+              )}
+              placeholder="Enter a title for your goal"
+              aria-invalid={!!nameError}
+              aria-describedby={nameError ? "name-error" : undefined}
+            />
           <Button
             type="button"
             variant="ghost"
@@ -557,8 +589,8 @@ export function CreateGoalDialog({
           >
             <X className="h-4 w-4" />
           </Button>
-        </div>
-      ) : (
+          </>
+        ) : (
         <button
           type="button"
           onClick={() => setIsEditingName(true)}
@@ -571,6 +603,14 @@ export function CreateGoalDialog({
           {formState.name.trim() || "Enter a title for your goal"}
         </button>
       )}
+      </div>
+      <div className="min-h-5 text-sm">
+        {nameError && (
+          <p id="name-error" className="text-destructive" role="alert">
+            {nameError}
+          </p>
+        )}
+      </div>
     </div>
   );
 
@@ -590,7 +630,23 @@ export function CreateGoalDialog({
             disabled={isLoading}
             min="0"
             step="any"
+            aria-invalid={!!fieldErrors.target_amount}
+            aria-describedby={
+              fieldErrors.target_amount ? "target_amount-error" : undefined
+            }
+            className={cn(fieldErrors.target_amount && "border-destructive")}
           />
+          <div className="min-h-5 text-sm">
+            {fieldErrors.target_amount && (
+              <p
+                id="target_amount-error"
+                className="text-destructive"
+                role="alert"
+              >
+                {fieldErrors.target_amount}
+              </p>
+            )}
+          </div>
         </div>
         {!isEditMode ? (
           <div className="grid gap-2">
@@ -604,7 +660,25 @@ export function CreateGoalDialog({
               disabled={isLoading}
               min="0"
               step="any"
+              aria-invalid={!!fieldErrors.initial_amount}
+              aria-describedby={
+                fieldErrors.initial_amount
+                  ? "initial_amount-error"
+                  : undefined
+              }
+              className={cn(fieldErrors.initial_amount && "border-destructive")}
             />
+            <div className="min-h-5 text-sm">
+              {fieldErrors.initial_amount && (
+                <p
+                  id="initial_amount-error"
+                  className="text-destructive"
+                  role="alert"
+                >
+                  {fieldErrors.initial_amount}
+                </p>
+              )}
+            </div>
           </div>
         ) : (
           <div className="grid gap-2">
@@ -761,7 +835,7 @@ export function CreateGoalDialog({
   );
 
   const dialogContent = (
-    <DialogContent className="sm:max-w-[500px]" showCloseButton={false}>
+    <DialogContent className="sm:max-w-[560px]" showCloseButton={false}>
       <form onSubmit={handleSubmit}>
         {editHeader}
 

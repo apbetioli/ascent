@@ -76,7 +76,7 @@ function buildUpdatePayload(formState: FormState) {
   const target = parseFloat(formState.targetAmount);
   const data = {
     name: formState.name.trim(),
-    deadline: formState.deadline ? formState.deadline.getTime() : null,
+    deadline: toDeadlineMs(formState.deadline),
     recurrence: formState.recurrence,
     format: formState.amountFormat,
     color: formState.color,
@@ -93,6 +93,52 @@ function formatZodErrors(error: ZodError): Record<string, string> {
     if (key && !errors[key]) errors[key] = issue.message;
   }
   return errors;
+}
+
+function omitKey(obj: Record<string, string>, key: string): Record<string, string> {
+  const next = { ...obj };
+  delete next[key];
+  return next;
+}
+
+function toDeadlineMs(deadline: Date | undefined): number | null {
+  return deadline ? deadline.getTime() : null;
+}
+
+/** Parsed form data used for both validation and createGoal mutation. */
+function getCreateGoalData(formState: FormState) {
+  const target = parseFloat(formState.targetAmount);
+  const initial = formState.initialAmount
+    ? parseFloat(formState.initialAmount)
+    : undefined;
+  return {
+    name: formState.name.trim(),
+    target,
+    initial: initial ?? 0,
+    deadlineMs: toDeadlineMs(formState.deadline),
+    recurrence: formState.recurrence,
+    format: formState.amountFormat,
+    color: formState.color,
+  };
+}
+
+/** Map validated update payload (snake_case) to updateGoal mutation args (camelCase). */
+function toUpdateGoalArgs(payload: {
+  name?: string;
+  target_amount?: number;
+  deadline?: number | null;
+  recurrence?: Recurrence;
+  format?: FormState["amountFormat"];
+  color?: string;
+}) {
+  return {
+    name: payload.name!,
+    ...(payload.target_amount != null && { targetAmount: payload.target_amount }),
+    deadline: payload.deadline ?? undefined,
+    recurrence: payload.recurrence,
+    format: payload.format,
+    color: payload.color,
+  };
 }
 
 export function useGoalForm({
@@ -117,47 +163,34 @@ export function useGoalForm({
   const currentValueOnFocusRef = useRef<string>("");
   const nameInputRef = useRef<HTMLInputElement>(null);
 
+  const syncFormFromGoal = useCallback((g: ConvexGoal) => {
+    const next = getFormStateFromGoal(g);
+    setFormState(next);
+    currentValueOnFocusRef.current = next.currentValue;
+  }, []);
+
   const updateFormField = useCallback(
     <K extends keyof FormState>(field: K, value: FormState[K]) => {
       setFormState((prev) => ({ ...prev, [field]: value }));
       const errorKey = FORM_FIELD_TO_ERROR_KEY[field];
-      if (errorKey) {
-        setFieldErrors((prev) => {
-          const next = { ...prev };
-          delete next[errorKey];
-          return next;
-        });
-      }
+      if (errorKey) setFieldErrors((prev) => omitKey(prev, errorKey));
     },
     []
   );
 
   const resetForm = useCallback(() => {
-    if (isEditMode && goal) {
-      const next = getFormStateFromGoal(goal);
-      setFormState(next);
-      currentValueOnFocusRef.current = next.currentValue;
-    } else {
-      setFormState(getEmptyFormState(existingGoalsCount));
-    }
+    if (isEditMode && goal) syncFormFromGoal(goal);
+    else setFormState(getEmptyFormState(existingGoalsCount));
     setFieldErrors({});
     setIsEditingName(!isEditMode);
-  }, [isEditMode, goal, existingGoalsCount]);
+  }, [isEditMode, goal, existingGoalsCount, syncFormFromGoal]);
 
-  // Sync form when goal changes (edit mode)
   useEffect(() => {
-    if (goal) {
-      const next = getFormStateFromGoal(goal);
-      setFormState(next);
-      currentValueOnFocusRef.current = next.currentValue;
-    }
-  }, [goal]);
+    if (goal) syncFormFromGoal(goal);
+  }, [goal, syncFormFromGoal]);
 
   const handleSave = useCallback(async () => {
-    if (!isEditMode || !goal || !userId) return;
-    const trimmedName = formState.name.trim();
-    if (!trimmedName) return;
-
+    if (!isEditMode || !goal || !userId || !formState.name.trim()) return;
     const payload = buildUpdatePayload(formState);
     if (!payload) return;
 
@@ -166,26 +199,16 @@ export function useGoalForm({
       await updateGoal({
         goalId: goal._id,
         userId,
-        name: payload.name,
-        ...(payload.target_amount != null && {
-          targetAmount: payload.target_amount,
-        }),
-        deadline: payload.deadline ?? undefined,
-        recurrence: payload.recurrence,
-        format: payload.format,
-        color: payload.color,
+        ...toUpdateGoalArgs(payload),
       });
 
       const newCurrent = parseFloat(formState.currentValue);
-      if (
-        !isNaN(newCurrent) &&
-        newCurrent >= 0 &&
-        newCurrent !== goal.currentAmount
-      ) {
+      const delta = newCurrent - goal.currentAmount;
+      if (!isNaN(newCurrent) && newCurrent >= 0 && delta !== 0) {
         await createRecord({
           goalId: goal._id,
           userId,
-          amount: newCurrent - goal.currentAmount,
+          amount: delta,
           timestamp: Date.now(),
         });
       }
@@ -244,22 +267,18 @@ export function useGoalForm({
   const handleSubmit = useCallback(
     async (e: React.FormEvent, onSuccess?: () => void) => {
       e.preventDefault();
-      if (isEditMode) return;
+      if (isEditMode || !userId) return;
 
-      const target = parseFloat(formState.targetAmount);
-      const initial = formState.initialAmount
-        ? parseFloat(formState.initialAmount)
-        : undefined;
-
+      const data = getCreateGoalData(formState);
       const validation = createGoalSchema.safeParse({
         board_id: boardId,
-        name: formState.name.trim(),
-        target_amount: target,
-        initial_amount: initial,
-        deadline: formState.deadline ? formState.deadline.getTime() : null,
-        recurrence: formState.recurrence,
-        format: formState.amountFormat,
-        color: formState.color,
+        name: data.name,
+        target_amount: data.target,
+        initial_amount: data.initial,
+        deadline: data.deadlineMs,
+        recurrence: data.recurrence,
+        format: data.format,
+        color: data.color,
       });
 
       if (!validation.success) {
@@ -269,28 +288,24 @@ export function useGoalForm({
 
       setIsLoading(true);
       try {
-        if (!userId) return;
-        const initialValue = initial ?? 0;
         const newGoalId = await createGoal({
           boardId,
           userId,
-          name: formState.name.trim(),
-          targetAmount: target,
-          deadline: formState.deadline
-            ? formState.deadline.getTime()
-            : undefined,
-          recurrence: formState.recurrence,
-          format: formState.amountFormat,
-          color: formState.color,
+          name: data.name,
+          targetAmount: data.target,
+          deadline: data.deadlineMs ?? undefined,
+          recurrence: data.recurrence,
+          format: data.format,
+          color: data.color,
           sortOrder: existingGoalsCount,
         });
 
-        if (initialValue > 0 && newGoalId) {
+        if (data.initial > 0 && newGoalId) {
           try {
             await createRecord({
               goalId: newGoalId,
               userId,
-              amount: initialValue,
+              amount: data.initial,
               description: "Initial value",
               timestamp: Date.now(),
             });

@@ -8,6 +8,7 @@ export type ConvexBoard = {
   isPublic: boolean;
   publicSlug?: string;
   theme: string;
+  sortOrder?: number;
 };
 
 export type ConvexGoal = {

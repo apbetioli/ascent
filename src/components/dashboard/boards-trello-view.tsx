@@ -19,6 +19,7 @@ import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
+  horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { BoardOptionsMenu } from "@/components/dashboard/board-options-menu";
@@ -29,7 +30,7 @@ import type { ConvexBoard, ConvexGoal } from "@/lib/convex-types";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
-import { Plus, Target } from "lucide-react";
+import { GripVertical, Plus, Target } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -91,9 +92,16 @@ function SortableGoalCard({ goal, boardId }: SortableGoalCardProps) {
 interface BoardColumnProps {
   board: ConvexBoard;
   onGoalsLoad?: (boardId: Id<"boards">, goals: ConvexGoal[]) => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
+  isDragging?: boolean;
 }
 
-function BoardColumn({ board, onGoalsLoad }: BoardColumnProps) {
+function BoardColumn({
+  board,
+  onGoalsLoad,
+  dragHandleProps,
+  isDragging,
+}: BoardColumnProps) {
   const goalsQuery = useQuery(api.goals.listGoalsByBoard, {
     boardId: board._id,
   });
@@ -117,14 +125,24 @@ function BoardColumn({ board, onGoalsLoad }: BoardColumnProps) {
   });
 
   return (
-    <div className="flex w-[340px] min-w-[340px] max-w-[340px] shrink-0 flex-col rounded-lg border bg-card">
+    <div
+      className={`flex w-[340px] min-w-[340px] max-w-[340px] shrink-0 flex-col rounded-lg border bg-card ${isDragging ? "opacity-50" : ""}`}
+    >
       <div className="flex shrink-0 items-center justify-between gap-2 border-b px-3 py-2">
-        <Link
-          href={`/boards/${board._id}`}
-          className="min-w-0 flex-1 truncate font-semibold uppercase tracking-wide text-foreground hover:underline"
-        >
-          {board.name}
-        </Link>
+        <div className="flex min-w-0 flex-1 items-center gap-1">
+          <span
+            className="cursor-grab touch-none text-muted-foreground active:cursor-grabbing [&>svg]:size-4"
+            {...dragHandleProps}
+          >
+            <GripVertical />
+          </span>
+          <Link
+            href={`/boards/${board._id}`}
+            className="min-w-0 flex-1 truncate font-semibold uppercase tracking-wide text-foreground hover:underline"
+          >
+            {board.name}
+          </Link>
+        </div>
         <div className="flex shrink-0 items-center gap-0.5">
           <Button
             variant="ghost"
@@ -180,19 +198,65 @@ function BoardColumn({ board, onGoalsLoad }: BoardColumnProps) {
   );
 }
 
+interface SortableBoardColumnProps {
+  board: ConvexBoard;
+  onGoalsLoad?: (boardId: Id<"boards">, goals: ConvexGoal[]) => void;
+}
+
+function SortableBoardColumn({ board, onGoalsLoad }: SortableBoardColumnProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: board._id,
+    data: { type: "board" as const },
+    transition: null,
+  });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="shrink-0"
+    >
+      <BoardColumn
+        board={board}
+        onGoalsLoad={onGoalsLoad}
+        dragHandleProps={{ ...attributes, ...listeners }}
+        isDragging={isDragging}
+      />
+    </div>
+  );
+}
+
 interface BoardsTrelloViewProps {
   boards: ConvexBoard[];
   className?: string;
 }
 
 export function BoardsTrelloView({ boards, className }: BoardsTrelloViewProps) {
-  const boardIds = useMemo(() => boards.map((b) => b._id), [boards]);
+  const [orderedBoards, setOrderedBoards] = useState<ConvexBoard[]>(boards);
+  useEffect(() => {
+    setOrderedBoards(boards);
+  }, [boards]);
+
+  const boardIds = useMemo(() => orderedBoards.map((b) => b._id), [orderedBoards]);
   const [goalsByBoardId, setGoalsByBoardId] = useState<
     Record<string, ConvexGoal[]>
   >({});
-  const [activeId, setActiveId] = useState<Id<"goals"> | null>(null);
+  const [activeId, setActiveId] = useState<Id<"goals"> | Id<"boards"> | null>(
+    null
+  );
   const userId = useQuery(api.profiles.getCurrentUserId);
   const updateGoal = useMutation(api.goals.updateGoal);
+  const reorderBoards = useMutation(api.boards.reorderBoards);
 
   const onGoalsLoad = useCallback(
     (boardId: Id<"boards">, goals: ConvexGoal[]) => {
@@ -207,14 +271,25 @@ export function BoardsTrelloView({ boards, className }: BoardsTrelloViewProps) {
     })
   );
 
+  const isBoardId = useCallback(
+    (id: unknown): id is Id<"boards"> =>
+      typeof id === "string" && boardIds.includes(id as Id<"boards">),
+    [boardIds]
+  );
+
   const activeGoal = useMemo(() => {
-    if (!activeId) return null;
+    if (!activeId || isBoardId(activeId)) return null;
     for (const goals of Object.values(goalsByBoardId)) {
       const goal = goals.find((g) => g._id === activeId);
       if (goal) return goal;
     }
     return null;
-  }, [activeId, goalsByBoardId]);
+  }, [activeId, goalsByBoardId, isBoardId]);
+
+  const activeBoard = useMemo(() => {
+    if (!activeId || !isBoardId(activeId)) return null;
+    return orderedBoards.find((b) => b._id === activeId) ?? null;
+  }, [activeId, orderedBoards, isBoardId]);
 
   const findBoardIdForGoal = useCallback(
     (goalId: Id<"goals">): Id<"boards"> | null => {
@@ -227,7 +302,7 @@ export function BoardsTrelloView({ boards, className }: BoardsTrelloViewProps) {
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    setActiveId(event.active.id as Id<"goals">);
+    setActiveId(event.active.id as Id<"goals"> | Id<"boards">);
   }, []);
 
   const handleDragEnd = useCallback(
@@ -235,6 +310,29 @@ export function BoardsTrelloView({ boards, className }: BoardsTrelloViewProps) {
       const { active, over } = event;
       setActiveId(null);
       if (!over || !userId) return;
+
+      if (isBoardId(active.id)) {
+        const overBoardId = isBoardId(over.id)
+          ? (over.id as Id<"boards">)
+          : findBoardIdForGoal(over.id as Id<"goals">);
+        if (overBoardId) {
+          const oldIndex = orderedBoards.findIndex((b) => b._id === active.id);
+          const newIndex = orderedBoards.findIndex((b) => b._id === overBoardId);
+          if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+            const reordered = arrayMove(orderedBoards, oldIndex, newIndex);
+            setOrderedBoards(reordered);
+            try {
+              await reorderBoards({
+                userId,
+                boardIds: reordered.map((b) => b._id),
+              });
+            } catch {
+              setOrderedBoards(orderedBoards);
+            }
+          }
+          return;
+        }
+      }
 
       const activeIdStr = active.id as Id<"goals">;
       const overIdStr = over.id as Id<"goals"> | Id<"boards">;
@@ -330,14 +428,27 @@ export function BoardsTrelloView({ boards, className }: BoardsTrelloViewProps) {
         }
       }
     },
-    [boardIds, goalsByBoardId, findBoardIdForGoal, updateGoal, userId]
+    [
+      boardIds,
+      goalsByBoardId,
+      findBoardIdForGoal,
+      updateGoal,
+      userId,
+      isBoardId,
+      orderedBoards,
+      reorderBoards,
+    ]
   );
 
   const collisionDetection: CollisionDetection = useCallback(
     (args) => {
       const pointerIntersections = rectIntersection(args);
       let overId = getFirstCollision(pointerIntersections, "id");
+      const isDraggingBoard =
+        (args.active.data.current as { type?: string } | undefined)?.type ===
+        "board";
       if (
+        !isDraggingBoard &&
         overId != null &&
         typeof overId === "string" &&
         overId in goalsByBoardId
@@ -390,13 +501,18 @@ export function BoardsTrelloView({ boards, className }: BoardsTrelloViewProps) {
       >
         <div className="min-h-0 w-full flex-1 overflow-x-auto overflow-y-hidden">
           <div className="inline-flex items-start gap-4 px-4 pt-4 h-full">
-            {boards.map((board) => (
-              <BoardColumn
-                key={board._id}
-                board={board}
-                onGoalsLoad={onGoalsLoad}
-              />
-            ))}
+            <SortableContext
+              items={boardIds}
+              strategy={horizontalListSortingStrategy}
+            >
+              {orderedBoards.map((board) => (
+                <SortableBoardColumn
+                  key={board._id}
+                  board={board}
+                  onGoalsLoad={onGoalsLoad}
+                />
+              ))}
+            </SortableContext>
           </div>
         </div>
       </div>
@@ -404,6 +520,12 @@ export function BoardsTrelloView({ boards, className }: BoardsTrelloViewProps) {
         {activeGoal ? (
           <div className="w-[316px] shrink-0 cursor-grabbing opacity-90 shadow-lg">
             <GoalCard goal={activeGoal} boardId={activeGoal.boardId} />
+          </div>
+        ) : activeBoard ? (
+          <div className="w-[340px] shrink-0 cursor-grabbing rounded-lg border bg-card opacity-90 shadow-lg">
+            <div className="border-b px-3 py-2 font-semibold uppercase tracking-wide text-foreground">
+              {activeBoard.name}
+            </div>
           </div>
         ) : null}
       </DragOverlay>

@@ -15,16 +15,20 @@ export const listBoards = query({
       isPublic: v.boolean(),
       publicSlug: v.optional(v.string()),
       theme: v.string(),
+      sortOrder: v.optional(v.number()),
     })
   ),
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx as GenericQueryCtx<DataModel>);
     if (!userId) return [];
-    return await ctx.db
+    const boards = await ctx.db
       .query("boards")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .order("asc")
       .collect();
+    return boards.sort(
+      (a, b) =>
+        (a.sortOrder ?? a._creationTime) - (b.sortOrder ?? b._creationTime)
+    );
   },
 });
 
@@ -39,6 +43,7 @@ export const getBoard = query({
       isPublic: v.boolean(),
       publicSlug: v.optional(v.string()),
       theme: v.string(),
+      sortOrder: v.optional(v.number()),
     }),
     v.null()
   ),
@@ -61,6 +66,7 @@ export const getBoardByPublicSlug = query({
       isPublic: v.boolean(),
       publicSlug: v.optional(v.string()),
       theme: v.string(),
+      sortOrder: v.optional(v.number()),
     }),
     v.null()
   ),
@@ -82,11 +88,20 @@ export const createBoard = mutation({
   },
   returns: v.id("boards"),
   handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("boards")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .collect();
+    const maxOrder = existing.reduce(
+      (max, b) => Math.max(max, b.sortOrder ?? -1),
+      -1
+    );
     return await ctx.db.insert("boards", {
       userId: args.userId,
       name: args.name.trim(),
       isPublic: false,
       theme: args.theme ?? "default",
+      sortOrder: maxOrder + 1,
     });
   },
 });
@@ -112,6 +127,22 @@ export const updateBoard = mutation({
     }
     if (Object.keys(updates).length > 0) {
       await ctx.db.patch(args.boardId, updates);
+    }
+    return null;
+  },
+});
+
+export const reorderBoards = mutation({
+  args: {
+    userId: v.id("users"),
+    boardIds: v.array(v.id("boards")),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    for (let i = 0; i < args.boardIds.length; i++) {
+      const board = await ctx.db.get(args.boardIds[i]);
+      if (!board || board.userId !== args.userId) return null;
+      await ctx.db.patch(args.boardIds[i], { sortOrder: i });
     }
     return null;
   },

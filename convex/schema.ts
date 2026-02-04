@@ -39,8 +39,10 @@ export default defineSchema({
     isPublic: v.boolean(),
     publicSlug: v.optional(v.string()),
     theme: v.string(),
+    sortOrder: v.optional(v.number()),
   })
     .index("by_userId", ["userId"])
+    .index("by_userId_sortOrder", ["userId", "sortOrder"])
     .index("by_publicSlug", ["publicSlug"]),
 
   goals: defineTable({

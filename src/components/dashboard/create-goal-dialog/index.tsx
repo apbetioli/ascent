@@ -88,7 +88,7 @@ export function CreateGoalDialog({
         </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-[560px]" showCloseButton={false}>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="min-w-0">
           {form.isEditMode ? (
             <>
               <DialogHeader>
@@ -96,7 +96,7 @@ export function CreateGoalDialog({
                   {form.formState.name.trim() || "Edit Goal"}
                 </DialogTitle>
               </DialogHeader>
-              <div className="pt-1">
+              <div className="pt-1 min-w-0">
                 <GoalNameField
                   formState={form.formState}
                   fieldErrors={form.fieldErrors}
@@ -144,7 +144,7 @@ export function CreateGoalDialog({
                   {form.formState.name.trim() || "Create New Goal"}
                 </DialogTitle>
               </DialogHeader>
-              <div className="flex items-center pr-12 mb-2">
+              <div className="flex items-center mb-2 min-w-0">
                 <GoalNameField
                   formState={form.formState}
                   fieldErrors={form.fieldErrors}
@@ -169,10 +169,10 @@ export function CreateGoalDialog({
             </>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 pt-4">
             {form.isEditMode ? (
               <>
-                <Button variant="outline" onClick={() => setOpen(false)}>
+                <Button variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
                 <Button
@@ -183,6 +183,7 @@ export function CreateGoalDialog({
                     !form.formState.name.trim() ||
                     !form.hasEdits
                   }
+                  className="w-full sm:w-auto"
                 >
                   {form.isLoading && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -192,12 +193,13 @@ export function CreateGoalDialog({
               </>
             ) : (
               <>
-                <Button variant="outline" onClick={() => setOpen(false)}>
+                <Button variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={form.isLoading || !form.formState.name.trim()}
+                  className="w-full sm:w-auto"
                 >
                   {form.isLoading && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

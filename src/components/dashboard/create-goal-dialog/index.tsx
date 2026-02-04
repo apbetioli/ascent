@@ -13,7 +13,6 @@ import type { ConvexGoal } from "@/lib/convex-types";
 import type { Id } from "convex/_generated/dataModel";
 import { Loader2, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { GoalEditHeader } from "./goal-edit-header";
 import { GoalIncrementRow } from "./goal-increment-row";
 import { GoalNameField } from "./goal-name-field";
 import { GoalSettingsSection } from "./goal-settings-section";
@@ -27,8 +26,6 @@ interface CreateGoalDialogProps {
   onOpenChange?: (open: boolean) => void;
   /** When true, do not render the default "New Goal" trigger (use your own button) */
   hideDefaultTrigger?: boolean;
-  onEmbedClick?: () => void;
-  onDeleteClick?: () => void;
 }
 
 export function CreateGoalDialog({
@@ -38,8 +35,6 @@ export function CreateGoalDialog({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   hideDefaultTrigger = false,
-  onEmbedClick,
-  onDeleteClick,
 }: CreateGoalDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen ?? internalOpen;
@@ -69,11 +64,14 @@ export function CreateGoalDialog({
   }, [form.isEditingName]);
 
   const handleSubmit = (e: React.FormEvent) => {
-    if (form.isEditMode) {
-      setOpen(false);
-      return;
-    }
+    e.preventDefault();
+    if (form.isEditMode) return;
     form.handleSubmit(e, () => setOpen(false));
+  };
+
+  const handleSaveEdit = async () => {
+    await form.handleSave();
+    setOpen(false);
   };
 
   const showDefaultTrigger =
@@ -91,13 +89,6 @@ export function CreateGoalDialog({
       )}
       <DialogContent className="sm:max-w-[560px]" showCloseButton={false}>
         <form onSubmit={handleSubmit}>
-          {form.isEditMode && (onEmbedClick || onDeleteClick) && (
-            <GoalEditHeader
-              onEmbedClick={onEmbedClick}
-              onDeleteClick={onDeleteClick}
-            />
-          )}
-
           {form.isEditMode ? (
             <>
               <DialogHeader>
@@ -105,7 +96,7 @@ export function CreateGoalDialog({
                   {form.formState.name.trim() || "Edit Goal"}
                 </DialogTitle>
               </DialogHeader>
-              <div className="pr-24 pt-1">
+              <div className="pt-1">
                 <GoalNameField
                   formState={form.formState}
                   fieldErrors={form.fieldErrors}
@@ -116,6 +107,7 @@ export function CreateGoalDialog({
                   onSetEditingName={form.setIsEditingName}
                   onSaveName={form.handleSaveName}
                   onCancelNameEdit={form.handleCancelNameEdit}
+                  onNameBlur={() => form.setIsEditingName(false)}
                 />
               </div>
 
@@ -124,7 +116,6 @@ export function CreateGoalDialog({
                   <GoalIncrementRow
                     formState={form.formState}
                     isLoading={form.isLoading}
-                    isAddingRecord={form.isAddingRecord}
                     onUpdateField={form.updateFormField}
                     onFocus={() => {
                       form.currentValueOnFocusRef.current = form.formState.currentValue;
@@ -179,7 +170,27 @@ export function CreateGoalDialog({
           )}
 
           <DialogFooter>
-            {!form.isEditMode && (
+            {form.isEditMode ? (
+              <>
+                <Button variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSaveEdit}
+                  disabled={
+                    form.isLoading ||
+                    !form.formState.name.trim() ||
+                    !form.hasEdits
+                  }
+                >
+                  {form.isLoading && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Save
+                </Button>
+              </>
+            ) : (
               <>
                 <Button variant="outline" onClick={() => setOpen(false)}>
                   Cancel

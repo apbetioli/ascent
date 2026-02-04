@@ -17,6 +17,8 @@ interface GoalNameFieldProps {
   onSetEditingName: (editing: boolean) => void;
   onSaveName: () => void;
   onCancelNameEdit: () => void;
+  /** When set, blur only closes the field (keeps value). Escape still calls onCancelNameEdit. */
+  onNameBlur?: () => void;
 }
 
 export function GoalNameField({
@@ -29,8 +31,10 @@ export function GoalNameField({
   onSetEditingName,
   onSaveName,
   onCancelNameEdit,
+  onNameBlur,
 }: GoalNameFieldProps) {
   const nameError = fieldErrors.name;
+  const handleBlur = onNameBlur ?? onCancelNameEdit;
 
   return (
     <div className="min-h-[2.5rem] flex flex-col gap-1 flex-1 min-w-0">
@@ -41,7 +45,7 @@ export function GoalNameField({
               ref={nameInputRef}
               value={formState.name}
               onChange={(e) => onUpdateField("name", e.target.value)}
-              onBlur={onCancelNameEdit}
+              onBlur={handleBlur}
               onKeyDown={(e) => {
                 if (e.key === "Enter") onSaveName();
                 if (e.key === "Escape") onCancelNameEdit();

@@ -137,66 +137,63 @@ export function GoalProgressDisplay({
       role={onCardClick ? "button" : undefined}
       tabIndex={onCardClick ? 0 : undefined}
     >
-      <CardHeader className="gap-0.5">
-        <div className="flex flex-col gap-0.5 min-h-12">
-          <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-base flex-1 min-w-0 text-start leading-tight">
-              {goal.name}
-            </CardTitle>
-            <div className="flex items-center gap-2 shrink-0">
-              {contextMenuEl}
-              {isSurpassed && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <AlertCircle
-                      className="h-5 w-5 cursor-help"
-                      style={{ color: goal.color }}
-                      aria-hidden
-                      tabIndex={0}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>Goal surpassed!</TooltipContent>
-                </Tooltip>
-              )}
-              {isComplete && !isSurpassed && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <CheckCircle2
-                      className="h-5 w-5 cursor-help"
-                      style={{ color: goal.color }}
-                      aria-hidden
-                      tabIndex={0}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>Goal complete!</TooltipContent>
-                </Tooltip>
-              )}
-            </div>
+      <CardHeader className="gap-0">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-base flex-1 min-w-0">
+            {goal.name}
+          </CardTitle>
+          <div className="flex items-center gap-2 shrink-0">
+            {contextMenuEl}
+            {isSurpassed && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertCircle
+                    className="h-5 w-5 cursor-help"
+                    style={{ color: goal.color }}
+                    aria-hidden
+                    tabIndex={0}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>Goal surpassed!</TooltipContent>
+              </Tooltip>
+            )}
+            {isComplete && !isSurpassed && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <CheckCircle2
+                    className="h-5 w-5 cursor-help"
+                    style={{ color: goal.color }}
+                    aria-hidden
+                    tabIndex={0}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>Goal complete!</TooltipContent>
+              </Tooltip>
+            )}
           </div>
-          <CardDescription className="flex flex-wrap gap-2 text-xs min-h-[20px] leading-tight -mt-0.5">
-            {goal.recurrence && String(goal.recurrence) !== "none" && (
-              <span className="flex items-center gap-1">
-                <Repeat className="h-3 w-3" />
-                {goal.recurrence}
-              </span>
-            )}
-            {deadlineStatus && !isComplete && (
-              <span
-                className={`flex items-center gap-1 ${
-                  isOverdue && deadlineStatus !== "Due today"
-                    ? "text-destructive"
-                    : ""
-                }`}
-              >
-                <Calendar className="h-3 w-3" />
-                {deadlineStatus}
-              </span>
-            )}
-          </CardDescription>
         </div>
+        <CardDescription className="flex flex-wrap gap-2 text-xs">
+          {goal.recurrence && String(goal.recurrence) !== "none" && (
+            <span className="flex items-center gap-1">
+              <Repeat className="h-3 w-3" />
+              {goal.recurrence}
+            </span>
+          )}
+          {deadlineStatus && !isComplete && (
+            <span
+              className={`flex items-center gap-1 ${
+                isOverdue && deadlineStatus !== "Due today"
+                  ? "text-destructive"
+                  : ""
+              }`}
+            >
+              <Calendar className="h-3 w-3" />
+              {deadlineStatus}
+            </span>
+          )}
+        </CardDescription>
       </CardHeader>
-
-      <CardContent className={"space-y-2"}>
+      <CardContent>
         {/* Progress Bar */}
         <div className="space-y-1">
           <div className="flex justify-between items-center text-sm">

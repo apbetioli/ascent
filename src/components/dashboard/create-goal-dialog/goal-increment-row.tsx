@@ -8,7 +8,6 @@ import type { FormState } from "./use-goal-form";
 interface GoalIncrementRowProps {
   formState: FormState;
   isLoading: boolean;
-  isAddingRecord: boolean;
   onUpdateField: <K extends keyof FormState>(field: K, value: FormState[K]) => void;
   onFocus: () => void;
   onBlur: () => void;
@@ -18,13 +17,12 @@ interface GoalIncrementRowProps {
 export function GoalIncrementRow({
   formState,
   isLoading,
-  isAddingRecord,
   onUpdateField,
   onFocus,
   onBlur,
   onAddAmount,
 }: GoalIncrementRowProps) {
-  const disabled = isLoading || isAddingRecord;
+  const disabled = isLoading;
 
   return (
     <div className="grid gap-4">

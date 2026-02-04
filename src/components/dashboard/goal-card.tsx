@@ -161,8 +161,6 @@ export function GoalCard({ goal, boardId }: GoalCardProps) {
         goal={goal}
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
-        onEmbedClick={() => setShowEmbedDialog(true)}
-        onDeleteClick={() => setShowDeleteDialog(true)}
       />
 
       <Dialog open={showEmbedDialog} onOpenChange={setShowEmbedDialog}>

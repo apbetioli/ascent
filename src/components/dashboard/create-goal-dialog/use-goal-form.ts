@@ -27,7 +27,7 @@ interface UseGoalFormOptions {
   goal?: ConvexGoal;
 }
 
-function getFormStateFromGoal(goal: ConvexGoal, existingGoalsCount: number): FormState {
+function getFormStateFromGoal(goal: ConvexGoal): FormState {
   return {
     name: goal.name,
     targetAmount: goal.targetAmount.toString(),
@@ -80,18 +80,14 @@ export function useGoalForm({
   const createRecord = useMutation(api.records.createRecord);
 
   const [formState, setFormState] = useState<FormState>(() =>
-    goal ? getFormStateFromGoal(goal, existingGoalsCount) : getEmptyFormState(existingGoalsCount)
+    goal ? getFormStateFromGoal(goal) : getEmptyFormState(existingGoalsCount)
   );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [isAddingRecord, setIsAddingRecord] = useState(false);
   const [isEditingName, setIsEditingName] = useState(!isEditMode);
 
   const currentValueOnFocusRef = useRef<string>("");
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const isInitialMountRef = useRef(true);
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const previousFormStateRef = useRef<FormState | null>(null);
 
   const updateFormField = useCallback(<K extends keyof FormState>(field: K, value: FormState[K]) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
@@ -112,10 +108,9 @@ export function useGoalForm({
 
   const resetForm = useCallback(() => {
     if (isEditMode && goal) {
-      const next = getFormStateFromGoal(goal, existingGoalsCount);
+      const next = getFormStateFromGoal(goal);
       setFormState(next);
       currentValueOnFocusRef.current = next.currentValue;
-      previousFormStateRef.current = next;
     } else {
       setFormState(getEmptyFormState(existingGoalsCount));
     }
@@ -126,26 +121,21 @@ export function useGoalForm({
   // Sync form when goal changes (edit mode)
   useEffect(() => {
     if (goal) {
-      const next = getFormStateFromGoal(goal, existingGoalsCount);
+      const next = getFormStateFromGoal(goal);
       setFormState(next);
       currentValueOnFocusRef.current = next.currentValue;
-      previousFormStateRef.current = next;
-      isInitialMountRef.current = true;
-      setTimeout(() => {
-        isInitialMountRef.current = false;
-      }, 100);
     }
-  }, [goal, existingGoalsCount]);
+  }, [goal]);
 
-  // Auto-save (edit mode only)
-  const autoSave = useCallback(async () => {
-    if (!isEditMode || !goal || isInitialMountRef.current) return;
+  const handleSave = useCallback(async () => {
+    if (!isEditMode || !goal || !userId) return;
     const trimmedName = formState.name.trim();
     if (!trimmedName) return;
 
     const payload = buildUpdatePayload(formState);
-    if (!payload || !userId) return;
+    if (!payload) return;
 
+    setIsLoading(true);
     try {
       await updateGoal({
         goalId: goal._id,
@@ -157,47 +147,48 @@ export function useGoalForm({
         format: payload.format,
         color: payload.color,
       });
-      previousFormStateRef.current = { ...formState };
+
+      const newCurrent = parseFloat(formState.currentValue);
+      if (
+        !isNaN(newCurrent) &&
+        newCurrent >= 0 &&
+        newCurrent !== goal.currentAmount
+      ) {
+        await createRecord({
+          goalId: goal._id,
+          userId,
+          amount: newCurrent - goal.currentAmount,
+          timestamp: Date.now(),
+        });
+      }
       router.refresh();
     } catch (error) {
-      console.error("Auto-save failed:", error);
+      console.error("Save failed:", error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [isEditMode, goal, formState, updateGoal, router, userId]);
-
-  useEffect(() => {
-    if (!isEditMode || !goal || isInitialMountRef.current) return;
-
-    const prev = previousFormStateRef.current;
-    const same =
-      prev &&
-      formState.currentValue === prev.currentValue &&
-      formState.name === prev.name &&
-      formState.targetAmount === prev.targetAmount &&
-      formState.recurrence === prev.recurrence &&
-      formState.amountFormat === prev.amountFormat &&
-      formState.color === prev.color &&
-      formState.deadline?.getTime() === prev.deadline?.getTime();
-    if (same) return;
-
-    if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
-    autoSaveTimeoutRef.current = setTimeout(autoSave, 500);
-    return () => {
-      if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
-    };
   }, [
     isEditMode,
     goal,
-    formState.name,
-    formState.currentValue,
-    formState.targetAmount,
-    formState.recurrence,
-    formState.amountFormat,
-    formState.color,
-    formState.deadline,
-    autoSave,
+    formState,
+    userId,
+    updateGoal,
+    createRecord,
+    router,
   ]);
 
-  const handleSaveName = useCallback(async () => {
+  const hasEdits =
+    isEditMode &&
+    goal &&
+    (formState.name.trim() !== goal.name ||
+      formState.targetAmount !== goal.targetAmount.toString() ||
+      formState.recurrence !== goal.recurrence ||
+      formState.amountFormat !== (goal.format ?? "number") ||
+      formState.color !== goal.color ||
+      (formState.deadline?.getTime() ?? null) !== (goal.deadline ?? null) ||
+      formState.currentValue !== goal.currentAmount.toString());
+
+  const handleSaveName = useCallback(() => {
     const trimmed = formState.name.trim();
     if (!trimmed) return;
     if (trimmed === (isEditMode && goal ? goal.name : "")) {
@@ -209,20 +200,9 @@ export function useGoalForm({
       setIsEditingName(false);
       return;
     }
-    if (!goal || !userId) return;
-    setIsLoading(true);
-    try {
-      await updateGoal({ goalId: goal._id, userId, name: trimmed });
-      updateFormField("name", trimmed);
-      previousFormStateRef.current = { ...formState, name: trimmed };
-      router.refresh();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsLoading(false);
-      setIsEditingName(false);
-    }
-  }, [formState, isEditMode, goal, userId, updateGoal, updateFormField, router]);
+    updateFormField("name", trimmed);
+    setIsEditingName(false);
+  }, [formState, isEditMode, goal, updateFormField]);
 
   const handleCancelNameEdit = useCallback(() => {
     if (isEditMode && goal) {
@@ -232,59 +212,27 @@ export function useGoalForm({
   }, [isEditMode, goal, updateFormField]);
 
   const addRecordByAmount = useCallback(
-    async (amount: number) => {
-      if (!goal || !userId) return;
-      setIsAddingRecord(true);
-      try {
-        await createRecord({
-          goalId: goal._id,
-          userId,
-          amount,
-          timestamp: Date.now(),
-        });
-        const next = (parseFloat(formState.currentValue) || 0) + amount;
-        const nextStr = next.toString();
-        updateFormField("currentValue", nextStr);
-        currentValueOnFocusRef.current = nextStr;
-        router.refresh();
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsAddingRecord(false);
-      }
+    (amount: number) => {
+      if (!goal) return;
+      const next = (parseFloat(formState.currentValue) || 0) + amount;
+      const nextStr = next.toString();
+      updateFormField("currentValue", nextStr);
+      currentValueOnFocusRef.current = nextStr;
+      // In edit mode, record is created only when user clicks Save
     },
-    [goal, userId, formState.currentValue, createRecord, updateFormField, router]
+    [goal, formState.currentValue, updateFormField]
   );
 
-  const handleCurrentValueBlur = useCallback(async () => {
+  const handleCurrentValueBlur = useCallback(() => {
     if (!goal) return;
     const parsed = parseFloat(formState.currentValue);
     if (isNaN(parsed) || parsed < 0) {
       updateFormField("currentValue", goal.currentAmount.toString());
       return;
     }
-    const prev = parseFloat(currentValueOnFocusRef.current);
-    if (isNaN(prev)) return;
-    const delta = parsed - prev;
-    if (delta === 0) return;
-    if (!userId) return;
-    setIsAddingRecord(true);
-    try {
-      await createRecord({
-        goalId: goal._id,
-        userId,
-        amount: delta,
-        timestamp: Date.now(),
-      });
-      currentValueOnFocusRef.current = formState.currentValue;
-      router.refresh();
-    } catch (e) {
-      updateFormField("currentValue", currentValueOnFocusRef.current);
-      console.error(e);
-    } finally {
-      setIsAddingRecord(false);
-    }
-  }, [goal, formState.currentValue, userId, createRecord, updateFormField, router]);
+    currentValueOnFocusRef.current = formState.currentValue;
+    // In edit mode, record is created only when user clicks Save
+  }, [goal, formState.currentValue, updateFormField]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent, onSuccess?: () => void) => {
@@ -372,7 +320,6 @@ export function useGoalForm({
     updateFormField,
     fieldErrors,
     isLoading,
-    isAddingRecord,
     isEditingName,
     setIsEditingName,
     isEditMode,
@@ -380,6 +327,8 @@ export function useGoalForm({
     currentValueOnFocusRef,
     resetForm,
     handleSubmit,
+    handleSave,
+    hasEdits,
     handleSaveName,
     handleCancelNameEdit,
     addRecordByAmount,

@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     const customerId =
       typeof session.customer === "string" ? session.customer : undefined;
 
-    await fetchMutation(api.payments.addPendingPayment, {
+    await fetchMutation(api.pendingPayments.addPendingPayment, {
       email,
       ...(customerId != null && { stripeCustomerId: customerId }),
       paymentProvider: paymentProvider.getProviderName(),

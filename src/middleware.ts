@@ -11,6 +11,7 @@ import { addVisitor } from "./lib/redis/visitors";
 const isSignInPage = createRouteMatcher(["/login"]);
 const isProtectedRoute = createRouteMatcher(["/(boards|settings|api)(.*)"]);
 const isPublicRoute = createRouteMatcher(["/public"]);
+const isCheckoutApi = (req: NextRequest) => req.nextUrl.pathname === "/api/checkout";
 const isEmbedRoute = createRouteMatcher(["/embed"]);
 const isBlockedRoute = createRouteMatcher(["/blocked"]);
 
@@ -19,7 +20,11 @@ const authMiddleware = convexAuthNextjsMiddleware(
     if (isSignInPage(request) && (await convexAuth.isAuthenticated())) {
       return nextjsMiddlewareRedirect(request, "/boards");
     }
-    if (isProtectedRoute(request) && !(await convexAuth.isAuthenticated())) {
+    if (
+      isProtectedRoute(request) &&
+      !isCheckoutApi(request) &&
+      !(await convexAuth.isAuthenticated())
+    ) {
       return nextjsMiddlewareRedirect(request, "/login");
     }
     return NextResponse.next({ request });

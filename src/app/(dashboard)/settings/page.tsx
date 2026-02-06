@@ -37,16 +37,18 @@ export default async function Settings() {
   }
 
   return (
-    <SettingsPage
-      user={{ id: userId, email: user.email ?? undefined }}
-      profile={profile}
-      tokens={tokens.map(
-        (t: { _id: Id<"apiTokens">; _creationTime: number; name: string }) => ({
-          id: t._id,
-          name: t.name,
-          created_at: new Date(t._creationTime).toISOString(),
-        })
-      )}
-    />
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain p-4 md:p-6">
+      <SettingsPage
+        user={{ id: userId, email: user.email ?? undefined }}
+        profile={profile}
+        tokens={tokens.map(
+          (t: { _id: Id<"apiTokens">; _creationTime: number; name: string }) => ({
+            id: t._id,
+            name: t.name,
+            created_at: new Date(t._creationTime).toISOString(),
+          })
+        )}
+      />
+    </div>
   );
 }

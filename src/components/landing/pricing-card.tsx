@@ -39,7 +39,7 @@ export function PricingCard({
   userId,
 }: PricingCardProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const priceFormatted = "$5";
+  const priceFormatted = `$${process.env.NEXT_PUBLIC_PRICE ?? ""}`;
   const router = useRouter();
 
   const handleCheckout = async () => {

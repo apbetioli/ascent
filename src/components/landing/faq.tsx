@@ -6,12 +6,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { APP_NAME } from "@/lib/app-name";
 
 const faqs = [
   {
     question: "Is this a one-time payment or a subscription?",
-    answer:
-      "GoalTrack is a one-time payment. You pay once and get lifetime access to all features, including future updates. No recurring charges, ever.",
+    get answer() {
+      return `${APP_NAME} is a one-time payment. You pay once and get lifetime access to all features, including future updates. No recurring charges, ever.`;
+    },
   },
   {
     question: "What types of goals can I track?",
@@ -35,13 +37,15 @@ const faqs = [
   },
   {
     question: "Is there a mobile app?",
-    answer:
-      "GoalTrack is a web app that works great on mobile browsers. Add it to your home screen for an app-like experience. We're considering native apps based on user demand.",
+    get answer() {
+      return `${APP_NAME} is a web app that works great on mobile browsers. Add it to your home screen for an app-like experience. We're considering native apps based on user demand.`;
+    },
   },
   {
     question: "What happens if I need a refund?",
-    answer:
-      "We offer a 30-day money-back guarantee. If you're not satisfied with GoalTrack for any reason, just contact us and we'll refund your purchase, no questions asked.",
+    get answer() {
+      return `We offer a 30-day money-back guarantee. If you're not satisfied with ${APP_NAME} for any reason, just contact us and we'll refund your purchase, no questions asked.`;
+    },
   },
   {
     question: "Is my data secure?",

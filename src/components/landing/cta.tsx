@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_NAME } from "@/lib/app-name";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
@@ -19,8 +20,8 @@ export function CTA() {
             Ready to Achieve Your Goals?
           </h2>
           <p className="text-xl text-muted-foreground mb-8">
-            Join thousands of goal-setters who are crushing their targets with
-            GoalTrack. Start tracking today.
+            Join thousands of goal-setters who are crushing their targets with{" "}
+            {APP_NAME}. Start tracking today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" onClick={() => scrollToSection("pricing")}>

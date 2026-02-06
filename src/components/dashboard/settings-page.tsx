@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { APP_NAME } from "@/lib/app-name";
 import {
   Dialog,
   DialogContent,
@@ -197,7 +198,7 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
         <CardHeader>
           <CardTitle>API Tokens</CardTitle>
           <CardDescription>
-            Create tokens to access the GoalTrack API for automation
+            {`Create tokens to access the ${APP_NAME} API for automation`}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

@@ -1,3 +1,4 @@
+import { APP_NAME } from "@/lib/app-name";
 import { paymentProvider } from "@/lib/payments";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { fetchQuery } from "convex/nextjs";
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
 
       if (profile?.hasPaid) {
         return NextResponse.json(
-          { error: "You have already purchased GoalTrack" },
+          { error: `You have already purchased ${APP_NAME}` },
           { status: 400 }
         );
       }

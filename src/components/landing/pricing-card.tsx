@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { APP_NAME } from "@/lib/app-name";
 import { Check, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -99,7 +100,7 @@ export function PricingCard({
         <Badge variant="secondary">Lifetime Deal</Badge>
       </div>
       <CardHeader className="text-center pb-2">
-        <CardTitle className="text-2xl">GoalTrack Pro</CardTitle>
+        <CardTitle className="text-2xl">{APP_NAME} Pro</CardTitle>
         <CardDescription>
           Everything you need to track your goals
         </CardDescription>

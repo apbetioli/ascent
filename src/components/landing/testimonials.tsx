@@ -1,13 +1,15 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { APP_NAME } from "@/lib/app-name";
 import { Star } from "lucide-react";
 
 const testimonials = [
   {
     name: "Sarah Chen",
     role: "Software Engineer",
-    content:
-      "I've tried so many goal tracking apps, but GoalTrack is the first one that actually stuck. The visual progress bars are incredibly motivating!",
+    get content() {
+      return `I've tried so many goal tracking apps, but ${APP_NAME} is the first one that actually stuck. The visual progress bars are incredibly motivating!`;
+    },
     initials: "SC",
   },
   {
@@ -20,8 +22,9 @@ const testimonials = [
   {
     name: "Emily Rodriguez",
     role: "Fitness Coach",
-    content:
-      "I use GoalTrack with all my clients. The recurring goals feature is perfect for weekly fitness targets. They can share their boards with me for accountability.",
+    get content() {
+      return `I use ${APP_NAME} with all my clients. The recurring goals feature is perfect for weekly fitness targets. They can share their boards with me for accountability.`;
+    },
     initials: "ER",
   },
 ];
@@ -35,8 +38,8 @@ export function Testimonials() {
             Loved by Goal-Setters
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Join thousands of people who are achieving their goals with
-            GoalTrack.
+            Join thousands of people who are achieving their goals with{" "}
+            {APP_NAME}.
           </p>
         </div>
 

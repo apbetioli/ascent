@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_NAME } from "@/lib/app-name";
 import Link from "next/link";
 import { Target } from "lucide-react";
 
@@ -18,7 +19,7 @@ export function Footer() {
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2 font-bold">
               <Target className="h-5 w-5 text-primary" />
-              <span>GoalTrack</span>
+              <span>{APP_NAME}</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               Track your goals, achieve your dreams. A simple and beautiful goal
@@ -88,7 +89,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} GoalTrack. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} {APP_NAME}. All rights reserved.</p>
         </div>
       </div>
     </footer>

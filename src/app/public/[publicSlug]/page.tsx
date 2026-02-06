@@ -1,5 +1,6 @@
 import { PublicBoardView } from "@/components/public/board-view";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { APP_NAME } from "@/lib/app-name";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "convex/_generated/api";
 import { Target } from "lucide-react";
@@ -45,7 +46,7 @@ export default async function PublicBoardPage({
         <div className="container mx-auto px-4 md:px-6 grid grid-cols-3 h-14 items-center">
           <Link href="/" className="flex items-center gap-2 font-bold">
             <Target className="h-5 w-5 text-primary" />
-            <span>GoalTrack</span>
+            <span>{APP_NAME}</span>
           </Link>
           <span className="font-bold text-center">{board.name}</span>
           <div className="flex items-center gap-2 justify-end">

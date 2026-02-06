@@ -30,7 +30,7 @@ export function Pricing() {
           <p>
             Questions?{" "}
             <a
-              href="mailto:support@goaltrack.app"
+              href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@goaltrack.app"}`}
               className="text-primary hover:underline"
             >
               Contact us

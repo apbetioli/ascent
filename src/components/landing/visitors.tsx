@@ -8,8 +8,9 @@ export default async function Visitors() {
 
   return (
     <GoalProgressDisplay
+      showLiveIndicator
       goal={{
-        name: "Live Visitors (including you)",
+        name: "Online visitors (including you)",
         currentAmount: visitorCount,
         targetAmount: VISITOR_TARGET,
         current_amount: visitorCount,

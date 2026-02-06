@@ -102,7 +102,9 @@ export function PricingCard({
 
           <div className="mb-8">
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-bold">{priceFormatted ?? "$"}</span>
+              <span className="text-5xl font-bold">
+                {priceFormatted ?? "$"}
+              </span>
               <span className="text-muted-foreground">one-time</span>
             </div>
             <p className="text-sm text-muted-foreground mt-2">
@@ -116,7 +118,7 @@ export function PricingCard({
             disabled={isLoading}
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isLoggedIn ? "Get Started" : "Sign Up & Pay"}
+            Sign Up
           </Button>
 
           <ul className="space-y-3">

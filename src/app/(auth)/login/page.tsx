@@ -88,7 +88,9 @@ export default function LoginPage() {
 
     try {
       await signIn("resend-otp", { email, code });
-      // On success, useUser/isAuthenticated will update and useEffect will redirect
+      // Redirect immediately instead of waiting for the reactive query,
+      // which may never update on mobile when the WebSocket isn't connected.
+      router.replace(redirect);
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "An unexpected error occurred";
@@ -98,7 +100,6 @@ export default function LoginPage() {
           : message
       );
       console.error(message);
-    } finally {
       setIsLoading(false);
     }
   };

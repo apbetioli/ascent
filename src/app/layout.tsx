@@ -18,11 +18,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: `${APP_NAME} - Track Your Goals, Achieve Your Dreams`,
+    default: APP_NAME,
     template: `%s | ${APP_NAME}`,
   },
   description:
-    "A beautiful and simple goal tracking app. Set goals, track progress, and achieve your dreams with visual progress bars and smart reminders.",
+    "Set goals, track progress, and achieve your dreams with visual progress bars and smart reminders.",
   keywords: [
     "goal tracking",
     "habit tracker",
@@ -38,16 +38,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_APP_URL,
-    title: `${APP_NAME} - Track Your Goals, Achieve Your Dreams`,
-    description:
-      "A beautiful and simple goal tracking app. Set goals, track progress, and achieve your dreams.",
+    title: APP_NAME,
+    description: "Set goals, track progress, and achieve your dreams.",
     siteName: APP_NAME,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${APP_NAME} - Track Your Goals, Achieve Your Dreams`,
-    description:
-      "A beautiful and simple goal tracking app. Set goals, track progress, and achieve your dreams.",
+    title: APP_NAME,
+    description: "Set goals, track progress, and achieve your dreams.",
   },
   robots: {
     index: true,

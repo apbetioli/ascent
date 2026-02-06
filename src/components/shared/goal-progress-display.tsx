@@ -51,6 +51,8 @@ interface GoalProgressDisplayProps {
   footer?: React.ReactNode;
   contextMenuHoverOnly?: boolean;
   onCardClick?: () => void;
+  /** When true, shows a pulsing dot before the title (e.g. for live data). */
+  showLiveIndicator?: boolean;
 }
 
 export function GoalProgressDisplay({
@@ -60,6 +62,7 @@ export function GoalProgressDisplay({
   footer,
   contextMenuHoverOnly,
   onCardClick,
+  showLiveIndicator,
 }: GoalProgressDisplayProps) {
   const goal = normalizeGoal(goalProp);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
@@ -82,6 +85,7 @@ export function GoalProgressDisplay({
   const isOverdue =
     goal.deadline != null && goal.deadline < currentTime && !isComplete;
 
+  // Use fixed "en-US" locale so server and client render the same (avoids hydration mismatch on mobile).
   const formatAmount = (amount: number) => {
     if (goal.format === "currency") {
       return new Intl.NumberFormat("en-US", {
@@ -91,7 +95,10 @@ export function GoalProgressDisplay({
         maximumFractionDigits: 2,
       }).format(amount);
     }
-    return amount.toLocaleString();
+    return new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount);
   };
 
   const cardCls = cn(
@@ -139,7 +146,19 @@ export function GoalProgressDisplay({
     >
       <CardHeader className="gap-0">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-base flex-1 min-w-0">
+          <CardTitle className="text-base flex-1 min-w-0 flex items-center gap-2">
+            {showLiveIndicator && (
+              <span
+                className="relative flex h-2 w-2 shrink-0"
+                aria-hidden
+              >
+                <span
+                  className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75"
+                  style={{ animationDuration: "1.5s" }}
+                />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+            )}
             {goal.name}
           </CardTitle>
           <div className="flex items-center gap-2 shrink-0">

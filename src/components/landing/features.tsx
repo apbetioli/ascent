@@ -68,11 +68,11 @@ const features: Feature[] = [
     description:
       "Set deadlines for your goals and see exactly how many days are left. Never miss a target date with visual countdown tracking.",
     goals: [
-      createFeatureGoal("Marathon training plan", 34, 42, "number", 3, {
+      createFeatureGoal("Marathon training plan", 24, 42, "number", 3, {
         deadline: endOfMonth,
       }),
-      createFeatureGoal("Book launch prep", 8, 12, "number", 7, {
-        deadline: endOfMonth,
+      createFeatureGoal("Book launch prep", 11, 12, "number", 7, {
+        deadline: new Date().getTime(),
       }),
     ],
   },
@@ -100,7 +100,7 @@ const features: Feature[] = [
     icon: Zap,
     title: "Automate with the API",
     description:
-      "Update goals programmatically via our API. Connect with Zapier, write scripts, or integrate with any tool that makes HTTP requests.",
+      "Update goals programmatically via our API. Connect with AI Agents, write scripts, or integrate with any tool that makes HTTP requests.",
     goals: [
       createFeatureGoal("Steps tracked", 8432, 10000, "number", 5, {
         recurrence: "daily",
@@ -147,13 +147,13 @@ export function Features() {
             return (
               <div
                 key={feature.title}
-                className={`flex flex-col ${isReversed ? "md:flex-row-reverse" : "md:flex-row"} items-center gap-12 md:gap-16`}
+                className={`flex flex-col ${isReversed ? "md:flex-row-reverse bg-muted/50" : "md:flex-row border"} items-center gap-12 md:gap-16 p-8 rounded-xl`}
               >
                 {/* Text side */}
                 <div className="flex-1 space-y-5">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-500/10 dark:bg-purple-500/15">
+                  {/* <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-500/10 dark:bg-purple-500/15">
                     <feature.icon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                  </div>
+                  </div> */}
                   <h3 className="text-2xl md:text-3xl font-bold tracking-tight">
                     {feature.title}
                   </h3>

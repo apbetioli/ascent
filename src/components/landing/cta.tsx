@@ -25,8 +25,7 @@ export function CTA() {
       <div className="relative max-w-6xl mx-auto px-4 md:px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
-            Ready to achieve{" "}
-            <span className="text-gradient">your goals</span>?
+            Ready to achieve <span className="text-gradient">your goals</span>?
           </h2>
           <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
             Join thousands of goal-setters who are crushing their targets with{" "}
@@ -43,7 +42,8 @@ export function CTA() {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-5">
-            One-time payment &middot; Lifetime access &middot; 30-day money-back guarantee
+            One-time payment &middot; Lifetime access &middot; 30-day money-back
+            guarantee
           </p>
         </div>
       </div>

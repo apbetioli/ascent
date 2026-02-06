@@ -6,13 +6,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { APP_NAME } from "@/lib/app-name";
 
 const faqs = [
   {
     question: "Is this a one-time payment or a subscription?",
     get answer() {
-      return `${APP_NAME} is a one-time payment. You pay once and get lifetime access to all features, including future updates. No recurring charges, ever.`;
+      return `One-time payment. You pay once and get lifetime access to all features, including future updates. No recurring charges, ever.`;
     },
   },
   {
@@ -23,7 +22,7 @@ const faqs = [
   {
     question: "How do recurring goals work?",
     answer:
-      "Recurring goals reset their progress at the start of each period. For example, a monthly savings goal resets on the 1st of each month. Records older than the current period don't count toward progress.",
+      "Each time you update the progress of a recurring goal, a record is created. Records older than the current period don't count toward progress. For example, in a weekly goal, records older than 7 days don't count toward progress.",
   },
   {
     question: "Can I share my goals publicly?",
@@ -31,26 +30,16 @@ const faqs = [
       "Yes! You can make any board public, which generates a unique shareable link. Anyone with the link can view your goals and progress. You can also embed individual goal widgets on your website.",
   },
   {
-    question: "What's the API for?",
-    answer:
-      "The API lets you update your goals programmatically. You can connect it to automation tools like Zapier, write scripts to log progress automatically, or integrate it with other apps you use.",
-  },
-  {
     question: "Is there a mobile app?",
     get answer() {
-      return `${APP_NAME} is a web app that works great on mobile browsers. Add it to your home screen for an app-like experience. We're considering native apps based on user demand.`;
+      return `This is a web app that works great on mobile browsers. Add it to your home screen for an app-like experience.`;
     },
   },
   {
     question: "What happens if I need a refund?",
     get answer() {
-      return `We offer a 30-day money-back guarantee. If you're not satisfied with ${APP_NAME} for any reason, just contact us and we'll refund your purchase, no questions asked.`;
+      return `We offer a 30-day money-back guarantee. If you're not satisfied for any reason, just contact us and we'll refund your purchase, no questions asked.`;
     },
-  },
-  {
-    question: "Is my data secure?",
-    answer:
-      "Yes, your data is stored securely using industry-standard encryption. We use Supabase for our database, which provides enterprise-grade security. Your payment is processed securely through Stripe.",
   },
 ];
 

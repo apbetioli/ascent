@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { APP_NAME } from "@/lib/app-name";
 import { Loader2, Mail } from "lucide-react";
 import Link from "next/link";
 
@@ -177,7 +178,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <Link href="/" className="inline-block">
-            <CardTitle className="text-2xl font-bold">GoalTrack</CardTitle>
+            <CardTitle className="text-2xl font-bold">{APP_NAME}</CardTitle>
           </Link>
           <CardDescription>
             {fromPayment

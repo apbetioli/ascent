@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_NAME } from "@/lib/app-name";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Target } from "lucide-react";
@@ -19,7 +20,7 @@ export function Header() {
         <div className="flex-1">
           <Link href="/" className="flex items-center gap-2 font-bold">
             <Target className="h-5 w-5 text-primary" />
-            <span>GoalTrack</span>
+            <span>{APP_NAME}</span>
           </Link>
         </div>
         <nav className="hidden md:flex items-center gap-6 text-sm">

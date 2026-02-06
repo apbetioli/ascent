@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { ConvexClientProvider } from "@/components/providers/convex-provider";
+import { APP_NAME } from "@/lib/app-name";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,8 +18,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "GoalTrack - Track Your Goals, Achieve Your Dreams",
-    template: "%s | GoalTrack",
+    default: `${APP_NAME} - Track Your Goals, Achieve Your Dreams`,
+    template: `%s | ${APP_NAME}`,
   },
   description:
     "A beautiful and simple goal tracking app. Set goals, track progress, and achieve your dreams with visual progress bars and smart reminders.",
@@ -31,20 +32,20 @@ export const metadata: Metadata = {
     "personal finance",
     "savings goals",
   ],
-  authors: [{ name: "GoalTrack" }],
-  creator: "GoalTrack",
+  authors: [{ name: APP_NAME }],
+  creator: APP_NAME,
   openGraph: {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_APP_URL,
-    title: "GoalTrack - Track Your Goals, Achieve Your Dreams",
+    title: `${APP_NAME} - Track Your Goals, Achieve Your Dreams`,
     description:
       "A beautiful and simple goal tracking app. Set goals, track progress, and achieve your dreams.",
-    siteName: "GoalTrack",
+    siteName: APP_NAME,
   },
   twitter: {
     card: "summary_large_image",
-    title: "GoalTrack - Track Your Goals, Achieve Your Dreams",
+    title: `${APP_NAME} - Track Your Goals, Achieve Your Dreams`,
     description:
       "A beautiful and simple goal tracking app. Set goals, track progress, and achieve your dreams.",
   },

@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_NAME } from "@/lib/app-name";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
@@ -64,7 +65,7 @@ export function DashboardNav({ user, profile }: DashboardNavProps) {
         <div className="flex items-center gap-6">
           <Link href="/boards" className="flex items-center gap-2 font-bold">
             <Target className="h-5 w-5 text-primary" />
-            <span>GoalTrack</span>
+            <span>{APP_NAME}</span>
           </Link>
           <nav className="hidden md:flex items-center gap-4">
             <Link

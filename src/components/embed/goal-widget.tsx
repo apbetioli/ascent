@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import { GoalProgressDisplay } from "@/components/shared/goal-progress-display";
+import { APP_NAME } from "@/lib/app-name";
 import type { ConvexGoal } from "@/lib/convex-types";
 
 interface EmbedGoalWidgetProps {
@@ -27,7 +28,7 @@ export function EmbedGoalWidget({ goal: initialGoal }: EmbedGoalWidgetProps) {
             rel="noopener noreferrer"
             className="text-primary hover:underline"
           >
-            GoalTrack
+            {APP_NAME}
           </a>
         </p>
       }

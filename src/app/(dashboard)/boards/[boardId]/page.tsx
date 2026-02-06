@@ -51,15 +51,18 @@ export default async function BoardPage({ params }: BoardPageProps) {
   );
 
   return (
-    <div className="w-full space-y-6 p-6">
-      <BoardHeader board={board}>
-        <CreateGoalDialog
-          boardId={board._id}
-          existingGoalsCount={goals.length}
-        />
-      </BoardHeader>
-
-      <GoalsList boardId={board._id} />
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain p-4 md:p-6">
+      <div className="shrink-0 pb-4">
+        <BoardHeader board={board}>
+          <CreateGoalDialog
+            boardId={board._id}
+            existingGoalsCount={goals.length}
+          />
+        </BoardHeader>
+      </div>
+      <div className="min-h-0 min-w-0 shrink-0">
+        <GoalsList boardId={board._id} />
+      </div>
     </div>
   );
 }

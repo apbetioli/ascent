@@ -1,4 +1,5 @@
 import { DashboardNav } from "@/components/dashboard/nav";
+import { ViewportLock } from "@/components/dashboard/viewport-lock";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { redirect } from "next/navigation";
@@ -26,12 +27,13 @@ export default async function DashboardLayout({
   if (!data.profile.hasPaid) redirect("/#pricing");
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-background">
+    <div className="fixed inset-0 z-0 flex flex-col overflow-hidden bg-background">
+      <ViewportLock />
       <DashboardNav
         user={{ id: data.userId, email: data.email ?? undefined }}
         profile={data.profile}
       />
-      <main className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {children}
       </main>
     </div>

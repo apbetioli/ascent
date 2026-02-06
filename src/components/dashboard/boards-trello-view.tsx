@@ -126,7 +126,7 @@ function BoardColumn({
 
   return (
     <div
-      className={`flex w-[340px] min-w-[340px] max-w-[340px] shrink-0 flex-col rounded-lg border bg-card ${isDragging ? "opacity-50" : ""}`}
+      className={`flex h-full w-[340px] min-w-[340px] max-w-[340px] shrink-0 flex-col rounded-lg border bg-card ${isDragging ? "opacity-50" : ""}`}
     >
       <div className="flex shrink-0 items-center justify-between gap-2 border-b px-3 py-2">
         <div className="flex min-w-0 flex-1 items-center gap-1">
@@ -165,7 +165,7 @@ function BoardColumn({
       </div>
       <div
         ref={setDroppableRef}
-        className={`max-h-[calc(100dvh-12rem)] min-h-0 overflow-y-auto overflow-x-hidden transition-colors ${
+        className={`min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain transition-colors ${
           isOver ? "bg-muted/50" : ""
         }`}
       >
@@ -499,8 +499,8 @@ export function BoardsTrelloView({ boards, className }: BoardsTrelloViewProps) {
       <div
         className={`flex min-h-0 flex-col overflow-hidden ${className ?? ""}`}
       >
-        <div className="min-h-0 w-full flex-1 overflow-x-auto overflow-y-hidden">
-          <div className="inline-flex items-start gap-4 px-4 pt-4 h-full">
+        <div className="min-h-0 w-full flex-1 overflow-x-auto overflow-y-hidden overscroll-contain">
+          <div className="inline-flex h-full items-stretch gap-4 px-4 pt-4">
             <SortableContext
               items={boardIds}
               strategy={horizontalListSortingStrategy}

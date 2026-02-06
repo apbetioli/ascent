@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useConvexConnectionState } from "convex/react";
 import { useUser } from "@/lib/hooks/use-user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,9 +34,17 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const { signIn } = useAuthActions();
   const { isAuthenticated, loading: authLoading } = useUser();
+  const connectionState = useConvexConnectionState();
+
+  // Only show the full-page loader when we're connected and still loading auth.
+  // When the WebSocket isn't connected (e.g. mobile never establishes), show the form
+  // so the user isn't stuck; auth will resolve when the client connects.
+  const showLoader =
+    connectionState.isWebSocketConnected && authLoading;
 
   // Redirect authenticated users (e.g. after OTP verification).
   // When fromPayment=1 and not yet authenticated, show the login form. Once authenticated,
@@ -55,6 +64,7 @@ export default function LoginPage() {
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     setIsLoading(true);
 
     try {
@@ -64,6 +74,7 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "An unexpected error occurred";
+      setFormError(message);
       console.error(message);
     } finally {
       setIsLoading(false);
@@ -72,6 +83,7 @@ export default function LoginPage() {
 
   const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     setIsLoading(true);
 
     try {
@@ -80,6 +92,11 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "An unexpected error occurred";
+      setFormError(
+        message === "Could not verify code"
+          ? "Invalid or expired code. Check the code or request a new one."
+          : message
+      );
       console.error(message);
     } finally {
       setIsLoading(false);
@@ -87,6 +104,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
+    setFormError(null);
     setIsGoogleLoading(true);
 
     try {
@@ -99,12 +117,13 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "An unexpected error occurred";
+      setFormError(message);
       console.error(message);
       setIsGoogleLoading(false);
     }
   };
 
-  if (authLoading || (isAuthenticated && redirect && !skipRedirectForPayment)) {
+  if (showLoader || (isAuthenticated && redirect && !skipRedirectForPayment)) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -124,6 +143,9 @@ export default function LoginPage() {
             <CardDescription>
               We sent a code to <strong>{email}</strong>
             </CardDescription>
+            {formError && (
+              <p className="text-sm text-destructive mt-2">{formError}</p>
+            )}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleVerifyCode} className="space-y-4">
@@ -163,6 +185,7 @@ export default function LoginPage() {
               onClick={() => {
                 setOtpSent(false);
                 setCode("");
+                setFormError(null);
               }}
             >
               Use a different email
@@ -185,9 +208,9 @@ export default function LoginPage() {
               ? "Payment successful! Sign in with the email below to access your account."
               : "Sign in to your account to continue"}
           </CardDescription>
-          {error && (
+          {(error || formError) && (
             <p className="text-sm text-destructive mt-2">
-              Authentication failed. Please try again.
+              {formError ?? "Authentication failed. Please try again."}
             </p>
           )}
         </CardHeader>

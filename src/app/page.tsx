@@ -10,20 +10,18 @@ import { Header } from "@/components/landing/header";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Header />
-      <div className="max-w-7xl mx-auto">
-        <main>
-          <Hero />
-          <Features />
-          <HowItWorks />
-          <Testimonials />
-          <Pricing />
-          <FAQ />
-          <CTA />
-        </main>
-        <Footer />
-      </div>
+      <main>
+        <Hero />
+        <Features />
+        <HowItWorks />
+        <Testimonials />
+        <Pricing />
+        <FAQ />
+        <CTA />
+      </main>
+      <Footer />
     </div>
   );
 }

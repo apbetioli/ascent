@@ -19,7 +19,7 @@ export function CTA() {
 
       {/* Glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-purple-500/8 dark:bg-purple-500/[0.05] blur-[120px]" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-green-500/8 dark:bg-green-500/[0.05] blur-[120px]" />
       </div>
 
       <div className="relative max-w-6xl mx-auto px-4 md:px-6">
@@ -35,7 +35,7 @@ export function CTA() {
             <Button
               size="lg"
               onClick={() => scrollToSection("pricing")}
-              className="bg-purple-600 hover:bg-purple-700 text-white h-12 px-8 text-base"
+              className="bg-green-600 hover:bg-green-700 text-white h-12 px-8 text-base"
             >
               Get Started
               <ArrowRight className="ml-2 h-4 w-4" />

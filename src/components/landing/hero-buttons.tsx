@@ -15,7 +15,7 @@ export function HeroButtons() {
       <Button
         size="lg"
         onClick={() => scrollToSection("pricing")}
-        className="bg-purple-600 hover:bg-purple-700 text-white px-8 h-12 text-base"
+        className="bg-green-600 hover:bg-green-700 text-white px-8 h-12 text-base"
       >
         Start tracking your goals
       </Button>

@@ -55,8 +55,8 @@ export function Hero() {
     <section className="relative pt-24 pb-8 md:pt-32 md:pb-12">
       {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] md:w-[900px] md:h-[900px] rounded-full bg-purple-500/10 dark:bg-purple-500/[0.07] blur-[120px] animate-pulse-glow" />
-        <div className="absolute top-1/3 left-1/3 w-[400px] h-[400px] rounded-full bg-fuchsia-500/8 dark:bg-fuchsia-500/[0.05] blur-[100px] animate-pulse-glow animation-delay-600" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] md:w-[900px] md:h-[900px] rounded-full bg-green-500/10 dark:bg-green-500/[0.07] blur-[120px] animate-pulse-glow" />
+        <div className="absolute top-1/3 left-1/3 w-[400px] h-[400px] rounded-full bg-emerald-500/8 dark:bg-emerald-500/[0.05] blur-[100px] animate-pulse-glow animation-delay-600" />
       </div>
 
       <div className="relative max-w-6xl mx-auto px-4 md:px-6">

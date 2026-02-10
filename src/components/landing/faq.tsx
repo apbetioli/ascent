@@ -48,7 +48,7 @@ export function FAQ() {
     <section id="faq" className="py-24 md:py-32">
       <div className="max-w-6xl mx-auto px-4 md:px-6">
         <div className="text-center mb-14">
-          <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-3 tracking-wide uppercase">
+          <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-3 tracking-wide uppercase">
             FAQ
           </p>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
@@ -58,7 +58,7 @@ export function FAQ() {
             We&apos;ve got answers. If you don&apos;t see yours here,{" "}
             <a
               href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@goaltrack.app"}`}
-              className="text-purple-600 dark:text-purple-400 hover:underline"
+              className="text-green-600 dark:text-green-400 hover:underline"
             >
               reach out
             </a>
@@ -74,7 +74,7 @@ export function FAQ() {
                 value={`item-${index}`}
                 className="border-border/50"
               >
-                <AccordionTrigger className="text-left text-base hover:no-underline hover:text-purple-600 dark:hover:text-purple-400">
+                <AccordionTrigger className="text-left text-base hover:no-underline hover:text-green-600 dark:hover:text-green-400">
                   {faq.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground leading-relaxed">

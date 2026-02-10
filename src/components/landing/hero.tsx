@@ -63,14 +63,13 @@ export function Hero() {
         <div className="flex flex-col items-center text-center space-y-8">
           {/* Headline */}
           <h1 className="animate-fade-up animation-delay-150 text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight max-w-4xl leading-[1.1]">
-            Track your goals,{" "}
-            <span className="text-gradient">achieve your dreams</span>
+            Track your goals. <span className="text-gradient">Ascent.</span>
           </h1>
 
           {/* Subheadline */}
           <p className="animate-fade-up animation-delay-300 text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
             Set financial goals, fitness targets, reading challenges, and more.
-            Watch your progress with beautiful visual charts.
+            Watch your progress climb with beautiful visual charts.
           </p>
 
           {/* CTA */}

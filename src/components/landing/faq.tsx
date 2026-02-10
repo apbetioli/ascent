@@ -57,7 +57,7 @@ export function FAQ() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             We&apos;ve got answers. If you don&apos;t see yours here,{" "}
             <a
-              href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@goaltrack.app"}`}
+              href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "contact@apbetioli.dev"}`}
               className="text-green-600 dark:text-green-400 hover:underline"
             >
               reach out

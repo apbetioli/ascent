@@ -1,4 +1,4 @@
-# GoalTrack
+# AScent
 
 A beautiful and simple goal tracking app built with Next.js, Supabase, and Stripe.
 

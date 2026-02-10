@@ -90,11 +90,11 @@ export function Testimonials() {
             Testimonials
           </p>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
-            Loved by{" "}
-            <span className="text-gradient">goal-setters</span>
+            Reaching higher with{" "}
+            <span className="text-gradient">thousands</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Join thousands who are crushing their targets with {APP_NAME}.
+            Join thousands climbing toward their goals with {APP_NAME}.
           </p>
         </div>
       </div>

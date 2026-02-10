@@ -25,11 +25,10 @@ export function CTA() {
       <div className="relative max-w-6xl mx-auto px-4 md:px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
-            Ready to achieve <span className="text-gradient">your goals</span>?
+            Ready for the <span className="text-gradient">ascent</span>?
           </h2>
           <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-            Join thousands of goal-setters who are crushing their targets with{" "}
-            {APP_NAME}. Start tracking today.
+            Join thousands reaching higher with {APP_NAME}. Start today.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button
@@ -37,7 +36,7 @@ export function CTA() {
               onClick={() => scrollToSection("pricing")}
               className="bg-green-600 hover:bg-green-700 text-white h-12 px-8 text-base"
             >
-              Get Started
+              Start now
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>

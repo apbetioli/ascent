@@ -134,10 +134,10 @@ export function Features() {
           </p>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
             Everything you need to{" "}
-            <span className="text-gradient">succeed</span>
+            <span className="text-gradient">reach the top</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Powerful goal tracking wrapped in a simple, beautiful interface.
+            Powerful goal tracking wrapped in a simple, beautiful interface. The climb, simplified.
           </p>
         </div>
 

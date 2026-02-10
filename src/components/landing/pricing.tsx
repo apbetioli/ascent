@@ -13,7 +13,7 @@ export function Pricing() {
 
       <div className="relative max-w-6xl mx-auto px-4 md:px-6">
         <div className="text-center mb-14">
-          <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-3 tracking-wide uppercase">
+          <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-3 tracking-wide uppercase">
             Pricing
           </p>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
@@ -37,7 +37,7 @@ export function Pricing() {
             Questions?{" "}
             <a
               href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@goaltrack.app"}`}
-              className="text-purple-600 dark:text-purple-400 hover:underline"
+              className="text-green-600 dark:text-green-400 hover:underline"
             >
               Contact us
             </a>

@@ -22,7 +22,7 @@ export function Header() {
             href="/"
             className="flex items-center gap-2 font-bold tracking-tight"
           >
-            <Target className="h-5 w-5 text-purple-500" />
+            <Target className="h-5 w-5 text-green-500" />
             <span>{APP_NAME}</span>
           </Link>
         </div>
@@ -54,7 +54,7 @@ export function Header() {
           {/* <Button
             size="sm"
             onClick={() => scrollToSection("pricing")}
-            className="bg-purple-600 hover:bg-purple-700 text-white"
+            className="bg-green-600 hover:bg-green-700 text-white"
           >
             Get Started
           </Button> */}

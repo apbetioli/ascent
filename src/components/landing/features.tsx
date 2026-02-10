@@ -129,7 +129,7 @@ export function Features() {
     <section id="features" className="py-24 md:py-32">
       <div className="max-w-6xl mx-auto px-4 md:px-6">
         <div className="text-center mb-20">
-          <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-3 tracking-wide uppercase">
+          <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-3 tracking-wide uppercase">
             Features
           </p>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
@@ -151,8 +151,8 @@ export function Features() {
               >
                 {/* Text side */}
                 <div className="flex-1 space-y-5">
-                  {/* <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-500/10 dark:bg-purple-500/15">
-                    <feature.icon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                  {/* <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-green-500/10 dark:bg-green-500/15">
+                    <feature.icon className="h-6 w-6 text-green-600 dark:text-green-400" />
                   </div> */}
                   <h3 className="text-2xl md:text-3xl font-bold tracking-tight">
                     {feature.title}

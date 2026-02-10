@@ -192,14 +192,14 @@
 
 /* Gradient text utility */
 .text-gradient {
-  background: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #06b6d4 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #059669 50%, #0d9488 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-subtle {
-  background: linear-gradient(135deg, #c084fc 0%, #f472b6 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #14b8a6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

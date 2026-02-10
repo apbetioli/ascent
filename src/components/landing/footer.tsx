@@ -18,7 +18,7 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-4">
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
-              <Target className="h-5 w-5 text-purple-500" />
+              <Target className="h-5 w-5 text-green-500" />
               <span>{APP_NAME}</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">

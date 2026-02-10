@@ -86,16 +86,16 @@ export function PricingCard({
   return (
     <div className="w-full max-w-md relative">
       {/* Glow effect behind card */}
-      <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-fuchsia-500 to-cyan-400 rounded-2xl opacity-20 blur-xl" />
+      <div className="absolute -inset-1 bg-gradient-to-r from-green-600 via-emerald-500 to-teal-400 rounded-2xl opacity-20 blur-xl" />
 
       <div className="relative bg-card border border-border/50 rounded-2xl overflow-hidden">
         {/* Top gradient bar */}
-        <div className="h-1 bg-gradient-to-r from-purple-600 via-fuchsia-500 to-cyan-400" />
+        <div className="h-1 bg-gradient-to-r from-green-600 via-emerald-500 to-teal-400" />
 
         <div className="p-8">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold">{APP_NAME} Pro</h3>
-            <Badge className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20">
+            <h3 className="text-xl font-bold">{APP_NAME}</h3>
+            <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
               Lifetime Deal
             </Badge>
           </div>
@@ -113,7 +113,7 @@ export function PricingCard({
           </div>
 
           <Button
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 text-base mb-8"
+            className="w-full bg-green-600 hover:bg-green-700 text-white h-12 text-base mb-8"
             onClick={handleCheckout}
             disabled={isLoading}
           >
@@ -124,8 +124,8 @@ export function PricingCard({
           <ul className="space-y-3">
             {features.map((feature) => (
               <li key={feature} className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-purple-500/10 dark:bg-purple-500/15 shrink-0">
-                  <Check className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500/10 dark:bg-green-500/15 shrink-0">
+                  <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
                 </div>
                 <span className="text-sm text-foreground/80">{feature}</span>
               </li>

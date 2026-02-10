@@ -17,13 +17,16 @@ export function Footer() {
       <div className="max-w-6xl mx-auto px-4 md:px-6">
         <div className="grid gap-8 md:grid-cols-4">
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
+            <Link
+              href="/"
+              className="flex items-center gap-2 font-bold tracking-tight"
+            >
               <Target className="h-5 w-5 text-green-500" />
               <span>{APP_NAME}</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Track your goals, achieve your dreams. A simple and beautiful goal
-              tracking app.
+              Reach your goals. A simple, beautiful way to track progress and
+              reach new heights.
             </p>
           </div>
 
@@ -61,12 +64,18 @@ export function Footer() {
             <h3 className="font-semibold mb-4 text-sm">Legal</h3>
             <ul className="space-y-2.5 text-sm text-muted-foreground">
               <li>
-                <Link href="/privacy" className="hover:text-foreground transition-colors">
+                <Link
+                  href="/privacy"
+                  className="hover:text-foreground transition-colors"
+                >
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-foreground transition-colors">
+                <Link
+                  href="/terms"
+                  className="hover:text-foreground transition-colors"
+                >
                   Terms of Service
                 </Link>
               </li>
@@ -78,7 +87,7 @@ export function Footer() {
             <ul className="space-y-2.5 text-sm text-muted-foreground">
               <li>
                 <a
-                  href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@goaltrack.app"}`}
+                  href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "contact@apbetioli.dev"}`}
                   className="hover:text-foreground transition-colors"
                 >
                   Contact Us
@@ -89,7 +98,9 @@ export function Footer() {
         </div>
 
         <div className="mt-10 pt-8 border-t border-border/50 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} {APP_NAME}. All rights reserved.</p>
+          <p>
+            &copy; {new Date().getFullYear()} {APP_NAME}. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>

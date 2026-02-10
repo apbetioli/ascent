@@ -1,7 +1,12 @@
 import { Target, TrendingUp, Trophy } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-const steps: { number: string; title: string; description: string; icon: LucideIcon }[] = [
+const steps: {
+  number: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+}[] = [
   {
     number: "01",
     title: "Create your goals",
@@ -18,9 +23,9 @@ const steps: { number: string; title: string; description: string; icon: LucideI
   },
   {
     number: "03",
-    title: "Achieve & celebrate",
+    title: "Reach the top & celebrate",
     description:
-      "Watch progress bars fill up. Hit 100% and celebrate! Surpass your goals and see the overflow. Then set the next one.",
+      "Watch progress bars fill up. Hit 100% and celebrate! Surpass your goals and see the overflow. Then set your next summit.",
     icon: Trophy,
   },
 ];
@@ -37,8 +42,7 @@ export function HowItWorks() {
             How it works
           </p>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
-            Three steps to{" "}
-            <span className="text-gradient">crushing it</span>
+            The ascent in <span className="text-gradient">three steps</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Getting started takes less than a minute.

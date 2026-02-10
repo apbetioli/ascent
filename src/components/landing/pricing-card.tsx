@@ -108,7 +108,7 @@ export function PricingCard({
               <span className="text-muted-foreground">one-time</span>
             </div>
             <p className="text-sm text-muted-foreground mt-2">
-              Everything you need to track and achieve your goals.
+              Everything you need to reach the top. One payment, lifetime access.
             </p>
           </div>
 

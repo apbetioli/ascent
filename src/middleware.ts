@@ -6,7 +6,6 @@ import {
 import type { NextFetchEvent } from "next/server";
 import { NextResponse, type NextRequest } from "next/server";
 import { authRateLimiter, checkRateLimit } from "./lib/redis/rate-limit";
-import { addVisitor } from "./lib/redis/visitors";
 
 const isSignInPage = createRouteMatcher(["/login"]);
 const isProtectedRoute = createRouteMatcher(["/(boards|settings|api)(.*)"]);
@@ -41,7 +40,13 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
     }
   }
 
-  addVisitor(ip);
+  const siteUrl = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;
+  if (siteUrl) {
+    fetch(`${siteUrl}/recordVisit`, {
+      method: "POST",
+      headers: { "X-Forwarded-For": ip },
+    }).catch(() => {});
+  }
 
   if (isPublicRoute(request)) {
     return NextResponse.next({ request });

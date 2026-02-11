@@ -82,4 +82,11 @@ export default defineSchema({
     url: v.string(),
     createdAt: v.number(),
   }).index("by_email", ["email"]),
+
+  liveVisitors: defineTable({
+    ipAddress: v.string(),
+    lastSeen: v.number(),
+  })
+    .index("by_ipAddress", ["ipAddress"])
+    .index("by_lastSeen", ["lastSeen"]),
 });

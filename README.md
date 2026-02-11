@@ -22,7 +22,7 @@ A beautiful and simple goal tracking app built with Next.js, Supabase, and Strip
 - **Auth**: Supabase Auth (Magic Link + Google OAuth)
 - **Real-time**: Supabase Realtime
 - **Payments**: Stripe Checkout
-- **Rate Limiting**: Upstash Redis
+- **Rate Limiting**: Convex rate limiter component
 
 ## Getting Started
 
@@ -77,26 +77,9 @@ A beautiful and simple goal tracking app built with Next.js, Supabase, and Strip
 3. Set up a webhook endpoint pointing to `/api/webhooks/stripe`
 4. Add your keys to `.env.local`
 
-### Redis / rate limiting
+### Rate limiting
 
-**Option A: Local Redis (development)**
-
-Use Redis locally via [Serverless Redis HTTP (SRH)](https://github.com/hiett/serverless-redis-http), which exposes an Upstash-compatible REST API in front of Redis. No Upstash account needed.
-
-```bash
-# Start Redis + SRH
-docker compose -f docker-compose.redis.yml up -d
-
-# In .env.local:
-# UPSTASH_REDIS_REST_URL=http://localhost:8079
-# UPSTASH_REDIS_REST_TOKEN=dev_token
-```
-
-**Option B: Upstash (production or hosted dev)**
-
-1. Create an Upstash account at [upstash.com](https://upstash.com)
-2. Create a Redis database
-3. Add the REST URL and token to `.env.local` as `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`
+Rate limiting uses the [Convex rate limiter component](https://www.convex.dev/components/rate-limiter). Ensure `NEXT_PUBLIC_CONVEX_SITE_URL` is set to your Convex HTTP URL (e.g. `https://<deployment>.convex.site`) for middleware and API rate limit checks. If unset, the app derives it from `NEXT_PUBLIC_CONVEX_URL`.
 
 ## Project Structure
 
@@ -116,7 +99,7 @@ docker compose -f docker-compose.redis.yml up -d
   /lib
     /supabase        # Supabase client
     /payments        # Payment provider abstraction
-    /rate-limit      # Upstash rate limiter
+    /api             # API routes (rate limited via Convex)
     /validations     # Zod schemas
     /utils           # Helpers
     /hooks           # React hooks

@@ -5,12 +5,12 @@ import {
 } from "@convex-dev/auth/nextjs/server";
 import type { NextFetchEvent } from "next/server";
 import { NextResponse, type NextRequest } from "next/server";
-import { authRateLimiter, checkRateLimit } from "./lib/redis/rate-limit";
 
 const isSignInPage = createRouteMatcher(["/login"]);
 const isProtectedRoute = createRouteMatcher(["/(boards|settings|api)(.*)"]);
 const isPublicRoute = createRouteMatcher(["/public"]);
-const isCheckoutApi = (req: NextRequest) => req.nextUrl.pathname === "/api/checkout";
+const isCheckoutApi = (req: NextRequest) =>
+  req.nextUrl.pathname === "/api/checkout";
 const isEmbedRoute = createRouteMatcher(["/embed"]);
 const isBlockedRoute = createRouteMatcher(["/blocked"]);
 
@@ -34,10 +34,8 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
   const ip = getIp(request);
 
   if (!isLocalhost(request) && !isBlockedRoute(request)) {
-    const rateLimitResult = await checkRateLimit(authRateLimiter, ip);
-    if (!rateLimitResult.success) {
-      return nextjsMiddlewareRedirect(request, "/blocked");
-    }
+    const redirect = await checkAuthRateLimit(ip, request);
+    if (redirect) return redirect;
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;
@@ -59,6 +57,27 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
   }
 
   return authMiddleware(request, event);
+}
+
+async function checkAuthRateLimit(
+  ip: string,
+  request: NextRequest
+): Promise<NextResponse | null> {
+  const convexSiteUrl = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;
+  if (!convexSiteUrl) return null;
+  try {
+    const res = await fetch(`${convexSiteUrl}/checkAuthRateLimit`, {
+      method: "POST",
+      headers: { "X-Forwarded-For": ip, "X-RateLimit-IP": ip },
+    });
+    if (res.ok) {
+      const { ok } = (await res.json()) as { ok: boolean };
+      if (!ok) return nextjsMiddlewareRedirect(request, "/blocked");
+    }
+  } catch {
+    // Fail open for availability
+  }
+  return null;
 }
 
 function getIp(request: NextRequest) {

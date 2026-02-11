@@ -11,6 +11,7 @@
 import type * as apiTokens from "../apiTokens.js";
 import type * as auth from "../auth.js";
 import type * as boards from "../boards.js";
+import type * as crons from "../crons.js";
 import type * as goals from "../goals.js";
 import type * as http from "../http.js";
 import type * as magicLinks from "../magicLinks.js";
@@ -18,6 +19,7 @@ import type * as pendingPayments from "../pendingPayments.js";
 import type * as profiles from "../profiles.js";
 import type * as records from "../records.js";
 import type * as resendOTP from "../resendOTP.js";
+import type * as visitors from "../visitors.js";
 
 import type {
   ApiFromModules,
@@ -29,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   apiTokens: typeof apiTokens;
   auth: typeof auth;
   boards: typeof boards;
+  crons: typeof crons;
   goals: typeof goals;
   http: typeof http;
   magicLinks: typeof magicLinks;
@@ -36,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   profiles: typeof profiles;
   records: typeof records;
   resendOTP: typeof resendOTP;
+  visitors: typeof visitors;
 }>;
 
 /**

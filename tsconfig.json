@@ -31,16 +31,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": [
-    "node_modules",
-    "convex/auth.ts",
-    "convex/http.ts",
-    "convex/schema.ts",
-    "convex/profiles.ts",
-    "convex/boards.ts",
-    "convex/goals.ts",
-    "convex/records.ts",
-    "convex/apiTokens.ts",
-    "convex/payments.ts"
-  ]
+  "exclude": ["node_modules", "convex"]
 }

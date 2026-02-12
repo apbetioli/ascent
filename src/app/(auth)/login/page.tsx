@@ -134,21 +134,21 @@ export default function LoginPage() {
                   type="text"
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  placeholder="Enter 8-digit code"
+                  placeholder="Enter code"
                   value={code}
                   onChange={(e) =>
-                    setCode(e.target.value.replace(/\D/g, "").slice(0, 8))
+                    setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                   }
                   required
                   disabled={isLoading}
-                  maxLength={8}
+                  maxLength={6}
                   className="text-center text-lg tracking-widest"
                 />
               </div>
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading || code.length < 8}
+                disabled={isLoading || code.length < 6}
               >
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

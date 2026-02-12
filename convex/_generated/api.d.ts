@@ -12,6 +12,7 @@ import type * as apiTokens from "../apiTokens.js";
 import type * as auth from "../auth.js";
 import type * as boards from "../boards.js";
 import type * as crons from "../crons.js";
+import type * as email_templates_sign_in_otp from "../email_templates/sign_in_otp.js";
 import type * as goals from "../goals.js";
 import type * as http from "../http.js";
 import type * as magicLinks from "../magicLinks.js";
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   boards: typeof boards;
   crons: typeof crons;
+  "email_templates/sign_in_otp": typeof email_templates_sign_in_otp;
   goals: typeof goals;
   http: typeof http;
   magicLinks: typeof magicLinks;

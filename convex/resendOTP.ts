@@ -1,11 +1,17 @@
 import { Email } from "@convex-dev/auth/providers/Email";
 import { RandomReader, generateRandomString } from "@oslojs/crypto/random";
 import { Resend as ResendAPI } from "resend";
+import {
+  getSignInOtpHtml,
+  getSignInOtpText,
+} from "./email_templates/sign_in_otp";
+
+const OTP_EXPIRES_MINUTES = 15;
 
 export const ResendOTP = Email({
   id: "resend-otp",
   apiKey: process.env.AUTH_RESEND_KEY,
-  maxAge: 60 * 15, // 15 minutes
+  maxAge: 60 * OTP_EXPIRES_MINUTES,
   async generateVerificationToken() {
     const random: RandomReader = {
       read(bytes) {
@@ -17,10 +23,11 @@ export const ResendOTP = Email({
   async sendVerificationRequest({ identifier: email, provider, token }) {
     const resend = new ResendAPI(provider.apiKey);
     const { error } = await resend.emails.send({
-      from: `Alexandre from Ascent <ascent@apbetioli.dev>`,
+      from: `Ascent <ascent@apbetioli.dev>`,
       to: [email],
-      subject: `Sign in to Ascent`,
-      text: "Your code is " + token,
+      subject: "One-time passcode",
+      html: getSignInOtpHtml(token, { expiresInMinutes: OTP_EXPIRES_MINUTES }),
+      text: getSignInOtpText(token, { expiresInMinutes: OTP_EXPIRES_MINUTES }),
     });
 
     if (error) {

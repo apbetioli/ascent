@@ -1,5 +1,10 @@
 const nextConfig = {
   reactStrictMode: false, //Avoids supabase errors abort controller
+  async redirects() {
+    return [
+      { source: "/favicon.ico", destination: "/icon", permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       {

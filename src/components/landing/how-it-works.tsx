@@ -1,18 +1,19 @@
-import { Target, TrendingUp, Trophy } from "lucide-react";
+import { TrendingUp, Trophy } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { AscentIcon } from "@/components/ui/ascent-icon";
 
 const steps: {
   number: string;
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: LucideIcon | typeof AscentIcon;
 }[] = [
   {
     number: "01",
     title: "Create your goals",
     description:
       "Set up goals in seconds. Add a target amount, optional deadline, recurrence, and pick a color. Financial, fitness, learning — anything.",
-    icon: Target,
+    icon: AscentIcon,
   },
   {
     number: "02",

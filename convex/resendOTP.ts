@@ -12,14 +12,14 @@ export const ResendOTP = Email({
         crypto.getRandomValues(bytes);
       },
     };
-    return generateRandomString(random, "0123456789", 8);
+    return generateRandomString(random, "0123456789", 6);
   },
   async sendVerificationRequest({ identifier: email, provider, token }) {
     const resend = new ResendAPI(provider.apiKey);
     const { error } = await resend.emails.send({
-      from: "My App <onboarding@resend.dev>",
+      from: `Alexandre from Ascent <ascent@apbetioli.dev>`,
       to: [email],
-      subject: `Sign in to My App`,
+      subject: `Sign in to Ascent`,
       text: "Your code is " + token,
     });
 

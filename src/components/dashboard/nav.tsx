@@ -1,11 +1,9 @@
 "use client";
 
-import { APP_NAME } from "@/lib/app-name";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useAuthActions } from "@convex-dev/auth/react";
-import { Button } from "@/components/ui/button";
+import { CreateBoardDialog } from "@/components/dashboard/create-board-dialog";
+import { AscentIcon } from "@/components/ui/ascent-icon";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,10 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LayoutDashboard, Settings, LogOut, Target } from "lucide-react";
-import { CreateBoardDialog } from "@/components/dashboard/create-board-dialog";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { APP_NAME } from "@/lib/app-name";
+import { useAuthActions } from "@convex-dev/auth/react";
 import type { Id } from "convex/_generated/dataModel";
+import { LogOut, Settings } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 
 export type DashboardProfile = {
   _id: Id<"profiles">;
@@ -64,7 +65,7 @@ export function DashboardNav({ user, profile }: DashboardNavProps) {
       <div className="flex h-14 w-full items-center px-4 md:px-6">
         <div className="flex items-center gap-6">
           <Link href="/boards" className="flex items-center gap-2 font-bold">
-            <Target className="h-5 w-5 text-primary" />
+            <AscentIcon className="h-5 w-5" />
             <span>{APP_NAME}</span>
           </Link>
           <nav className="hidden md:flex items-center gap-4">
@@ -76,17 +77,12 @@ export function DashboardNav({ user, profile }: DashboardNavProps) {
                   : "text-muted-foreground"
               }`}
             >
-              <span className="flex items-center gap-1">
-                <LayoutDashboard className="h-4 w-4" />
-                Boards
-              </span>
+              <span className="flex items-center gap-1">Boards</span>
             </Link>
           </nav>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          {(pathname === "/boards" || pathname.startsWith("/boards/")) && (
-            <CreateBoardDialog />
-          )}
+          {pathname === "/boards" && <CreateBoardDialog />}
           <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

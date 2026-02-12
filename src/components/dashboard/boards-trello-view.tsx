@@ -30,7 +30,8 @@ import type { ConvexBoard, ConvexGoal } from "@/lib/convex-types";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
-import { GripVertical, Plus, Target } from "lucide-react";
+import { AscentIcon } from "@/components/ui/ascent-icon";
+import { GripVertical, Plus } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -172,7 +173,7 @@ function BoardColumn({
         <div className="flex flex-col gap-2 p-3 min-w-0 min-h-[120px]">
           {sortedGoals.length === 0 ? (
             <Card className="flex flex-col items-center justify-center py-6">
-              <Target className="mb-0 h-10 w-10 text-muted-foreground" />
+              <AscentIcon className="mb-0 h-10 w-10" />
               <CardTitle className="mb-0 text-sm">No goals yet</CardTitle>
               <CardDescription className="text-center text-xs">
                 Use + to add a goal or drag one here

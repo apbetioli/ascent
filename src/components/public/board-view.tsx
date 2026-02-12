@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { Target } from "lucide-react";
+import { AscentIcon } from "@/components/ui/ascent-icon";
 import { GoalProgressDisplay } from "@/components/shared/goal-progress-display";
 import type { ConvexBoard, ConvexGoal } from "@/lib/convex-types";
 
@@ -26,7 +26,7 @@ export function PublicBoardView({
     <div className="space-y-6">
       {sortedGoals.length === 0 ? (
         <Card className="flex flex-col items-center justify-center py-12">
-          <Target className="h-12 w-12 text-muted-foreground mb-4" />
+          <AscentIcon className="mb-4 h-12 w-12" />
           <CardTitle className="mb-2">No goals yet</CardTitle>
           <CardDescription>This board has no goals.</CardDescription>
         </Card>

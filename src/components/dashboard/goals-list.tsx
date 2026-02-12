@@ -4,7 +4,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
-import { Target } from "lucide-react";
+import { AscentIcon } from "@/components/ui/ascent-icon";
 import { GoalCard } from "./goal-card";
 
 interface GoalsListProps {
@@ -17,7 +17,7 @@ export function GoalsList({ boardId }: GoalsListProps) {
   if (goals.length === 0) {
     return (
       <Card className="flex flex-col items-center justify-center py-12">
-        <Target className="h-12 w-12 text-muted-foreground mb-4" />
+        <AscentIcon className="mb-4 h-12 w-12" />
         <CardTitle className="mb-2">No goals yet</CardTitle>
         <CardDescription>
           Create your first goal to start tracking your progress

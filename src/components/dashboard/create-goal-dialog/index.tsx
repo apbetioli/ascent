@@ -81,7 +81,7 @@ export function CreateGoalDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       {showDefaultTrigger && (
         <DialogTrigger asChild>
-          <Button>
+          <Button variant="outline">
             <Plus className="mr-2 h-4 w-4" />
             New Goal
           </Button>
@@ -118,7 +118,8 @@ export function CreateGoalDialog({
                     isLoading={form.isLoading}
                     onUpdateField={form.updateFormField}
                     onFocus={() => {
-                      form.currentValueOnFocusRef.current = form.formState.currentValue;
+                      form.currentValueOnFocusRef.current =
+                        form.formState.currentValue;
                     }}
                     onBlur={form.handleCurrentValueBlur}
                     onAddAmount={form.addRecordByAmount}
@@ -172,7 +173,11 @@ export function CreateGoalDialog({
           <DialogFooter className="gap-2 pt-4">
             {form.isEditMode ? (
               <>
-                <Button variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                  className="w-full sm:w-auto"
+                >
                   Cancel
                 </Button>
                 <Button
@@ -193,7 +198,11 @@ export function CreateGoalDialog({
               </>
             ) : (
               <>
-                <Button variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                  className="w-full sm:w-auto"
+                >
                   Cancel
                 </Button>
                 <Button

@@ -2,7 +2,7 @@
 
 import { APP_NAME } from "@/lib/app-name";
 import Link from "next/link";
-import { Target } from "lucide-react";
+import { AscentIcon } from "@/components/ui/ascent-icon";
 
 export function Footer() {
   const scrollToSection = (id: string) => {
@@ -21,7 +21,7 @@ export function Footer() {
               href="/"
               className="flex items-center gap-2 font-bold tracking-tight"
             >
-              <Target className="h-5 w-5 text-green-500" />
+              <AscentIcon className="h-5 w-5" />
               <span>{APP_NAME}</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">

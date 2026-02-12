@@ -194,7 +194,7 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
         </CardContent>
       </Card>
 
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>API Tokens</CardTitle>
           <CardDescription>
@@ -338,7 +338,7 @@ export function SettingsPage({ user, profile, tokens }: SettingsPageProps) {
             </p>
           )}
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

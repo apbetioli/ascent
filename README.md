@@ -37,7 +37,7 @@ A beautiful and simple goal tracking app built with Next.js, Supabase, and Strip
 1. **Clone and install dependencies**
    ```bash
    git clone <repo-url>
-   cd gtapp
+   cd ascent
    npm install
    ```
 

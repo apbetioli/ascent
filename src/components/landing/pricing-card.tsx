@@ -72,6 +72,12 @@ export function PricingCard({
         return;
       }
 
+      const redirectTo = data?.redirectTo;
+      if (typeof redirectTo === "string") {
+        router.push(redirectTo);
+        return;
+      }
+
       const url = data?.url;
       if (!url || typeof url !== "string") return;
 

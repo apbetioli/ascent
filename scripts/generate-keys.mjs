@@ -1,5 +1,7 @@
 import { exportJWK, exportPKCS8, generateKeyPair } from "jose";
 
+// Use this to generate new keys for the JWT_PRIVATE_KEY and JWKS environment variables for convex auth
+
 const keys = await generateKeyPair("RS256", {
   extractable: true,
 });

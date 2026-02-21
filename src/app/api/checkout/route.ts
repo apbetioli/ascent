@@ -1,4 +1,3 @@
-import { APP_NAME } from "@/lib/app-name";
 import { paymentProvider } from "@/lib/payments";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { fetchQuery } from "convex/nextjs";
@@ -13,9 +12,9 @@ export async function POST(req: Request) {
       userId?: string;
     };
 
-    const token = await convexAuthNextjsToken();
-
     if (bodyUserId) {
+      // TODO extract function
+      const token = await convexAuthNextjsToken();
       if (!token) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
@@ -37,10 +36,7 @@ export async function POST(req: Request) {
       );
 
       if (profile?.hasPaid) {
-        return NextResponse.json(
-          { error: `You have already purchased ${APP_NAME}` },
-          { status: 400 }
-        );
+        return NextResponse.json({ redirectTo: "/login" }, { status: 200 });
       }
     }
 

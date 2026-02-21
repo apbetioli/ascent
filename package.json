@@ -1,13 +1,15 @@
 {
-  "name": "gtapp",
+  "name": "ascent",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "build": "next build",
     "start": "next start",
     "dev": "npm-run-all --parallel dev:frontend dev:backend",
+    "dev:local": "npm-run-all --parallel dev:frontend dev:backend:local",
     "dev:frontend": "next dev",
     "dev:backend": "npx convex dev",
+    "dev:backend:local": "npx convex dev --local --once",
     "predev": "convex dev --until-success && convex dashboard",
     "lint": "tsc && tsc -p convex/tsconfig.json && eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "next preview"
